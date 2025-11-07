@@ -1,4 +1,10 @@
 ﻿@inherits LayoutComponentBase
+@using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Core.Models
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@implements IDisposable
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -6,10 +12,50 @@
 
     <main>
         <div class="top-row px-4">
-            <!-- Barra vacía pero visible -->
+            @if (currentUser != null)
+            {
+                <div class="user-info">
+                    <img src="/images/users/@(GetUserImage())" alt="@currentUser.FullName" class="user-avatar" />
+                    <div class="user-details">
+                        <span class="user-name">@currentUser.FullName</span>
+                        <span class="user-role">@currentUser.Role</span>
+                    </div>
+                </div>
+            }
         </div>
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code {
+    private UserSession? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+        AuthService.OnAuthStateChanged += OnAuthStateChanged;
+    }
+
+    private async void OnAuthStateChanged()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string GetUserImage()
+    {
+        // if user is demo, use his picture
+        if (currentUser?.FullName == "Ana García")
+            return "ana-garcia.png";
+
+        // else use default picture
+        return "default-avatar.png";
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnAuthStateChanged -= OnAuthStateChanged;
+    }
+}

@@ -10,6 +10,7 @@ public class AuthService
     private readonly IJSRuntime _jsRuntime;
     private const string SessionKey = "userSession";
     private UserSession? _currentUser;
+    public event Action? OnAuthStateChanged;
 
     public AuthService(IJSRuntime jsRuntime)
     {
@@ -31,6 +32,8 @@ public class AuthService
 
             await SaveSessionAsync(user);
             _currentUser = user;
+
+            OnAuthStateChanged?.Invoke();
 
             return new LoginResponse
             {
@@ -60,6 +63,8 @@ public class AuthService
 
             await SaveSessionAsync(user);
             _currentUser = user;
+
+            OnAuthStateChanged?.Invoke();
 
             return new LoginResponse
             {
@@ -99,6 +104,8 @@ public class AuthService
     {
         await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", SessionKey);
         _currentUser = null;
+
+        OnAuthStateChanged?.Invoke();
     }
 
     private async Task SaveSessionAsync(UserSession user)

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/InfraGestion.Web.props" />
-</Project>
