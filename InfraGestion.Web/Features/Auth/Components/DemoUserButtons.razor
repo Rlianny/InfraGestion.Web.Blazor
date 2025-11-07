@@ -1,0 +1,63 @@
+@using InfraGestion.Web.Features.Auth.Models
+
+<div class="demo-section">
+    <h3 class="demo-title">Usuarios de Demostración</h3>
+    
+    <div class="demo-buttons">
+        @foreach (var user in DemoUsers)
+        {
+            <button 
+                type="button" 
+                class="demo-button" 
+                @onclick="() => OnDemoLogin.InvokeAsync(user.Role)"
+                disabled="@(!user.IsEnabled)">
+                <img src="@user.IconPath" alt="@user.DisplayName" class="demo-icon" />
+                <span>@user.DisplayName</span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnDemoLogin { get; set; }
+
+    private List<DemoUser> DemoUsers = new()
+    {
+        new DemoUser 
+        { 
+            Role = "Director", 
+            DisplayName = "Director", 
+            IconPath = "/images/icons/director.svg",
+            IsEnabled = false 
+        },
+        new DemoUser 
+        { 
+            Role = "Técnico", 
+            DisplayName = "Técnico", 
+            IconPath = "/images/icons/technician.svg",
+            IsEnabled = false 
+        },
+        new DemoUser 
+        { 
+            Role = "Logístico", 
+            DisplayName = "Logístico", 
+            IconPath = "/images/icons/logistic.svg",
+            IsEnabled = false 
+        },
+        new DemoUser 
+        { 
+            Role = "Responsable", 
+            DisplayName = "Responsable de Sección", 
+            IconPath = "/images/icons/manager.svg",
+            IsEnabled = false 
+        },
+        new DemoUser 
+        { 
+            Role = "Administrador", 
+            DisplayName = "Administrador", 
+            IconPath = "/images/icons/admin.svg",
+            IsEnabled = true 
+        }
+    };
+}

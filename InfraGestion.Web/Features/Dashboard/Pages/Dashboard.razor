@@ -1,11 +1,19 @@
 @page "/"
+@using InfraGestion.Web.Features.Auth.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
 
 <PageTitle>Dashboard - InfraCom</PageTitle>
 
 <h1 class="page-title">Dashboard</h1>
-
 <p class="page-description">Bienvenido al sistema de gestión de infraestructura.</p>
 
 @code {
-    
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await AuthService.IsAuthenticatedAsync())
+        {
+            Navigation.NavigateTo("/login");
+        }
+    }
 }

@@ -28,18 +28,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/DemoUserButtons.razor]
-build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0RlbW9Vc2VyQnV0dG9ucy5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/LoginForm.razor]
-build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0xvZ2luRm9ybS5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Pages/Login.razor]
-build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9QYWdlcy9Mb2dpbi5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Dashboard/Pages/Dashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvRGFzaGJvYXJkL1BhZ2VzL0Rhc2hib2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -124,13 +112,25 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvTW9kYWwucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/LoginLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9Mb2dpbkxheW91dC5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/DemoUserButtons.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0RlbW9Vc2VyQnV0dG9ucy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-w8tiellwsm
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/LoginForm.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0xvZ2luRm9ybS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-tskiek3ztm
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9QYWdlcy9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-47k4yrfmzs
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/LoginLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9Mb2dpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-bveux2wd6r
 
 [/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/MainLayout.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9NYWluTGF5b3V0LnJhem9y

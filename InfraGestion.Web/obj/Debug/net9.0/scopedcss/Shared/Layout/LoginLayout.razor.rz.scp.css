@@ -1,0 +1,13 @@
+.login-layout[b-bveux2wd6r] {
+    min-height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(9, 93, 208);
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 24px;
+    overflow-y: auto;
+}

@@ -1,0 +1,91 @@
+@page "/login"
+@layout LoginLayout
+@using InfraGestion.Web.Features.Auth.Components
+@using InfraGestion.Web.Features.Auth.Models
+@using InfraGestion.Web.Features.Auth.Services
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Iniciar Sesión - InfraCom</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <img src="/images/LogoCircuit.png" alt="InfraCom" class="login-logo" />
+            <h1 class="login-title">Bienvenido a InfraCom</h1>
+            <p class="login-subtitle">Inicia sesión para gestionar tu infraestructura</p>
+        </div>
+
+        <LoginForm 
+            LoginModel="@loginRequest" 
+            OnSubmit="HandleLogin"
+            ErrorMessage="@errorMessage"
+            IsLoading="@isLoading" />
+
+        <DemoUserButtons OnDemoLogin="HandleDemoLogin" />
+    </div>
+
+    <img src="/images/logoBlueWhite.png" alt="InfraCom" class="brand-logo" />
+</div>
+
+@code {
+    private LoginRequest loginRequest = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private async Task HandleLogin(LoginRequest request)
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var response = await AuthService.LoginAsync(request);
+
+            if (response.Success)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = response.Message;
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleDemoLogin(string role)
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var response = await AuthService.LoginAsDemoAsync(role);
+
+            if (response.Success)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = response.Message;
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

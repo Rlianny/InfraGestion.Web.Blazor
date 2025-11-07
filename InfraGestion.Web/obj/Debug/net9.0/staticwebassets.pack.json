@@ -41,6 +41,14 @@
       "PackagePath": "staticwebassets/icon-192.png"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/LogoCircuit.png",
+      "PackagePath": "staticwebassets/images/LogoCircuit.png"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/admin.svg",
+      "PackagePath": "staticwebassets/images/icons/admin.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/archive.svg",
       "PackagePath": "staticwebassets/images/icons/archive.svg"
     },
@@ -65,6 +73,10 @@
       "PackagePath": "staticwebassets/images/icons/chart-pie-slice.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/director.svg",
+      "PackagePath": "staticwebassets/images/icons/director.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/download-fill.svg",
       "PackagePath": "staticwebassets/images/icons/download-fill.svg"
     },
@@ -77,8 +89,20 @@
       "PackagePath": "staticwebassets/images/icons/identification-card.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/lock-key.svg",
+      "PackagePath": "staticwebassets/images/icons/lock-key.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/logistic.svg",
+      "PackagePath": "staticwebassets/images/icons/logistic.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/magnifying-glass.svg",
       "PackagePath": "staticwebassets/images/icons/magnifying-glass.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/manager.svg",
+      "PackagePath": "staticwebassets/images/icons/manager.svg"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/note-pencil.svg",
@@ -97,16 +121,32 @@
       "PackagePath": "staticwebassets/images/icons/squares-four.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/technician.svg",
+      "PackagePath": "staticwebassets/images/icons/technician.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/toggle-left-fill.svg",
       "PackagePath": "staticwebassets/images/icons/toggle-left-fill.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/user.svg",
+      "PackagePath": "staticwebassets/images/icons/user.svg"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/users.svg",
       "PackagePath": "staticwebassets/images/icons/users.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/logoBlueWhite.png",
+      "PackagePath": "staticwebassets/images/logoBlueWhite.png"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/logoSideBar.png",
       "PackagePath": "staticwebassets/images/logoSideBar.png"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/logoWhiteBlue.png",
+      "PackagePath": "staticwebassets/images/logoWhiteBlue.png"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/index.html",
