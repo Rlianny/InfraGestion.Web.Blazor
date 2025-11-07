@@ -13,8 +13,24 @@
       "PackagePath": "staticwebassets/css/app.css"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/components/badge.css",
+      "PackagePath": "staticwebassets/css/components/badge.css"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/components/modal.css",
+      "PackagePath": "staticwebassets/css/components/modal.css"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/components/table.css",
+      "PackagePath": "staticwebassets/css/components/table.css"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/pages.css",
       "PackagePath": "staticwebassets/css/pages.css"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/variable.css",
+      "PackagePath": "staticwebassets/css/variable.css"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/favicon.png",

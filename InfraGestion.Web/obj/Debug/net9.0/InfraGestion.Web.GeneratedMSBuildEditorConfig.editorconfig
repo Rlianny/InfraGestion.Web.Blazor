@@ -28,26 +28,114 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Pages/Home.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSG9tZS5yYXpvcg==
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/DemoUserButtons.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0RlbW9Vc2VyQnV0dG9ucy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Pages/Inventory.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvSW52ZW50b3J5LnJhem9y
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Components/LoginForm.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9Db21wb25lbnRzL0xvZ2luRm9ybS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Auth/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvQXV0aC9QYWdlcy9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Dashboard/Pages/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvRGFzaGJvYXJkL1BhZ2VzL0Rhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/DeviceFormModal.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvRGV2aWNlRm9ybU1vZGFsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/DevicesFilters.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvRGV2aWNlc0ZpbHRlcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/DeviceTable.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvRGV2aWNlVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/EmptyState.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvRW1wdHlTdGF0ZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/InitialReview.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvSW5pdGlhbFJldmlldy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/InventoryStats.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvSW52ZW50b3J5U3RhdHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/MaintenanceHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvTWFpbnRlbmFuY2VIaXN0b3J5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Components/TransferHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L0NvbXBvbmVudHMvVHJhbnNmZXJIaXN0b3J5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Pages/DeviceDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L1BhZ2VzL0RldmljZURldGFpbHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Inventory/Pages/InventoryList.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvSW52ZW50b3J5L1BhZ2VzL0ludmVudG9yeUxpc3QucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Users/Components/UserFilters.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvVXNlcnMvQ29tcG9uZW50cy9Vc2VyRmlsdGVycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Users/Components/UserFormModal.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvVXNlcnMvQ29tcG9uZW50cy9Vc2VyRm9ybU1vZGFsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Users/Components/UserTable.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvVXNlcnMvQ29tcG9uZW50cy9Vc2VyVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Users/Components/UserToggleButton.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvVXNlcnMvQ29tcG9uZW50cy9Vc2VyVG9nZ2xlQnV0dG9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Features/Users/Pages/UserManagement.razor]
+build_metadata.AdditionalFiles.TargetPath = RmVhdHVyZXMvVXNlcnMvUGFnZXMvVXNlck1hbmFnZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Components/Badge.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvQmFkZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Components/ConfirmDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvQ29uZmlybURpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Components/EmptyState.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvRW1wdHlTdGF0ZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Components/ExportButton.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvRXhwb3J0QnV0dG9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Components/Modal.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0NvbXBvbmVudHMvTW9kYWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/LoginLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9Mb2dpbkxheW91dC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Layout/MainLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L01haW5MYXlvdXQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-52xaqtge06
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9NYWluTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-5100qo2jc1
 
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Layout/NavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L05hdk1lbnUucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-ac201xfnqm
-
-[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Pages/UsersManagement.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvVXNlcnNNYW5hZ2VtZW50LnJhem9y
-build_metadata.AdditionalFiles.CssScope = b-56k78f63xh
+[/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/Shared/Layout/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0xheW91dC9OYXZNZW51LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-v91v73qjc8
