@@ -1,0 +1,15 @@
+.page-title {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: rgb(53, 65, 85);
+    margin-bottom: 0.5rem;
+}
+
+.page-description {
+    font-size: 0.875rem;
+    color: rgb(53, 65, 85);
+    margin-top: 0;
+    line-height: 1.5;
+    padding-bottom: 1rem; /*space before line*/ 
+    border-bottom: 1px solid rgb(229, 234, 241); /*fine line*/
+}

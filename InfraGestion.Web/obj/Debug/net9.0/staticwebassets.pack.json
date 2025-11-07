@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets/css/app.css"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/css/pages.css",
+      "PackagePath": "staticwebassets/css/pages.css"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/favicon.png",
       "PackagePath": "staticwebassets/favicon.png"
     },
@@ -37,16 +41,48 @@
       "PackagePath": "staticwebassets/images/icons/buildings.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/caret-down.svg",
+      "PackagePath": "staticwebassets/images/icons/caret-down.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/chart-pie-slice.svg",
       "PackagePath": "staticwebassets/images/icons/chart-pie-slice.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/download-fill.svg",
+      "PackagePath": "staticwebassets/images/icons/download-fill.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/gear-bold.svg",
+      "PackagePath": "staticwebassets/images/icons/gear-bold.svg"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/identification-card.svg",
       "PackagePath": "staticwebassets/images/icons/identification-card.svg"
     },
     {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/magnifying-glass.svg",
+      "PackagePath": "staticwebassets/images/icons/magnifying-glass.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/note-pencil.svg",
+      "PackagePath": "staticwebassets/images/icons/note-pencil.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/plus.svg",
+      "PackagePath": "staticwebassets/images/icons/plus.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/sign-out-bold.svg",
+      "PackagePath": "staticwebassets/images/icons/sign-out-bold.svg"
+    },
+    {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/squares-four.svg",
       "PackagePath": "staticwebassets/images/icons/squares-four.svg"
+    },
+    {
+      "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/toggle-left-fill.svg",
+      "PackagePath": "staticwebassets/images/icons/toggle-left-fill.svg"
     },
     {
       "Id": "/media/lianny/1AB44624B44602AD/projects/InfraGestion.Web.Blazor/InfraGestion.Web/wwwroot/images/icons/users.svg",
