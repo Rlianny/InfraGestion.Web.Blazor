@@ -4,54 +4,49 @@ namespace InfraGestion.Web.Features.Users.Services;
 
 public class UserService
 {
-    private List<User> _users = new()
+    private readonly List<User> _users = new()
+{
+    new User
     {
-        new User
-        {
-            Id = 1,
-            Name = "Elena Morales",
-            Department = "Análisis Forense y\nRespuesta a Incidentes",
-            Role = UserRole.Director,
-            Status = UserStatus.Active,
-            CreatedAt = DateTime.Now.AddMonths(-6)
-        },
-        new User
-        {
-            Id = 2,
-            Name = "Carmen Sánchez",
-            Department = "Almacenamiento\ny Backup",
-            Role = UserRole.Administrator,
-            Status = UserStatus.Active,
-            CreatedAt = DateTime.Now.AddMonths(-4)
-        },
-        new User
-        {
-            Id = 3,
-            Name = "Isabel Castro",
-            Department = "Infraestructura\ncomo Servicio",
-            Role = UserRole.SectionManager,
-            Status = UserStatus.Inactive,
-            CreatedAt = DateTime.Now.AddMonths(-8)
-        },
-        new User
-        {
-            Id = 4,
-            Name = "Jorge Silva",
-            Department = "Soporte a Nodos\nRemotos",
-            Role = UserRole.Technician,
-            Status = UserStatus.Active,
-            CreatedAt = DateTime.Now.AddMonths(-2)
-        },
-        new User
-        {
-            Id = 5,
-            Name = "Carlos Ruiz",
-            Department = "Reparación y\nRefabricación",
-            Role = UserRole.Logistician,
-            Status = UserStatus.Active,
-            CreatedAt = DateTime.Now.AddMonths(-3)
-        }
-    };
+        Id = 1,
+        Name = "Elena Morales",
+        Department = "Análisis Forense y Respuesta a Incidentes",
+        Role = UserRole.Director,
+        Status = UserStatus.Active
+    },
+    new User
+    {
+        Id = 2,
+        Name = "Carmen Sánchez",
+        Department = "Almacenamiento y Backup",
+        Role = UserRole.Administrator,
+        Status = UserStatus.Active
+    },
+    new User
+    {
+        Id = 3,
+        Name = "Isabel Castro",
+        Department = "Infraestructura como Servicio",
+        Role = UserRole.SectionManager,
+        Status = UserStatus.Inactive
+    },
+    new User
+    {
+        Id = 4,
+        Name = "Jorge Silva",
+        Department = "Soporte a Nodos Remotos",
+        Role = UserRole.Technician,
+        Status = UserStatus.Active
+    },
+    new User
+    {
+        Id = 5,
+        Name = "Carlos Ruiz",
+        Department = "Reparación y Refabricación",
+        Role = UserRole.Logistician,
+        Status = UserStatus.Active
+    }
+};
 
     private int _nextId = 6;
 
@@ -120,7 +115,7 @@ public class UserService
 
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
-            user.Password = request.Password;
+            user.Password = request.Password; // Here goes password management logic
         }
 
         return Task.FromResult<User?>(user);
@@ -139,10 +134,10 @@ public class UserService
     public Task<bool> ToggleUserStatusAsync(int id)
     {
         var user = _users.FirstOrDefault(u => u.Id == id);
-    if (user == null)
-        return Task.FromResult(false);
+        if (user == null)
+            return Task.FromResult(false);
 
-    user.Status = user.Status == UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
-    return Task.FromResult(true);
+        user.Status = user.Status == UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
+        return Task.FromResult(true);
     }
 }

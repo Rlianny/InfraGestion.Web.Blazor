@@ -2,6 +2,7 @@
 @using InfraGestion.Web.Features.Users.Models
 @using InfraGestion.Web.Features.Users.Services
 @using InfraGestion.Web.Features.Users.Helpers
+@using InfraGestion.Web.Features.Users.Components
 @inject UserService UserService
 @inject NavigationManager Navigation
 
@@ -97,7 +98,8 @@
                         <tr>
                             <td class="name-cell">@user.Name</td>
                             <td class="department-cell">
-                                <span class="department-text">@user.Department</span>
+                                <span
+                                    class="department-text">@DepartmentHelper.FormatDepartmentForDisplay(user.Department)</span>
                             </td>
                             <td>
                                 <span class="role-badge @UserRoleHelper.GetRoleBadgeClass(user.Role)">
@@ -134,6 +136,15 @@
     </div>
 </div>
 
+<!-- Create User Modal -->
+<Modal IsOpen="@showCreateModal" Title="Agregar Usuario" OnClose="@CloseCreateModal">
+    <UserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateModal" />
+</Modal>
+
+<Modal IsOpen="@showEditModal" Title="Editar Usuario" OnClose="@CloseEditModal">
+    <UserFormEdit FormModel="@updateUserRequest" OnValidSubmit="@HandleUpdateUser" OnCancel="@CloseEditModal" />
+</Modal>
+
 @code {
     private List<User> allUsers = new();
     private List<User> filteredUsers = new();
@@ -142,6 +153,32 @@
     private string searchTerm = string.Empty;
     private string selectedRole = string.Empty;
     private string selectedStatus = string.Empty;
+
+    private bool showCreateModal = false;
+    private CreateUserRequest createUserRequest = new();
+
+    private bool showEditModal = false;
+    private UpdateUserRequest updateUserRequest = new();
+
+    private void NavigateToCreate()
+    {
+        createUserRequest = new CreateUserRequest();
+        showCreateModal = true;
+    }
+
+    private void CloseCreateModal()
+    {
+        showCreateModal = false;
+        createUserRequest = new CreateUserRequest();
+    }
+
+    private async Task HandleCreateUser(CreateUserRequest request)
+    {
+        await UserService.CreateUserAsync(request);
+        await LoadUsers();
+        CloseCreateModal();
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,13 +218,39 @@
         await ApplyFilters();
     }
 
-    private void NavigateToCreate()
-    {
-        Navigation.NavigateTo("/users/create");
-    }
-
     private void NavigateToEdit(int userId)
     {
         Navigation.NavigateTo($"/users/edit/{userId}");
+    }
+
+    /*private async Task NavigateToEdit(int userId)
+    {
+        var user = await UserService.GetUserByIdAsync(userId);
+        if (user != null)
+        {
+            updateUserRequest = new UpdateUserRequest
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Role = user.Role,
+                Department = user.Department,
+                Password = null
+            };
+            showEditModal = true;
+        }
+    }*/
+
+    private void CloseEditModal()
+    {
+        showEditModal = false;
+        updateUserRequest = new UpdateUserRequest();
+    }
+
+    private async Task HandleUpdateUser(UpdateUserRequest request)
+    {
+        await UserService.UpdateUserAsync(request);
+        await LoadUsers();
+        await ApplyFilters();
+        CloseEditModal();
     }
 }

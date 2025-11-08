@@ -1,0 +1,82 @@
+@using InfraGestion.Web.Features.Users.Models
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Ingrese el nombre completo" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="role" class="form-label">Rol*</label>
+            <select id="role" class="form-input" @bind="FormModel.Role">
+                <option value="">Seleccione un rol</option>
+                <option value="@UserRole.Director">Director</option>
+                <option value="@UserRole.Administrator">Administrador</option>
+                <option value="@UserRole.SectionManager">Responsable</option>
+                <option value="@UserRole.Technician">Técnico</option>
+                <option value="@UserRole.Logistician">Logística</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Role)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="department" class="form-label">Departamento*</label>
+            <select id="department" class="form-input" @bind="FormModel.Department">
+                <option value="">Seleccione un departamento</option>
+                <option value="Análisis Forense y Respuesta a Incidentes">Análisis Forense y Respuesta a Incidentes</option>
+                <option value="Almacenamiento y Backup">Almacenamiento y Backup</option>
+                <option value="Infraestructura como Servicio">Infraestructura como Servicio</option>
+                <option value="Soporte a Nodos Remotos">Soporte a Nodos Remotos</option>
+                <option value="Reparación y Refabricación">Reparación y Refabricación</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Department)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+        <input type="password" 
+               id="password" 
+               class="form-input" 
+               @bind="FormModel.Password" 
+               placeholder="Mínimo 6 caracteres (opcional)" />
+        <ValidationMessage For="@(() => FormModel.Password)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+            </svg>
+            Guardar
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UpdateUserRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<UpdateUserRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}
