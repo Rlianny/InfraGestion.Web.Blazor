@@ -1,0 +1,80 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Ej: Router de Agregación ASR 9000" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="type" class="form-label">Tipo*</label>
+            <select id="type" class="form-input" @bind="FormModel.Type">
+                <option value="">Seleccione un tipo</option>
+                <option value="@DeviceType.ConnectivityAndNetwork">Conectividad y Red</option>
+                <option value="@DeviceType.ComputingAndIT">Cómputo e Informática</option>
+                <option value="@DeviceType.ElectricalInfrastructureAndSupport">Infraestructura y Soporte</option>
+                <option value="@DeviceType.CommunicationsAndTransmission">Comunicaciones y Transmisión</option>
+                <option value="@DeviceType.DiagnosticAndMeasurement">Diagnóstico y Medición</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Type)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="purchaseDate" class="form-label">Fecha de Adquisición*</label>
+            <input type="date" 
+                   id="purchaseDate" 
+                   class="form-input" 
+                   @bind="FormModel.PurchaseDate" />
+            <ValidationMessage For="@(() => FormModel.PurchaseDate)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="technician" class="form-label">Nombre del Técnico que hará la defectación inicial:*</label>
+        <select id="technician" class="form-input" @bind="FormModel.TechnicianName">
+            <option value="">Seleccione un técnico</option>
+            <option value="Carlos Ruiz">Carlos Ruiz</option>
+            <option value="Ana López">Ana López</option>
+            <option value="Jorge Silva">Jorge Silva</option>
+            <option value="Elena Morales">Elena Morales</option>
+        </select>
+        <ValidationMessage For="@(() => FormModel.TechnicianName)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224,128a8,8,0,0,1-8,8H128v88a8,8,0,0,1-16,0V136H24a8,8,0,0,1,0-16h88V32a8,8,0,0,1,16,0v88h88A8,8,0,0,1,224,128Z"/>
+            </svg>
+            Crear Solicitud de Defectación Inicial
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public CreateDeviceRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<CreateDeviceRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}

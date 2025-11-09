@@ -1,0 +1,97 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Ej: Router de Agregación ASR 9000" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="type" class="form-label">Tipo*</label>
+            <select id="type" class="form-input" @bind="FormModel.Type">
+                <option value="">Seleccione un tipo</option>
+                <option value="@DeviceType.ConnectivityAndNetwork">Conectividad y Red</option>
+                <option value="@DeviceType.ComputingAndIT">Cómputo e Informática</option>
+                <option value="@DeviceType.ElectricalInfrastructureAndSupport">Infraestructura y Soporte</option>
+                <option value="@DeviceType.CommunicationsAndTransmission">Comunicaciones y Transmisión</option>
+                <option value="@DeviceType.DiagnosticAndMeasurement">Diagnóstico y Medición</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Type)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="purchaseDate" class="form-label">Fecha de Adquisición*</label>
+            <input type="date" 
+                   id="purchaseDate" 
+                   class="form-input" 
+                   @bind="FormModel.PurchaseDate" />
+            <ValidationMessage For="@(() => FormModel.PurchaseDate)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="state" class="form-label">Estado*</label>
+            <select id="state" class="form-input" @bind="FormModel.State">
+                <option value="@OperationalState.Operational">Operativo</option>
+                <option value="@OperationalState.UnderMaintenance">En Mantenimiento</option>
+                <option value="@OperationalState.Decommissioned">De Baja</option>
+                <option value="@OperationalState.BeingTransferred">Siendo Trasladado</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.State)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="location" class="form-label">Ubicación*</label>
+            <select id="location" class="form-input" @bind="FormModel.Location">
+                <option value="">Seleccione una ubicación</option>
+                <option value="Mantenimiento Correctivo y Urgencias">Mantenimiento Correctivo y Urgencias</option>
+                <option value="Recepción y Diagnóstico Técnico">Recepción y Diagnóstico Técnico</option>
+                <option value="Análisis Forense y Respuesta a Incidentes">Análisis Forense y Respuesta a Incidentes</option>
+                <option value="Plataforma como Servicio">Plataforma como Servicio</option>
+                <option value="Almacenamiento y Backup">Almacenamiento y Backup</option>
+                <option value="Infraestructura como Servicio">Infraestructura como Servicio</option>
+                <option value="Soporte a Nodos Remotos">Soporte a Nodos Remotos</option>
+                <option value="Reparación y Refabricación">Reparación y Refabricación</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Location)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+            </svg>
+            Guardar
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UpdateDeviceRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<UpdateDeviceRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}
