@@ -1,143 +1,364 @@
+using System.Net.Http.Json;
 using InfraGestion.Web.Features.Users.Models;
+using InfraGestion.Web.Features.Users.DTOs;
+using InfraGestion.Web.Features.Auth.DTOs;
 
 namespace InfraGestion.Web.Features.Users.Services;
 
 public class UserService
 {
-    private readonly List<User> _users = new()
-{
-    new User
-    {
-        Id = 1,
-        Name = "Elena Morales",
-        Department = "Análisis Forense y Respuesta a Incidentes",
-        Role = UserRole.Director,
-        Status = UserStatus.Active
-    },
-    new User
-    {
-        Id = 2,
-        Name = "Carmen Sánchez",
-        Department = "Almacenamiento y Backup",
-        Role = UserRole.Administrator,
-        Status = UserStatus.Active
-    },
-    new User
-    {
-        Id = 3,
-        Name = "Isabel Castro",
-        Department = "Infraestructura como Servicio",
-        Role = UserRole.SectionManager,
-        Status = UserStatus.Inactive
-    },
-    new User
-    {
-        Id = 4,
-        Name = "Jorge Silva",
-        Department = "Soporte a Nodos Remotos",
-        Role = UserRole.Technician,
-        Status = UserStatus.Active
-    },
-    new User
-    {
-        Id = 5,
-        Name = "Carlos Ruiz",
-        Department = "Reparación y Refabricación",
-        Role = UserRole.Logistician,
-        Status = UserStatus.Active
-    }
-};
+    private readonly HttpClient _httpClient;
 
-    private int _nextId = 6;
-
-    public Task<List<User>> GetAllUsersAsync()
+    public UserService(HttpClient httpClient)
     {
-        return Task.FromResult(_users.ToList());
+        _httpClient = httpClient;
     }
 
-    public Task<User?> GetUserByIdAsync(int id)
+    /// <summary>
+    /// Get users from API
+    /// </summary>
+    public async Task<List<User>> GetAllUsersAsync()
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
-        return Task.FromResult(user);
-    }
-
-    public Task<List<User>> SearchUsersAsync(string searchTerm, UserRole? roleFilter, UserStatus? statusFilter)
-    {
-        var query = _users.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        try
         {
-            query = query.Where(u =>
-                u.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                u.Department.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            // GET /Users
+            var response = await _httpClient.GetAsync("Users");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error HTTP {response.StatusCode} al obtener usuarios");
+                return new List<User>();
+            }
+            
+            // Deserialize ApiResponse<IEnumerable<UserDto>>
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
+            
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToUser).ToList();
+            }
+            
+            return new List<User>();
         }
-
-        if (roleFilter.HasValue)
+        catch (HttpRequestException ex)
         {
-            query = query.Where(u => u.Role == roleFilter.Value);
+            Console.WriteLine($"Error de red al obtener usuarios: {ex.Message}");
+            return new List<User>();
         }
-
-        if (statusFilter.HasValue)
+        catch (Exception ex)
         {
-            query = query.Where(u => u.Status == statusFilter.Value);
+            Console.WriteLine($"Error inesperado al obtener usuarios: {ex.Message}");
+            return new List<User>();
         }
-
-        return Task.FromResult(query.ToList());
     }
 
-    public Task<User> CreateUserAsync(CreateUserRequest request)
+    /// <summary>
+    /// Get user by ID
+    /// </summary>
+    public async Task<User?> GetUserByIdAsync(int id)
     {
-        var user = new User
+        try
         {
-            Id = _nextId++,
-            Name = request.Name,
-            Department = request.Department,
-            Role = request.Role,
-            Status = UserStatus.Active,
-            Password = request.Password,
-            CreatedAt = DateTime.Now
+            // GET /Users/{id}
+            var response = await _httpClient.GetAsync($"Users/{id}");
+            
+            if (!response.IsSuccessStatusCode)
+                return null;
+            
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
+            
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return MapDtoToUser(apiResponse.Data);
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener usuario {id}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Search user with filters
+    /// NOTE: the actual API has not search endpoint
+    /// </summary>
+    public async Task<List<User>> SearchUsersAsync(string searchTerm, UserRole? roleFilter, UserStatus? statusFilter)
+    {
+        try
+        {
+            // Get users
+            var allUsers = await GetAllUsersAsync();
+            
+            // Filetr in client (because API has not search endpoint)
+            var query = allUsers.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(u =>
+                    u.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    u.Department.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (roleFilter.HasValue)
+            {
+                query = query.Where(u => u.Role == roleFilter.Value);
+            }
+
+            if (statusFilter.HasValue)
+            {
+                query = query.Where(u => u.Status == statusFilter.Value);
+            }
+
+            return query.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en búsqueda: {ex.Message}");
+            return new List<User>();
+        }
+    }
+
+    /// <summary>
+    /// Create a new user
+    /// </summary>
+    public async Task<User?> CreateUserAsync(CreateUserRequest request)
+    {
+        try
+        {
+            // Convert CreateUserRequest to CreateUserRequestDto
+            var dto = new CreateUserRequestDto
+            {
+                Username = GenerateUsername(request.Name), // Generate username from name
+                FullName = request.Name,
+                Password = request.Password,
+                Role = MapRoleToString(request.Role),
+                DepartmentName = request.Department,
+                YearsOfExperience = null,
+                Specialty = null
+            };
+
+            // POST /Users
+            var response = await _httpClient.PostAsJsonAsync("Users", dto);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error al crear usuario: {error}");
+                return null;
+            }
+            
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
+            
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return MapDtoToUser(apiResponse.Data);
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al crear usuario: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Update an existent user
+    /// </summary>
+    public async Task<User?> UpdateUserAsync(UpdateUserRequest request)
+    {
+        try
+        {
+            var dto = new UpdateUserRequestDto
+            {
+                UserId = request.Id,
+                FullName = request.Name,
+                Role = MapRoleToString(request.Role),
+                DepartmentName = request.Department,
+                IsActive = null,
+                YearsOfExperience = null,
+                Specialty = null
+            };
+
+            // PUT /Users/{id}
+            var response = await _httpClient.PutAsJsonAsync($"Users/{request.Id}", dto);
+            
+            if (!response.IsSuccessStatusCode)
+                return null;
+            
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
+            
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return MapDtoToUser(apiResponse.Data);
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al actualizar usuario: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Disable user (la API usa desactivación)
+    /// </summary>
+    public async Task<bool> DeleteUserAsync(int id)
+    {
+        try
+        {
+            // Disable
+            var dto = new
+            {
+                UserId = id,
+                Reason = "Eliminado desde la interfaz de usuario"
+            };
+
+            // POST /Users/{id}/deactivate
+            var response = await _httpClient.PostAsJsonAsync($"Users/{id}/deactivate", dto);
+            
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar usuario: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Enable/Disable user
+    /// </summary>
+    public async Task<bool> ToggleUserStatusAsync(int id)
+    {
+        try
+        {
+            var user = await GetUserByIdAsync(id);
+            if (user == null) return false;
+
+            HttpResponseMessage response;
+            
+            if (user.Status == UserStatus.Active)
+            {
+                var dto = new
+                {
+                    UserId = id,
+                    Reason = "Desactivado manualmente"
+                };
+                response = await _httpClient.PostAsJsonAsync($"Users/{id}/deactivate", dto);
+            }
+            else
+            {
+                response = await _httpClient.PostAsync($"Users/{id}/activate", null);
+            }
+            
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cambiar estado del usuario: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Get users by department
+    /// </summary>
+    public async Task<List<User>> GetUsersByDepartmentAsync(int departmentId)
+    {
+        try
+        {
+            // GET /Users/department/{id}
+            var response = await _httpClient.GetAsync($"Users/department/{departmentId}");
+            
+            if (!response.IsSuccessStatusCode)
+                return new List<User>();
+            
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
+            
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToUser).ToList();
+            }
+            
+            return new List<User>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener usuarios del departamento: {ex.Message}");
+            return new List<User>();
+        }
+    }
+
+    // === Mapping methods ===
+
+    /// <summary>
+    /// Convert UserDto from API a User from UI
+    /// </summary>
+    private User MapDtoToUser(UserDto dto)
+    {
+        return new User
+        {
+            Id = dto.UserId,
+            Name = dto.FullName,
+            Department = dto.DepartmentName,
+            Role = MapStringToRole(dto.Role),
+            Status = dto.IsActive ? UserStatus.Active : UserStatus.Inactive,
+            CreatedAt = dto.CreatedAt
         };
-
-        _users.Add(user);
-        return Task.FromResult(user);
     }
 
-    public Task<User?> UpdateUserAsync(UpdateUserRequest request)
+    /// <summary>
+    /// Convert UserRole (enum) to string for API
+    /// </summary>
+    private string MapRoleToString(UserRole role)
     {
-        var user = _users.FirstOrDefault(u => u.Id == request.Id);
-        if (user == null)
-            return Task.FromResult<User?>(null);
-
-        user.Name = request.Name;
-        user.Department = request.Department;
-        user.Role = request.Role;
-
-        if (!string.IsNullOrWhiteSpace(request.Password))
+        return role switch
         {
-            user.Password = request.Password; // Here goes password management logic
-        }
-
-        return Task.FromResult<User?>(user);
+            UserRole.Administrator => "Administrator",
+            UserRole.Director => "Director",
+            UserRole.SectionManager => "SectionManager",
+            UserRole.Technician => "Technician",
+            UserRole.Logistician => "Logistician",
+            _ => "Technician"
+        };
     }
 
-    public Task<bool> DeleteUserAsync(int id)
+    /// <summary>
+    /// Convert string from API to UserRole (enum)
+    /// </summary>
+    private UserRole MapStringToRole(string role)
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
-        if (user == null)
-            return Task.FromResult(false);
-
-        _users.Remove(user);
-        return Task.FromResult(true);
+        return role switch
+        {
+            "Administrator" => UserRole.Administrator,
+            "Director" => UserRole.Director,
+            "SectionManager" => UserRole.SectionManager,
+            "Technician" => UserRole.Technician,
+            "Logistician" => UserRole.Logistician,
+            _ => UserRole.Technician
+        };
     }
 
-    public Task<bool> ToggleUserStatusAsync(int id)
+    /// <summary>
+    /// Generate a username from full name
+    /// Example: "Elena Morales" → "elena.morales"
+    /// </summary>
+    private string GenerateUsername(string fullName)
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
-        if (user == null)
-            return Task.FromResult(false);
-
-        user.Status = user.Status == UserStatus.Active ? UserStatus.Inactive : UserStatus.Active;
-        return Task.FromResult(true);
+        return fullName.ToLower()
+            .Replace(" ", "_")
+            .Replace("á", "a")
+            .Replace("é", "e")
+            .Replace("í", "i")
+            .Replace("ó", "o")
+            .Replace("ú", "u");
     }
 }

@@ -1,210 +1,576 @@
+using System.Net.Http.Json;
 using InfraGestion.Web.Features.Inventory.Models;
+using InfraGestion.Web.Features.Inventory.DTOs;
+using InfraGestion.Web.Features.Auth.DTOs;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
 public class DeviceService
 {
-    private readonly List<Device> _devices = new()
+    private readonly HttpClient _httpClient;
+
+    public DeviceService(HttpClient httpClient)
     {
-        new Device
+        _httpClient = httpClient;
+    }
+
+    // GET ENDPOINTS
+
+    /// <summary>
+    /// Gets all devices with optional filters
+    /// GET /inventory?userId={userId}&filter.xxx=yyy
+    /// </summary>
+    public async Task<List<Device>> GetAllDevicesAsync(int userId = 1, DeviceFilterDto? filter = null)
+    {
+        try
         {
-            Id = 1,
-            Name = "Router de Agregación ASR 9000",
-            Type = DeviceType.ConnectivityAndNetwork,
-            State = OperationalState.UnderMaintenance,
-            Location = "Mantenimiento Correctivo y Urgencias"
-        },
-        new Device
-        {
-            Id = 2,
-            Name = "Servidor de Virtualización HP DL380",
-            Type = DeviceType.ComputingAndIT,
-            State = OperationalState.Operational,
-            Location = "Recepción y Diagnóstico Técnico"
-        },
-        new Device
-        {
-            Id = 3,
-            Name = "Firewall de Próxima Generación PA-5200",
-            Type = DeviceType.ConnectivityAndNetwork,
-            State = OperationalState.Operational,
-            Location = "Análisis Forense y Respuesta a Incidentes"
-        },
-        new Device
-        {
-            Id = 4,
-            Name = "Sistema UPS Eaton 20kVA",
-            Type = DeviceType.ElectricalInfrastructureAndSupport,
-            State = OperationalState.Decommissioned,
-            Location = "Análisis Forense y Respuesta a Incidentes"
-        },
-        new Device
-        {
-            Id = 5,
-            Name = "Analizador de Espectro Viavi",
-            Type = DeviceType.DiagnosticAndMeasurement,
-            State = OperationalState.BeingTransferred,
-            Location = "Plataforma como Servicio"
+
+            var queryParams = new List<string> { $"userId={userId}" };
+
+            if (filter != null)
+            {
+                if (!string.IsNullOrEmpty(filter.SearchTerm))
+                    queryParams.Add($"filter.SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
+                //Console.WriteLine("🔵 Fetching devices from API...");
+                if (filter.DeviceType.HasValue)
+                    queryParams.Add($"filter.DeviceType={filter.DeviceType.Value}");
+
+                if (filter.OperationalState.HasValue)
+                    queryParams.Add($"filter.OperationalState={filter.OperationalState.Value}");
+
+                if (!string.IsNullOrEmpty(filter.DepartmentName))
+                    queryParams.Add($"filter.DepartmentName={Uri.EscapeDataString(filter.DepartmentName)}");
+
+                if (filter.DepartmentId.HasValue)
+                    queryParams.Add($"filter.DepartmentId={filter.DepartmentId.Value}");
+            }
+
+            var url = $"inventory?{string.Join("&", queryParams)}";
+
+            var response = await _httpClient.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<Device>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToDevice).ToList();
+            }
+
+            return new List<Device>();
         }
-    };
-
-    private int _nextId = 6;
-
-    public Task<List<Device>> GetAllDevicesAsync()
-    {
-        return Task.FromResult(_devices.ToList());
-    }
-
-    public Task<Device?> GetDeviceByIdAsync(int id)
-    {
-        var device = _devices.FirstOrDefault(d => d.Id == id);
-        return Task.FromResult(device);
-    }
-
-    public Task<Device> CreateDeviceAsync(CreateDeviceRequest request)
-    {
-        var newDevice = new Device
+        catch (Exception ex)
         {
-            Id = _nextId++,
-            Name = request.Name,
-            Type = request.Type,
-            State = OperationalState.UnderMaintenance, // Nuevo dispositivo va a defectación inicial
-            Location = "Recepción y Diagnóstico Técnico" // Ubicación inicial
+            return new List<Device>();
+        }
+    }
+
+    /// <summary>
+    /// Gets device by ID (for edit modal)
+    /// Uses GetDeviceDetailsAsync internally
+    /// </summary>
+    public async Task<Device?> GetDeviceByIdAsync(int id)
+    {
+        try
+        {
+            var details = await GetDeviceDetailsAsync(id);
+
+            if (details != null)
+            {
+                return new Device
+                {
+                    Id = details.Id,
+                    Name = details.Name,
+                    Type = details.Type,
+                    State = details.State,
+                    Location = details.Department,
+                    AcquisitionDate = details.PurchaseDate
+                };
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets detailed device information
+    /// GET /inventory/{id}
+    /// </summary>
+    public async Task<DeviceDetails?> GetDeviceDetailsAsync(int id)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"inventory/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<DeviceDetailDto>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return MapDetailDtoToDeviceDetails(apiResponse.Data);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets all company devices
+    /// GET /inventory/company/devices
+    /// </summary>
+    public async Task<List<Device>> GetCompanyDevicesAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("inventory/company/devices");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<Device>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToDevice).ToList();
+            }
+
+            return new List<Device>();
+        }
+        catch (Exception ex)
+        {
+            return new List<Device>();
+        }
+    }
+
+    /// <summary>
+    /// Gets devices from a specific section
+    /// GET /inventory/sections/{sectionId}
+    /// </summary>
+    public async Task<List<Device>> GetSectionDevicesAsync(int sectionId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"inventory/sections/{sectionId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<Device>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToDevice).ToList();
+            }
+
+            return new List<Device>();
+        }
+        catch (Exception ex)
+        {
+            return new List<Device>();
+        }
+    }
+
+    /// <summary>
+    /// Gets devices from authenticated user's section
+    /// GET /inventory/ownedSection
+    /// Requires JWT token
+    /// </summary>
+    public async Task<List<Device>> GetOwnSectionDevicesAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("inventory/ownedSection");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<Device>();
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToDevice).ToList();
+            }
+
+            return new List<Device>();
+        }
+        catch (Exception ex)
+        {
+            return new List<Device>();
+        }
+    }
+
+    /// <summary>
+    /// Searches devices with filters
+    /// Uses GetAllDevicesAsync internally
+    /// </summary>
+    public async Task<List<Device>> SearchDevicesAsync(
+        string searchTerm = "",
+        DeviceType? type = null,
+        OperationalState? state = null,
+        string location = "")
+    {
+        var filter = new DeviceFilterDto
+        {
+            SearchTerm = searchTerm,
+            DeviceType = type,
+            OperationalState = state,
+            DepartmentName = location
         };
 
-        _devices.Add(newDevice);
-        return Task.FromResult(newDevice);
+        return await GetAllDevicesAsync(1, filter);
     }
 
-    public Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
+    // POST ENDPOINTS
+
+    /// <summary>
+    /// Creates a new device
+    /// POST /inventory
+    /// </summary>
+    public async Task<Device?> CreateDeviceAsync(CreateDeviceRequest request)
     {
-        var device = _devices.FirstOrDefault(d => d.Id == request.Id);
-        if (device == null) return Task.FromResult<Device?>(null);
+        try
+        {
+            var dto = new InsertDeviceRequestDto
+            {
+                Name = request.Name,
+                DeviceType = request.Type,
+                AcquisitionDate = request.PurchaseDate
+            };
 
-        device.Name = request.Name;
-        device.Type = request.Type;
-        device.State = request.State;
-        device.Location = request.Location;
+            var response = await _httpClient.PostAsJsonAsync("inventory", dto);
 
-        return Task.FromResult<Device?>(device);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string?>>();
+
+            if (apiResponse?.Success == true)
+            {
+                // Return local representation (API doesn't return created device)
+                return new Device
+                {
+                    Id = 0,
+                    Name = request.Name,
+                    Type = request.Type,
+                    State = OperationalState.Operational,
+                    Location = "Pending"
+                };
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
     }
 
-    public Task<bool> DeleteDeviceAsync(int id)
+    /// <summary>
+    /// Rejects a device
+    /// POST /inventory/rejections
+    /// </summary>
+    public async Task<bool> RejectDeviceAsync(int deviceId, int technicianId, string reason)
     {
-        var device = _devices.FirstOrDefault(d => d.Id == id);
-        if (device == null) return Task.FromResult(false);
+        try
+        {
+            var dto = new RejectDeviceRequestDto
+            {
+                DeviceID = deviceId,
+                TechnicianID = technicianId,
+                Reason = reason
+            };
 
-        _devices.Remove(device);
-        return Task.FromResult(true);
+            var response = await _httpClient.PostAsJsonAsync("inventory/rejections", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 
-    public Task<List<Device>> SearchDevicesAsync(
-        string searchTerm,
-        DeviceType? type,
-        OperationalState? state,
-        string location)
+    /// <summary>
+    /// Approves a device
+    /// POST /inventory/approbals
+    /// </summary>
+    public async Task<bool> ApproveDeviceAsync(int deviceId, int technicianId)
     {
-        var query = _devices.AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        try
         {
-            query = query.Where(d =>
-                d.Id.ToString().Contains(searchTerm) ||
-                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                d.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
-        }
+            var dto = new AcceptDeviceRequestDto
+            {
+                DeviceId = deviceId,
+                TechnicianId = technicianId
+            };
 
-        if (type.HasValue)
+            var response = await _httpClient.PostAsJsonAsync("inventory/approbals", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
         {
-            query = query.Where(d => d.Type == type.Value);
+            return false;
         }
-
-        if (state.HasValue)
-        {
-            query = query.Where(d => d.State == state.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(location))
-        {
-            query = query.Where(d => d.Location == location);
-        }
-
-        return Task.FromResult(query.ToList());
     }
 
-    public Task<Dictionary<string, int>> GetStatisticsAsync()
+    /// <summary>
+    /// Assigns device for inspection
+    /// POST /inventory/reviews
+    /// </summary>
+    public async Task<bool> AssignDeviceForReviewAsync(AssignDeviceForInspectionRequestDto request)
     {
-        var stats = new Dictionary<string, int>
+        try
         {
-            ["Total"] = _devices.Count,
-            ["Operational"] = _devices.Count(d => d.State == OperationalState.Operational),
-            ["UnderMaintenance"] = _devices.Count(d => d.State == OperationalState.UnderMaintenance),
-            ["Decommissioned"] = _devices.Count(d => d.State == OperationalState.Decommissioned)
+            var response = await _httpClient.PostAsJsonAsync("inventory/reviews", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
+
+    // PUT ENDPOINTS
+
+    /// <summary>
+    /// Updates an existing device
+    /// PUT /inventory
+    /// </summary>
+    public async Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
+    {
+        try
+        {
+            var dto = new UpdateDeviceRequestDto
+            {
+                DeviceId = request.Id,
+                Name = request.Name,
+                DeviceType = request.Type,
+                OperationalState = request.State,
+                DepartmentName = request.Location,
+                Date = request.PurchaseDate
+            };
+
+            var response = await _httpClient.PutAsJsonAsync("inventory", dto);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string?>>();
+
+            if (apiResponse?.Success == true)
+            {
+                return new Device
+                {
+                    Id = request.Id,
+                    Name = request.Name,
+                    Type = request.Type,
+                    State = request.State,
+                    Location = request.Location
+                };
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+
+    // DELETE - NOT AVAILABLE
+
+    /// <summary>
+    /// Deletes a device
+    /// ⚠️ WARNING: DELETE endpoint does NOT exist in API
+    /// Use RejectDeviceAsync instead
+    /// </summary>
+    public async Task<bool> DeleteDeviceAsync(int id)
+    {
+        try
+        {
+            Console.WriteLine($"🔵 Deleting device {id}...");
+
+            var response = await _httpClient.DeleteAsync($"inventory/{id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return false;
+            }
+
+            // Try to parse API response
+            try
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string?>>();
+
+                if (apiResponse?.Success == true)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception)
+            {
+                // If response doesn't contain JSON (e.g., 204 No Content)
+                // Consider it successful
+                return true;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
+
+    // STATISTICS (for UI cards)
+
+    /// <summary>
+    /// Gets device statistics
+    /// Calculates from GetAllDevicesAsync
+    /// </summary>
+    public async Task<Dictionary<string, int>> GetStatisticsAsync()
+    {
+        var devices = await GetAllDevicesAsync();
+
+        return new Dictionary<string, int>
+        {
+            ["Total"] = devices.Count,
+            ["Operational"] = devices.Count(d => d.State == OperationalState.Operational),
+            ["UnderMaintenance"] = devices.Count(d => d.State == OperationalState.UnderMaintenance),
+            ["Decommissioned"] = devices.Count(d => d.State == OperationalState.Decommissioned),
+            ["BeingTransferred"] = devices.Count(d => d.State == OperationalState.BeingTransferred)
         };
-
-        return Task.FromResult(stats);
     }
 
-    public Task<DeviceDetails?> GetDeviceDetailsAsync(int id)
+    // MAPPERS
+
+    private Device MapDtoToDevice(DeviceDto dto)
     {
-        var device = _devices.FirstOrDefault(d => d.Id == id);
-        if (device == null) return Task.FromResult<DeviceDetails?>(null);
-
-        // Simular detalles extendidos (en producción vendría de la base de datos)
-        var details = new DeviceDetails
+        return new Device
         {
-            Id = device.Id,
-            Name = device.Name,
-            IdentificationNumber = $"DEV{device.Id:D3}",
-            Type = device.Type,
-            State = device.State,
-            PurchaseDate = DateTime.Now.AddMonths(-14), // Simulado
-            MaintenanceCount = 2,
-            TotalMaintenanceCost = 144.90m,
-            LastMaintenanceDate = new DateTime(2025, 7, 1),
-            Section = "Taller Central y Logística",
-            Department = device.Location,
-            SectionManager = "Alejandro Torres",
-            MaintenanceHistory = new List<MaintenanceRecord>
-        {
-            new MaintenanceRecord
-            {
-                Date = new DateTime(2025, 7, 1),
-                Type = "Preventivo",
-                Technician = "Carlos Ruiz",
-                Notes = "Limpieza de ventiladores y componentes",
-                Cost = 24.00m
-            },
-            new MaintenanceRecord
-            {
-                Date = new DateTime(2024, 1, 5),
-                Type = "Predictivo",
-                Technician = "Ana López",
-                Notes = "Actualización de firmware a v2.5.1 sin incidentes",
-                Cost = 120.90m
-            }
-        },
-            TransferHistory = new List<TransferRecord>
-        {
-            new TransferRecord
-            {
-                Date = new DateTime(2023, 12, 20),
-                Origin = "Gestión de Activos y Red Local",
-                Destination = "Recepción y Diagnóstico Técnico",
-                Responsible = "Alejandro Torres",
-                Receiver = "Juan Pérez"
-            }
-        },
-            InitialDefect = new InitialDefect
-            {
-                SubmissionDate = new DateTime(2023, 11, 10),
-                Requester = "Ana García",
-                Technician = "Carlos Ruiz",
-                Status = "Aprobado",
-                ResponseDate = new DateTime(2023, 11, 11)
-            }
+            Id = dto.DeviceId,
+            Name = dto.Name,
+            Type = dto.DeviceType,
+            State = dto.OperationalState,
+            Location = dto.DepartmentName
         };
+    }
 
-        return Task.FromResult<DeviceDetails?>(details);
+    private DeviceDetails MapDetailDtoToDeviceDetails(DeviceDetailDto dto)
+    {
+        return new DeviceDetails
+        {
+            Id = dto.DeviceId,
+            Name = dto.Name,
+            IdentificationNumber = $"DEV{dto.DeviceId:D3}",
+            Type = dto.DeviceType,
+            State = dto.OperationalState,
+            PurchaseDate = dto.AcquisitionDate,
+            Department = dto.DepartmentName,
+            Section = dto.SectionName ?? "N/A",
+            SectionManager = dto.SectionManager ?? "N/A",
+            MaintenanceCount = dto.MaintenanceCount ?? 0,
+            TotalMaintenanceCost = dto.TotalMaintenanceCost ?? 0m,
+            LastMaintenanceDate = dto.LastMaintenanceDate,
+            MaintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory),
+            TransferHistory = MapTransferHistory(dto.TransferHistory),
+            InitialDefect = MapInitialDefect(dto.InitialDefect)
+        };
+    }
+
+    private List<MaintenanceRecord> MapMaintenanceHistory(List<MaintenanceRecordDto>? dtos)
+    {
+        if (dtos == null || !dtos.Any())
+            return new List<MaintenanceRecord>();
+
+        return dtos.Select(dto => new MaintenanceRecord
+        {
+            Date = dto.Date,
+            Type = dto.Type,
+            Technician = dto.Technician,
+            Notes = dto.Notes,
+            Cost = dto.Cost
+        }).ToList();
+    }
+
+    private List<TransferRecord> MapTransferHistory(List<TransferRecordDto>? dtos)
+    {
+        if (dtos == null || !dtos.Any())
+            return new List<TransferRecord>();
+
+        return dtos.Select(dto => new TransferRecord
+        {
+            Date = dto.Date,
+            Origin = dto.Origin,
+            Destination = dto.Destination,
+            Manager = dto.ResponsiblePerson,
+            Receiver = dto.Receiver
+        }).ToList();
+    }
+
+    private InitialDefect? MapInitialDefect(InitialDefectDto? dto)
+    {
+        if (dto == null)
+            return null;
+
+        return new InitialDefect
+        {
+            SubmissionDate = dto.IssueDate,
+            Requester = dto.Requester,
+            Technician = dto.Technician,
+            Status = dto.Status,
+            ResponseDate = dto.ResponseDate
+        };
     }
 }

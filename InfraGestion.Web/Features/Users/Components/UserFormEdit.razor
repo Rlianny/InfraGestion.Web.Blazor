@@ -1,5 +1,7 @@
 @using InfraGestion.Web.Features.Users.Models
+@using InfraGestion.Web.Features.Departments.Services
 @using System.ComponentModel.DataAnnotations
+@inject DepartmentService DepartmentService
 
 <EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -30,14 +32,29 @@
 
         <div class="form-group">
             <label for="department" class="form-label">Departamento*</label>
-            <select id="department" class="form-input" @bind="FormModel.Department">
-                <option value="">Seleccione un departamento</option>
-                <option value="Análisis Forense y Respuesta a Incidentes">Análisis Forense y Respuesta a Incidentes</option>
-                <option value="Almacenamiento y Backup">Almacenamiento y Backup</option>
-                <option value="Infraestructura como Servicio">Infraestructura como Servicio</option>
-                <option value="Soporte a Nodos Remotos">Soporte a Nodos Remotos</option>
-                <option value="Reparación y Refabricación">Reparación y Refabricación</option>
-            </select>
+            @if (isLoadingDepartments)
+            {
+                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                    <span>Cargando departamentos...</span>
+                </div>
+            }
+            else if (availableDepartments.Any())
+            {
+                <select id="department" class="form-input" @bind="FormModel.Department">
+                    @foreach (var dept in availableDepartments)
+                    {
+                        <option value="@dept">@dept</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="text" 
+                       id="department" 
+                       class="form-input" 
+                       @bind="FormModel.Department" 
+                       placeholder="Escriba el nombre del departamento" />
+            }
             <ValidationMessage For="@(() => FormModel.Department)" class="validation-message" />
         </div>
     </div>
@@ -74,6 +91,21 @@
 
     [Parameter]
     public EventCallback OnCancel { get; set; }
+
+    private List<string> availableDepartments = new();
+    private bool isLoadingDepartments = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartments();
+    }
+
+    private async Task LoadDepartments()
+    {
+        isLoadingDepartments = true;
+        availableDepartments = await DepartmentService.GetAllDepartmentNamesAsync();
+        isLoadingDepartments = false;
+    }
 
     private async Task HandleValidSubmit()
     {
