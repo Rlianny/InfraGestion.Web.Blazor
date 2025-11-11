@@ -2,8 +2,8 @@
 > Facultad de Matemática y Computación - Universidad de La Habana.
 > Curso 2025
 ![Have you delete the image?](.//MockupSlides/banner.png)
->
-> # InfraGestion - Infrastructure Management System
+
+# InfraGestion - Infrastructure Management System
 
 <div align="center">
 
