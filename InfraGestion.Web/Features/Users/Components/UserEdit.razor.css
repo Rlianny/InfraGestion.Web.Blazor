@@ -1,7 +1,7 @@
 .form-container {
     background: white;
     border-radius: 12px;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     padding: 2rem;
     max-width: 800px;
     margin: 0 auto;
@@ -20,7 +20,7 @@
 .loading-container p,
 .error-container p {
     margin-top: 1rem;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
     font-size: 14px;
 }
 
@@ -30,18 +30,18 @@
     gap: 8px;
     padding: 10px 20px;
     background: white;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .btn-back:hover {
-    background: rgb(248, 250, 252);
-    border-color: rgb(9, 93, 208);
+    background: var(--color-bg-main);
+    border-color: var(--color-primary);
 }
 
 .btn-back .btn-icon {
@@ -52,8 +52,8 @@
 .spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgb(229, 234, 241);
-    border-top-color: rgb(9, 93, 208);
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }

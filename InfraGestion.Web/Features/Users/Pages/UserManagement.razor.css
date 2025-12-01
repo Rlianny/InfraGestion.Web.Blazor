@@ -7,7 +7,7 @@
 /* Header */
 .page-header-wrapper {
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgb(229, 234, 241);
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 2rem;
 }
 
@@ -35,7 +35,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: rgb(9, 93, 208);
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 8px;
@@ -47,7 +47,7 @@
 }
 
 .btn-add-user:hover {
-    background: rgb(9,93,208);
+    background: var(--color-primary);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(9, 93, 208, 0.3);
 }
@@ -87,21 +87,21 @@
 .search-input {
     width: 100%;
     padding: 10px 16px 10px 44px;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 14px;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     transition: all 0.2s ease;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: rgb(9, 93, 208);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(53, 65, 85, 0.1);
 }
 
 .search-input::placeholder {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-light);
 }
 
 .filter-group {
@@ -112,10 +112,10 @@
 
 .filter-select {
     padding: 10px 16px;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 14px;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     background: white;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -124,7 +124,7 @@
 
 .filter-select:focus {
     outline: none;
-    border-color: rgb(9, 93, 208);
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(53, 65, 85, 0.1);
 }
 
@@ -133,19 +133,19 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: rgb(229, 234, 241);
-    border: 1px solid rgb(229, 234, 241);
+    background: var(--color-border);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .btn-export:hover {
-    background: rgb(248, 250, 252);
-    border-color: rgb(9, 93, 208);
+    background: var(--color-bg-main);
+    border-color: var(--color-primary);
 }
 
 .btn-export .btn-icon {
@@ -157,7 +157,7 @@
 .table-container {
     background: white;
     border-radius: 12px;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     overflow: hidden;
 }
 
@@ -167,8 +167,8 @@
 }
 
 .users-table thead {
-    background: rgb(248, 250, 252);
-    border-bottom: 1px solid rgb(229, 234, 241);
+    background: var(--color-bg-main);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .users-table th {
@@ -176,7 +176,7 @@
     text-align: left;
     font-size: 13px;
     font-weight: bold;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -208,7 +208,7 @@
     display: block;
     white-space: pre-line;
     line-height: 1.5;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
 }
 
 /* Role Badges */
@@ -353,7 +353,7 @@
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background-color: rgb(9,93,208);
+    background-color: var(--color-primary);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -365,7 +365,7 @@
 .empty-cell {
     text-align: center;
     padding: 3rem 2rem !important;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
 }
 
 .loading-cell {
@@ -378,8 +378,8 @@
 .spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgb(229, 234, 241);
-    border-top-color: rgb(9, 93, 208);
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }

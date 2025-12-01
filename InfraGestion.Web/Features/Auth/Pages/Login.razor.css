@@ -6,7 +6,7 @@
 }
 
 .login-card {
-    background: #ffffff;
+    background: var(--color-bg-white);
     border-radius: 16px;
     padding: 48px 40px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -26,14 +26,14 @@
 .login-title {
     font-size: 28px;
     font-weight: 700;
-    color: rgb(9, 93, 208);
+    color: var(--color-primary);
     margin: 0 0 8px 0;
     line-height: 1.2;
 }
 
 .login-subtitle {
     font-size: 15px;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
     margin: 0;
     line-height: 1.5;
 }

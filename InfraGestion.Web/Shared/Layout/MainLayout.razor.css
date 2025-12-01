@@ -5,7 +5,7 @@
 }
 
 main {
-    background-color: rgb(248, 250, 252);
+    background-color: var(--color-bg-main);
     flex: 1;
 }
 
@@ -14,8 +14,8 @@ main {
 }
 
 .top-row {
-    background-color: #ffffff;
-    border-bottom: 1px solid rgb(229, 234, 241);
+    background-color: var(--color-bg-white);
+    border-bottom: 1px solid var(--color-border);
     justify-content: flex-end;
     height: 5rem;
     display: flex;
@@ -54,13 +54,13 @@ main {
 .user-name {
     font-size: 1.2rem;
     font-weight: bold;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     line-height: 1.2;
 }
 
 .user-role {
     font-size: 1rem;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     line-height: 1.2;
 }
 

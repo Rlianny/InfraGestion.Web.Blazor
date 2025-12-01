@@ -1,6 +1,6 @@
 .nav-scrollable {
     background-color: white;
-    border-right: 1px solid rgb(229, 234, 241);
+    border-right: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
 }
@@ -47,7 +47,7 @@
 }
 
 .nav-item ::deep a {
-    color: rgb(53, 65, 85); /*Font color*/
+    color: var(--color-text-primary); /*Font color*/
     border-radius: 4px;
     height: 3rem;
     display: flex;
@@ -64,12 +64,12 @@
 }
 .nav-item ::deep a.active {
     background-color: rgb(231, 242, 253); /* Light blue bg for active button */
-    color: rgb(9, 93, 208);
+    color: var(--color-primary);
 }
 
 .nav-item ::deep a:hover {
     background-color: rgb(245, 248, 252); 
-    color: rgb(9, 93, 208); 
+    color: var(--color-primary); 
 }
 
 /* Spacer for bring logout and setting bottom*/
@@ -80,7 +80,7 @@
 
 /* style for logout button*/
 .logout-button {
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     background: transparent;
     border: none;
     cursor: pointer;

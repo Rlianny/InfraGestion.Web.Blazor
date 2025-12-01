@@ -157,13 +157,6 @@
                                             d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
                                     </svg>
                                 </button>
-                                <button class="btn-action btn-delete" @onclick="() => HandleDelete(device.Id)" title="Eliminar">
-                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM112,168a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm0-120H96V40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8Z" />
-                                    </svg>
-                                </button>
                                 <button class="btn-action btn-view" @onclick="() => NavigateToDetails(device.Id)"
                                     title="Ver detalles">
                                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
@@ -194,7 +187,13 @@
 @code {
     private List<Device> allDevices = new();
     private List<Device> filteredDevices = new();
-    private Dictionary<string, int> statistics = new();
+    private Dictionary<string, int> statistics = new()
+    {
+        { "Total", 0 },
+        { "Operational", 0 },
+        { "UnderMaintenance", 0 },
+        { "Decommissioned", 0 }
+    };
     private bool isLoading = true;
 
     private string searchTerm = string.Empty;
@@ -239,21 +238,53 @@
 
     private async Task HandleSearch()
     {
-        await ApplyFilters();
+        ApplyLocalFilters();
     }
 
     private async Task HandleFilterChange()
     {
-        await ApplyFilters();
+        ApplyLocalFilters();
+    }
+
+    private void ApplyLocalFilters()
+    {
+        var query = allDevices.AsEnumerable();
+
+        // Filtrar por término de búsqueda
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(d =>
+                d.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Filtrar por tipo
+        if (!string.IsNullOrEmpty(selectedType))
+        {
+            var typeFilter = Enum.Parse<DeviceType>(selectedType);
+            query = query.Where(d => d.Type == typeFilter);
+        }
+
+        // Filtrar por estado
+        if (!string.IsNullOrEmpty(selectedState))
+        {
+            var stateFilter = Enum.Parse<OperationalState>(selectedState);
+            query = query.Where(d => d.State == stateFilter);
+        }
+
+        // Filtrar por ubicación
+        if (!string.IsNullOrEmpty(selectedLocation))
+        {
+            query = query.Where(d => d.Location.Equals(selectedLocation, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredDevices = query.ToList();
     }
 
     private async Task ApplyFilters()
     {
-        DeviceType? typeFilter = string.IsNullOrEmpty(selectedType) ? null : Enum.Parse<DeviceType>(selectedType);
-        OperationalState? stateFilter = string.IsNullOrEmpty(selectedState) ? null :
-        Enum.Parse<OperationalState>(selectedState);
-
-        filteredDevices = await DeviceService.SearchDevicesAsync(searchTerm, typeFilter, stateFilter, selectedLocation);
+        ApplyLocalFilters();
     }
 
     private void OpenCreateModal()
@@ -308,28 +339,6 @@
         await LoadStatistics();
         await ApplyFilters();
         CloseEditModal();
-    }
-
-    private async Task HandleDelete(int deviceId)
-    {
-
-        try
-        {
-            var success = await DeviceService.DeleteDeviceAsync(deviceId);
-
-            if (success)
-            {
-                Console.WriteLine("Device deleted successfully!");
-
-                await LoadDevices();
-                await LoadStatistics();
-                await ApplyFilters();
-            }
-        }
-        catch (Exception ex)
-        {
-
-        }
     }
 
     private void NavigateToDetails(int deviceId)

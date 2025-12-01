@@ -1,13 +1,13 @@
 .demo-section {
     margin-top: 32px;
     padding-top: 24px;
-    border-top: 1px solid #e5eaf1;
+    border-top: 1px solid var(--color-border);
 }
 
 .demo-title {
     text-align: center;
     font-size: 14px;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     margin-bottom: 20px;
     font-weight: 500;
 }
@@ -46,20 +46,20 @@
     justify-content: center;  
     gap: 10px;  
     padding: 12px 14px;
-    background: rgb(248,250,252);
-    border: 1.5px solid rgb(229,234,241); 
+    background: var(--color-bg-main);
+    border: 1.5px solid var(--color-border); 
     border-radius: 8px;
     cursor: pointer;
     transition: all 200ms ease-in-out;
     font-size: 13px;
-    color: rgb(53,65,85);
+    color: var(--color-text-primary);
     font-weight: 500;
     text-align: center;  
 }
 
 .demo-button:not(:disabled):hover {
     background: #f9fafb;
-    border-color: rgb(9, 93, 208);
+    border-color: var(--color-primary);
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

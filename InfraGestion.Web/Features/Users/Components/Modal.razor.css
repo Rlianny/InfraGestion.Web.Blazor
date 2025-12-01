@@ -53,7 +53,7 @@
 .modal-title {
     font-size: 20px;
     font-weight: bold;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     margin: 0;
 }
 
@@ -67,13 +67,13 @@
     background: transparent;
     border-radius: 6px;
     cursor: pointer;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
     transition: all 0.2s ease;
 }
 
 .modal-close:hover {
-    background: rgb(243, 244, 246);
-    color: rgb(53, 65, 85);
+    background: var(--color-bg-gray);
+    color: var(--color-text-primary);
 }
 
 .modal-close svg {

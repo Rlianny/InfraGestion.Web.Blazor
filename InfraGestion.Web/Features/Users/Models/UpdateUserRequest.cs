@@ -17,4 +17,9 @@ public class UpdateUserRequest
 
     [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener entre 6 y 100 caracteres")]
     public string? Password { get; set; }
+
+    [Range(0, 50, ErrorMessage = "Los años de experiencia deben estar entre 0 y 50")]
+    public int? YearsOfExperience { get; set; }
+
+    public string? Specialty { get; set; }
 }

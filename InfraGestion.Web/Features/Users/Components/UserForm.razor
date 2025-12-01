@@ -70,6 +70,29 @@
         <ValidationMessage For="@(() => FormModel.Password)" class="validation-message" />
     </div>
 
+    <div class="form-row">
+        <div class="form-group">
+            <label for="yearsOfExperience" class="form-label">Años de experiencia</label>
+            <input type="number" 
+                   id="yearsOfExperience" 
+                   class="form-input" 
+                   @bind="FormModel.YearsOfExperience" 
+                   placeholder="Ej: 5"
+                   min="0"
+                   max="50" />
+            <ValidationMessage For="@(() => FormModel.YearsOfExperience)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="specialty" class="form-label">Especialidad</label>
+            <input type="text" 
+                   id="specialty" 
+                   class="form-input" 
+                   @bind="FormModel.Specialty" 
+                   placeholder="Ej: Redes, Servidores, etc." />
+        </div>
+    </div>
+
     <div class="form-actions">
         <button type="button" class="btn-cancel" @onclick="OnCancel">
             Cancelar

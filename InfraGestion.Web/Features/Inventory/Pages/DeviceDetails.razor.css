@@ -12,8 +12,8 @@
 .spinner {
     width: 48px;
     height: 48px;
-    border: 4px solid rgb(229, 234, 241);
-    border-top-color: rgb(9, 93, 208);
+    border: 4px solid var(--color-border);
+    border-top-color: var(--color-primary);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin-bottom: 1rem;
@@ -25,7 +25,7 @@
 
 .loading-container p,
 .error-container p {
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
     font-size: 14px;
     margin: 0;
 }
@@ -33,7 +33,7 @@
 .btn-back {
     margin-top: 1rem;
     padding: 10px 20px;
-    background: rgb(9, 93, 208);
+    background: var(--color-primary);
     color: white;
     border: none;
     border-radius: 8px;
@@ -44,7 +44,7 @@
 }
 
 .btn-back:hover {
-    background: rgb(7, 75, 170);
+    background: var(--color-primary-hover);
     transform: translateY(-1px);
 }
 
@@ -57,7 +57,7 @@
 /* Header */
 .details-header {
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgb(229, 234, 241);
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 2rem;
 }
 
@@ -71,7 +71,7 @@
 .device-title {
     font-size: 28px;
     font-weight: 700;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     margin: 0;
 }
 
@@ -105,7 +105,7 @@
 }
 
 .page-description {
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     font-size: 14px;
     margin: 0 0 1rem 0;
 }
@@ -121,31 +121,31 @@
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    background: rgb(229, 234, 241);
-    color: rgb(53, 65, 85);
+    background: var(--color-border);
+    color: var(--color-text-primary);
 }
 
 .btn-export:hover,
 .btn-edit:hover {
-    background: rgb(248, 250, 252);
-    border-color: rgb(9, 93, 208);
+    background: var(--color-bg-main);
+    border-color: var(--color-primary);
 }
 
 .btn-edit {
-    background: rgb(9, 93, 208);
+    background: var(--color-primary);
     color: white;
-    border-color: rgb(9, 93, 208);
+    border-color: var(--color-primary);
 }
 
 .btn-edit:hover {
-    background: rgb(7, 75, 170);
-    border-color: rgb(7, 75, 170);
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
 }
 
 .btn-icon {
@@ -173,7 +173,7 @@
 .details-card,
 .location-card {
     background: white;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 1.5rem;
 }
@@ -181,10 +181,10 @@
 .card-title {
     font-size: 18px;
     font-weight: 700;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     margin: 0 0 1.25rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgb(229, 234, 241);
+    border-bottom: 1px solid var(--color-border);
 }
 
 /* Details Grid */
@@ -203,17 +203,17 @@
 .detail-label {
     font-size: 13px;
     font-weight: 500;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
 }
 
 .detail-value {
     font-size: 15px;
     font-weight: 600;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
 }
 
 .detail-value.device-id {
-    color: rgb(9, 93, 208);
+    color: var(--color-primary);
 }
 
 /* Location Info */
@@ -232,13 +232,13 @@
 .location-label {
     font-size: 13px;
     font-weight: 500;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
 }
 
 .location-value {
     font-size: 15px;
     font-weight: 600;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
 }
 
 /* History Sections */
@@ -249,13 +249,13 @@
 .section-title {
     font-size: 20px;
     font-weight: 700;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     margin: 0 0 1rem 0;
 }
 
 .table-container {
     background: white;
-    border: 1px solid rgb(229, 234, 241);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -266,8 +266,8 @@
 }
 
 .history-table thead {
-    background: rgb(248, 250, 252);
-    border-bottom: 1px solid rgb(229, 234, 241);
+    background: var(--color-bg-main);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .history-table th {
@@ -275,7 +275,7 @@
     text-align: left;
     font-size: 13px;
     font-weight: bold;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -296,14 +296,14 @@
 .history-table td {
     padding: 16px 20px;
     font-size: 14px;
-    color: rgb(53, 65, 85);
+    color: var(--color-text-primary);
 }
 
 /* Empty State */
 .empty-cell {
     text-align: center;
     padding: 3rem 2rem !important;
-    color: rgb(107, 114, 128);
+    color: var(--color-text-secondary);
     font-size: 14px;
 }
 
