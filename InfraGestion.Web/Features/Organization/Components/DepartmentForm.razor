@@ -1,0 +1,59 @@
+@using InfraGestion.Web.Features.Organization.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Conmutación y Enrutamiento Avanzado" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="section" class="form-label">Sección*</label>
+        <select id="section" class="form-input" @bind="FormModel.SectionId">
+            <option value="0">Seleccione una sección</option>
+            @foreach (var sec in Sections)
+            {
+                <option value="@sec.Id">@sec.Name</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.SectionId)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M224,128a8,8,0,0,1-8,8H128v88a8,8,0,0,1-16,0V136H24a8,8,0,0,1,0-16h88V32a8,8,0,0,1,16,0v88h88A8,8,0,0,1,224,128Z"/>
+            </svg>
+            Crear Departamento
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public CreateDepartmentRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public List<(int Id, string Name)> Sections { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<CreateDepartmentRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}

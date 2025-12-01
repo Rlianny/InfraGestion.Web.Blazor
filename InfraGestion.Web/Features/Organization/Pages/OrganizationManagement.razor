@@ -1,0 +1,497 @@
+@page "/organization"
+@using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Organization.Helpers
+@using InfraGestion.Web.Features.Organization.Components
+@inject OrganizationService OrganizationService
+@inject NavigationManager Navigation
+
+<PageTitle>Gestión Organizacional - InfraCom</PageTitle>
+
+<div class="organization-page">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Gestión Organizacional</h1>
+                <p class="page-description">Administración de secciones y departamentos de la empresa</p>
+            </div>
+            <div class="header-actions">
+                @if (currentView == ViewType.Sections)
+                {
+                    <button class="btn-toggle-view" @onclick="SwitchToDepartmentsView">
+                        Ver Departamentos
+                    </button>
+                    <button class="btn-add-primary" @onclick="OpenCreateSectionModal">
+                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M228,128a12,12,0,0,1-12,12H140v76a12,12,0,0,1-24,0V140H40a12,12,0,0,1,0-24h76V40a12,12,0,0,1,24,0v76h76A12,12,0,0,1,228,128Z" />
+                        </svg>
+                        Agregar Sección
+                    </button>
+                }
+                else
+                {
+                    <button class="btn-toggle-view" @onclick="SwitchToSectionsView">
+                        Ver Secciones
+                    </button>
+                    <button class="btn-add-primary" @onclick="OpenCreateDepartmentModal">
+                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M228,128a12,12,0,0,1-12,12H140v76a12,12,0,0,1-24,0V140H40a12,12,0,0,1,0-24h76V40a12,12,0,0,1,24,0v76h76A12,12,0,0,1,228,128Z" />
+                        </svg>
+                        Agregar Departamento
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input type="text" class="search-input" placeholder="Buscar por nombre ..." 
+                   @bind="searchTerm" @bind:event="oninput" @bind:after="HandleSearch" />
+        </div>
+
+        <div class="filter-group">
+            @if (currentView == ViewType.Departments)
+            {
+                <select class="filter-select" @bind="selectedSectionFilter" @bind:after="HandleFilterChange">
+                    <option value="">Sección: Todas</option>
+                    @foreach (var sec in allSections)
+                    {
+                        <option value="@sec.Name">@sec.Name</option>
+                    }
+                </select>
+            }
+
+            <select class="filter-select" @bind="selectedStatus" @bind:after="HandleFilterChange">
+                <option value="">Estado: Todos</option>
+                <option value="@OrganizationStatus.Active">Activo</option>
+                <option value="@OrganizationStatus.Inactive">Inactivo</option>
+            </select>
+
+            <button class="btn-export">
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M74.34,85.66A8,8,0,0,1,85.66,74.34L120,108.69V24a8,8,0,0,1,16,0v84.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-48,48a8,8,0,0,1-11.32,0ZM240,136v64a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V136a16,16,0,0,1,16-16H84.4a4,4,0,0,1,2.83,1.17L111,145A24,24,0,0,0,145,145l23.8-23.8A4,4,0,0,1,171.6,120H224A16,16,0,0,1,240,136Zm-40,32a12,12,0,1,0-12,12A12,12,0,0,0,200,168Z" />
+                </svg>
+                Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        @if (currentView == ViewType.Sections)
+        {
+            <!-- Sections Table (divisiones principales - tienen Responsable) -->
+            <table class="organization-table">
+                <thead>
+                    <tr>
+                        <th>Sección</th>
+                        <th>Responsable</th>
+                        <th>Estado</th>
+                        <th class="actions-column"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="4" class="loading-cell">
+                                <div class="spinner"></div>
+                                <span>Cargando datos...</span>
+                            </td>
+                        </tr>
+                    }
+                    else if (filteredSections == null || !filteredSections.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="empty-cell">
+                                <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                                </svg>
+                                <p>No se encontraron registros que coincidan con los filtros aplicados</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var sec in filteredSections)
+                        {
+                            <tr>
+                                <td class="section-cell">@FormatName(sec.Name)</td>
+                                <td class="manager-cell">@sec.ManagerName</td>
+                                <td>
+                                    <span class="status-badge @OrganizationStatusHelper.GetStatusBadgeClass(sec.Status)">
+                                        <span class="status-dot"></span>
+                                        @OrganizationStatusHelper.GetStatusDisplayName(sec.Status)
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-edit" @onclick="() => OpenEditSectionModal(sec.Id)" title="Editar">
+                                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
+                                        </svg>
+                                    </button>
+                                    <label class="toggle-switch" title="@(sec.Status == OrganizationStatus.Active ? "Desactivar" : "Activar")">
+                                        <input type="checkbox" 
+                                               checked="@(sec.Status == OrganizationStatus.Active)"
+                                               @onchange="() => ToggleSectionStatus(sec.Id)" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <!-- Departments Table (subdivisiones de las secciones) -->
+            <table class="organization-table">
+                <thead>
+                    <tr>
+                        <th>Departamento</th>
+                        <th>Sección</th>
+                        <th>Estado</th>
+                        <th class="actions-column"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="4" class="loading-cell">
+                                <div class="spinner"></div>
+                                <span>Cargando datos...</span>
+                            </td>
+                        </tr>
+                    }
+                    else if (filteredDepartments == null || !filteredDepartments.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="empty-cell">
+                                <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                                </svg>
+                                <p>No se encontraron registros que coincidan con los filtros aplicados</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var dept in filteredDepartments)
+                        {
+                            <tr>
+                                <td class="department-cell">@FormatName(dept.Name)</td>
+                                <td class="section-cell">@FormatName(dept.SectionName)</td>
+                                <td>
+                                    <span class="status-badge @OrganizationStatusHelper.GetStatusBadgeClass(dept.Status)">
+                                        <span class="status-dot"></span>
+                                        @OrganizationStatusHelper.GetStatusDisplayName(dept.Status)
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <button class="btn-action btn-edit" @onclick="() => OpenEditDepartmentModal(dept.Id)" title="Editar">
+                                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
+                                        </svg>
+                                    </button>
+                                    <label class="toggle-switch" title="@(dept.Status == OrganizationStatus.Active ? "Desactivar" : "Activar")">
+                                        <input type="checkbox" 
+                                               checked="@(dept.Status == OrganizationStatus.Active)"
+                                               @onchange="() => ToggleDepartmentStatus(dept.Id)" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- Create Section Modal -->
+<Modal IsOpen="@showCreateSectionModal" Title="Agregar Sección" OnClose="@CloseCreateSectionModal">
+    <SectionForm FormModel="@createSectionRequest" 
+                 OnValidSubmit="@HandleCreateSection" 
+                 OnCancel="@CloseCreateSectionModal" />
+</Modal>
+
+<!-- Edit Section Modal -->
+<Modal IsOpen="@showEditSectionModal" Title="Editar Sección" OnClose="@CloseEditSectionModal">
+    <SectionFormEdit FormModel="@updateSectionRequest" 
+                     OnValidSubmit="@HandleUpdateSection" 
+                     OnCancel="@CloseEditSectionModal" />
+</Modal>
+
+<!-- Create Department Modal -->
+<Modal IsOpen="@showCreateDepartmentModal" Title="Agregar Departamento" OnClose="@CloseCreateDepartmentModal">
+    <DepartmentForm FormModel="@createDepartmentRequest" 
+                    Sections="@sectionOptions"
+                    OnValidSubmit="@HandleCreateDepartment" 
+                    OnCancel="@CloseCreateDepartmentModal" />
+</Modal>
+
+<!-- Edit Department Modal -->
+<Modal IsOpen="@showEditDepartmentModal" Title="Editar Departamento" OnClose="@CloseEditDepartmentModal">
+    <DepartmentFormEdit FormModel="@updateDepartmentRequest" 
+                        Sections="@sectionOptions"
+                        OnValidSubmit="@HandleUpdateDepartment" 
+                        OnCancel="@CloseEditDepartmentModal" />
+</Modal>
+
+@code {
+    // View state - Sections es la vista principal
+    private enum ViewType { Sections, Departments }
+    private ViewType currentView = ViewType.Sections;
+
+    // Data
+    private List<Section> allSections = new();
+    private List<Section> filteredSections = new();
+    private List<Department> allDepartments = new();
+    private List<Department> filteredDepartments = new();
+    private List<(int Id, string Name)> sectionOptions = new();
+    private bool isLoading = true;
+
+    // Filters
+    private string searchTerm = string.Empty;
+    private string selectedSectionFilter = string.Empty;
+    private string selectedStatus = string.Empty;
+
+    // Section modals
+    private bool showCreateSectionModal = false;
+    private bool showEditSectionModal = false;
+    private CreateSectionRequest createSectionRequest = new();
+    private UpdateSectionRequest updateSectionRequest = new();
+
+    // Department modals
+    private bool showCreateDepartmentModal = false;
+    private bool showEditDepartmentModal = false;
+    private CreateDepartmentRequest createDepartmentRequest = new();
+    private UpdateDepartmentRequest updateDepartmentRequest = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        allSections = await OrganizationService.GetAllSectionsAsync();
+        allDepartments = await OrganizationService.GetAllDepartmentsAsync();
+        sectionOptions = await OrganizationService.GetSectionNamesAsync();
+        
+        ApplyFilters();
+        isLoading = false;
+    }
+
+    private void SwitchToSectionsView()
+    {
+        currentView = ViewType.Sections;
+        ClearFilters();
+        ApplyFilters();
+    }
+
+    private void SwitchToDepartmentsView()
+    {
+        currentView = ViewType.Departments;
+        ClearFilters();
+        ApplyFilters();
+    }
+
+    private void ClearFilters()
+    {
+        searchTerm = string.Empty;
+        selectedSectionFilter = string.Empty;
+        selectedStatus = string.Empty;
+    }
+
+    private void HandleSearch()
+    {
+        ApplyFilters();
+    }
+
+    private void HandleFilterChange()
+    {
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        if (currentView == ViewType.Sections)
+        {
+            var query = allSections.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(s =>
+                    s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    s.ManagerName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(selectedStatus))
+            {
+                var statusFilter = Enum.Parse<OrganizationStatus>(selectedStatus);
+                query = query.Where(s => s.Status == statusFilter);
+            }
+
+            filteredSections = query.ToList();
+        }
+        else
+        {
+            var query = allDepartments.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(d =>
+                    d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    d.SectionName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(selectedSectionFilter))
+            {
+                query = query.Where(d => d.SectionName.Equals(selectedSectionFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrEmpty(selectedStatus))
+            {
+                var statusFilter = Enum.Parse<OrganizationStatus>(selectedStatus);
+                query = query.Where(d => d.Status == statusFilter);
+            }
+
+            filteredDepartments = query.ToList();
+        }
+    }
+
+    private string FormatName(string name)
+    {
+        if (name.Length > 30)
+        {
+            var words = name.Split(' ');
+            var midpoint = words.Length / 2;
+            var firstHalf = string.Join(" ", words.Take(midpoint));
+            var secondHalf = string.Join(" ", words.Skip(midpoint));
+            return $"{firstHalf}\n{secondHalf}";
+        }
+        return name;
+    }
+
+    // Section modal handlers
+    private void OpenCreateSectionModal()
+    {
+        createSectionRequest = new CreateSectionRequest();
+        showCreateSectionModal = true;
+    }
+
+    private void CloseCreateSectionModal()
+    {
+        showCreateSectionModal = false;
+        createSectionRequest = new CreateSectionRequest();
+    }
+
+    private async Task HandleCreateSection(CreateSectionRequest request)
+    {
+        await OrganizationService.CreateSectionAsync(request);
+        await LoadData();
+        CloseCreateSectionModal();
+    }
+
+    private async Task OpenEditSectionModal(int sectionId)
+    {
+        var section = await OrganizationService.GetSectionByIdAsync(sectionId);
+        if (section != null)
+        {
+            updateSectionRequest = new UpdateSectionRequest
+            {
+                Id = section.Id,
+                Name = section.Name,
+                ManagerName = section.ManagerName,
+                Status = section.Status
+            };
+            showEditSectionModal = true;
+        }
+    }
+
+    private void CloseEditSectionModal()
+    {
+        showEditSectionModal = false;
+        updateSectionRequest = new UpdateSectionRequest();
+    }
+
+    private async Task HandleUpdateSection(UpdateSectionRequest request)
+    {
+        await OrganizationService.UpdateSectionAsync(request);
+        await LoadData();
+        CloseEditSectionModal();
+    }
+
+    private async Task ToggleSectionStatus(int sectionId)
+    {
+        await OrganizationService.ToggleSectionStatusAsync(sectionId);
+        await LoadData();
+    }
+
+    // Department modal handlers
+    private void OpenCreateDepartmentModal()
+    {
+        createDepartmentRequest = new CreateDepartmentRequest();
+        showCreateDepartmentModal = true;
+    }
+
+    private void CloseCreateDepartmentModal()
+    {
+        showCreateDepartmentModal = false;
+        createDepartmentRequest = new CreateDepartmentRequest();
+    }
+
+    private async Task HandleCreateDepartment(CreateDepartmentRequest request)
+    {
+        await OrganizationService.CreateDepartmentAsync(request);
+        await LoadData();
+        CloseCreateDepartmentModal();
+    }
+
+    private async Task OpenEditDepartmentModal(int departmentId)
+    {
+        var department = await OrganizationService.GetDepartmentByIdAsync(departmentId);
+        if (department != null)
+        {
+            updateDepartmentRequest = new UpdateDepartmentRequest
+            {
+                Id = department.Id,
+                Name = department.Name,
+                SectionId = department.SectionId,
+                Status = department.Status
+            };
+            showEditDepartmentModal = true;
+        }
+    }
+
+    private void CloseEditDepartmentModal()
+    {
+        showEditDepartmentModal = false;
+        updateDepartmentRequest = new UpdateDepartmentRequest();
+    }
+
+    private async Task HandleUpdateDepartment(UpdateDepartmentRequest request)
+    {
+        await OrganizationService.UpdateDepartmentAsync(request);
+        await LoadData();
+        CloseEditDepartmentModal();
+    }
+
+    private async Task ToggleDepartmentStatus(int departmentId)
+    {
+        await OrganizationService.ToggleDepartmentStatusAsync(departmentId);
+        await LoadData();
+    }
+}

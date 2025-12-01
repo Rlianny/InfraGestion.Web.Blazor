@@ -5,6 +5,8 @@ using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Users.Services;
 using InfraGestion.Web.Features.Inventory.Services;
 using InfraGestion.Web.Features.Departments.Services;
+using InfraGestion.Web.Features.Organization.Services;
+using InfraGestion.Web.Features.Transfers.Services;
 using Blazored.LocalStorage;
 
 
@@ -24,5 +26,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<DepartmentService>();
+builder.Services.AddScoped<OrganizationService>();
+builder.Services.AddScoped<TransferService>();
 
 await builder.Build().RunAsync();

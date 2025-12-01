@@ -1,0 +1,66 @@
+@using InfraGestion.Web.Features.Organization.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Operaciones de Red Corporativa" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="manager" class="form-label">Responsable de Sección*</label>
+        <select id="manager" class="form-input" @bind="FormModel.ManagerName">
+            <option value="">Seleccione un responsable</option>
+            @foreach (var manager in Managers)
+            {
+                <option value="@manager">@manager</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.ManagerName)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+            </svg>
+            Guardar Cambios
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UpdateSectionRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public List<string> Managers { get; set; } = new()
+    {
+        "Isabel Castro",
+        "Sofía Ramírez",
+        "Alejandro Torres",
+        "Ricardo Díaz",
+        "María González"
+    };
+
+    [Parameter]
+    public EventCallback<UpdateSectionRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}
