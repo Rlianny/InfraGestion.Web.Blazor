@@ -7,6 +7,7 @@ using InfraGestion.Web.Features.Inventory.Services;
 using InfraGestion.Web.Features.Departments.Services;
 using InfraGestion.Web.Features.Organization.Services;
 using InfraGestion.Web.Features.Transfers.Services;
+using InfraGestion.Web.Features.Technicians.Services;
 using Blazored.LocalStorage;
 
 
@@ -28,5 +29,6 @@ builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<TransferService>();
+builder.Services.AddScoped<TechnicianService>();
 
 await builder.Build().RunAsync();

@@ -1,0 +1,170 @@
+@using InfraGestion.Web.Features.Technicians.Models
+@using InfraGestion.Web.Features.Technicians.Services
+@inject TechnicianService TechnicianService
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="name" class="form-label">Nombre*</label>
+        <input type="text" 
+               id="name" 
+               class="form-input" 
+               @bind="FormModel.Name" 
+               placeholder="Ingrese el nombre completo" />
+        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="specialty" class="form-label">Especialidad*</label>
+            @if (isLoadingSpecialties)
+            {
+                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                    <span>Cargando especialidades...</span>
+                </div>
+            }
+            else if (availableSpecialties.Any())
+            {
+                <select id="specialty" class="form-input" @bind="FormModel.Specialty">
+                    <option value="">Seleccione una especialidad</option>
+                    @foreach (var specialty in availableSpecialties)
+                    {
+                        <option value="@specialty">@specialty</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="text" 
+                       id="specialty" 
+                       class="form-input" 
+                       @bind="FormModel.Specialty" 
+                       placeholder="Escriba la especialidad" />
+            }
+            <ValidationMessage For="@(() => FormModel.Specialty)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="section" class="form-label">Sección*</label>
+            @if (isLoadingSections)
+            {
+                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                    <span>Cargando secciones...</span>
+                </div>
+            }
+            else if (availableSections.Any())
+            {
+                <select id="section" class="form-input" @bind="FormModel.Section">
+                    <option value="">Seleccione una sección</option>
+                    @foreach (var sec in availableSections)
+                    {
+                        <option value="@sec">@sec</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="text" 
+                       id="section" 
+                       class="form-input" 
+                       @bind="FormModel.Section" 
+                       placeholder="Escriba la sección" />
+            }
+            <ValidationMessage For="@(() => FormModel.Section)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" 
+                   id="email" 
+                   class="form-input" 
+                   @bind="FormModel.Email" 
+                   placeholder="correo@ejemplo.com" />
+            <ValidationMessage For="@(() => FormModel.Email)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="phone" class="form-label">Teléfono</label>
+            <input type="tel" 
+                   id="phone" 
+                   class="form-input" 
+                   @bind="FormModel.Phone" 
+                   placeholder="+1 234 567 8900" />
+            <ValidationMessage For="@(() => FormModel.Phone)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="status" class="form-label">Estado*</label>
+            <select id="status" class="form-input" @bind="FormModel.Status">
+                <option value="@TechnicianStatus.Active">Activo</option>
+                <option value="@TechnicianStatus.Inactive">Inactivo</option>
+                <option value="@TechnicianStatus.OnLeave">De Permiso</option>
+            </select>
+            <ValidationMessage For="@(() => FormModel.Status)" class="validation-message" />
+        </div>
+
+        <div class="form-group">
+            <label for="hireDate" class="form-label">Fecha de Contratación*</label>
+            <input type="date" 
+                   id="hireDate" 
+                   class="form-input" 
+                   @bind="FormModel.HireDate" />
+            <ValidationMessage For="@(() => FormModel.HireDate)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save">
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+            </svg>
+            Guardar
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UpdateTechnicianRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<UpdateTechnicianRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private List<string> availableSpecialties = new();
+    private List<string> availableSections = new();
+    private bool isLoadingSpecialties = true;
+    private bool isLoadingSections = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoadingSpecialties = true;
+        isLoadingSections = true;
+        
+        availableSpecialties = await TechnicianService.GetSpecialtiesAsync();
+        availableSections = await TechnicianService.GetSectionsAsync();
+        
+        isLoadingSpecialties = false;
+        isLoadingSections = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}
