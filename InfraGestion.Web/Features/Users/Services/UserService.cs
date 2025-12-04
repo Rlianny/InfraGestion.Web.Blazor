@@ -199,8 +199,8 @@ public class UserService
                 Role = MapRoleToString(request.Role),
                 DepartmentName = request.Department,
                 IsActive = null,
-                YearsOfExperience = null,
-                Specialty = null
+                YearsOfExperience = request.YearsOfExperience,
+                Specialty = request.Specialty
             };
 
             // PUT /Users/{id}
@@ -329,7 +329,9 @@ public class UserService
             Department = dto.DepartmentName,
             Role = MapStringToRole(dto.Role),
             Status = dto.IsActive ? UserStatus.Active : UserStatus.Inactive,
-            CreatedAt = dto.CreatedAt
+            CreatedAt = dto.CreatedAt,
+            YearsOfExperience = dto.YearsOfExperience,
+            Specialty = dto.Specialty
         };
     }
 

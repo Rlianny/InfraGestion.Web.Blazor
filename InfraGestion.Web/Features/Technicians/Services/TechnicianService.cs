@@ -248,13 +248,50 @@ public class TechnicianService
     }
 
     /// <summary>
-    /// Actualiza datos de un técnico (placeholder - backend no tiene este endpoint)
+    /// Actualiza datos de un técnico
     /// </summary>
-    public Task<Technician?> UpdateTechnicianAsync(UpdateTechnicianRequest request)
+    public async Task<Technician?> UpdateTechnicianAsync(UpdateTechnicianRequest request)
     {
-        // TODO: Implementar cuando el backend tenga el endpoint PUT
-        Console.WriteLine("UpdateTechnicianAsync: Endpoint no disponible en el backend");
-        return Task.FromResult<Technician?>(null);
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            
+            var updateRequest = new
+            {
+                FullName = request.Name,
+                Specialty = request.Specialty,
+                YearsOfExperience = (int?)null,
+                DepartmentId = (int?)null
+            };
+            
+            var response = await _httpClient.PutAsJsonAsync($"{BASE_URL}/technician/{request.Id}", updateRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDto>>();
+
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    var dto = apiResponse.Data;
+                    return new Technician
+                    {
+                        Id = dto.TechnicianId,
+                        Name = dto.Name,
+                        Specialty = dto.Specialty,
+                        YearsOfExperience = dto.YearsOfExperience,
+                        Status = TechnicianStatus.Active
+                    };
+                }
+            }
+            
+            Console.WriteLine($"Error al actualizar técnico: {response.StatusCode}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al actualizar técnico: {ex.Message}");
+            return null;
+        }
     }
 
     // ==================== DETAIL METHODS ====================

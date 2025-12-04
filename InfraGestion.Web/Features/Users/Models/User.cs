@@ -24,4 +24,8 @@ public class User
     public string? Password { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.Now;
+    
+    // Technician specific fields
+    public int? YearsOfExperience { get; set; }
+    public string? Specialty { get; set; }
 }
