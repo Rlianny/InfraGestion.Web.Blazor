@@ -13,10 +13,9 @@ public class UpdateTechnicianRequest
     [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
     public string Name { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La especialidad es requerida")]
     public string Specialty { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "La sección es requerida")]
+    [Required(ErrorMessage = "El departamento es requerido")]
     public string Section { get; set; } = string.Empty;
 
     public string PhotoUrl { get; set; } = string.Empty;
@@ -25,6 +24,12 @@ public class UpdateTechnicianRequest
 
     [Range(0, 5, ErrorMessage = "La valoración debe estar entre 0 y 5")]
     public decimal Rating { get; set; }
+
+    [StringLength(100, MinimumLength = 6, ErrorMessage = "La contraseña debe tener entre 6 y 100 caracteres")]
+    public string? Password { get; set; }
+
+    [Range(0, 50, ErrorMessage = "Los años de experiencia deben estar entre 0 y 50")]
+    public int? YearsOfExperience { get; set; }
 
     [EmailAddress(ErrorMessage = "El correo electrónico no es válido")]
     public string? Email { get; set; }

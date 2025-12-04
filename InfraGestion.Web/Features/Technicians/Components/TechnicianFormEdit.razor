@@ -1,6 +1,7 @@
 @using InfraGestion.Web.Features.Technicians.Models
-@using InfraGestion.Web.Features.Technicians.Services
-@inject TechnicianService TechnicianService
+@using InfraGestion.Web.Features.Departments.Services
+@using System.ComponentModel.DataAnnotations
+@inject DepartmentService DepartmentService
 
 <EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -17,88 +18,6 @@
 
     <div class="form-row">
         <div class="form-group">
-            <label for="specialty" class="form-label">Especialidad*</label>
-            @if (isLoadingSpecialties)
-            {
-                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
-                    <span>Cargando especialidades...</span>
-                </div>
-            }
-            else if (availableSpecialties.Any())
-            {
-                <select id="specialty" class="form-input" @bind="FormModel.Specialty">
-                    <option value="">Seleccione una especialidad</option>
-                    @foreach (var specialty in availableSpecialties)
-                    {
-                        <option value="@specialty">@specialty</option>
-                    }
-                </select>
-            }
-            else
-            {
-                <input type="text" 
-                       id="specialty" 
-                       class="form-input" 
-                       @bind="FormModel.Specialty" 
-                       placeholder="Escriba la especialidad" />
-            }
-            <ValidationMessage For="@(() => FormModel.Specialty)" class="validation-message" />
-        </div>
-
-        <div class="form-group">
-            <label for="section" class="form-label">Sección*</label>
-            @if (isLoadingSections)
-            {
-                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
-                    <span>Cargando secciones...</span>
-                </div>
-            }
-            else if (availableSections.Any())
-            {
-                <select id="section" class="form-input" @bind="FormModel.Section">
-                    <option value="">Seleccione una sección</option>
-                    @foreach (var sec in availableSections)
-                    {
-                        <option value="@sec">@sec</option>
-                    }
-                </select>
-            }
-            else
-            {
-                <input type="text" 
-                       id="section" 
-                       class="form-input" 
-                       @bind="FormModel.Section" 
-                       placeholder="Escriba la sección" />
-            }
-            <ValidationMessage For="@(() => FormModel.Section)" class="validation-message" />
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" 
-                   id="email" 
-                   class="form-input" 
-                   @bind="FormModel.Email" 
-                   placeholder="correo@ejemplo.com" />
-            <ValidationMessage For="@(() => FormModel.Email)" class="validation-message" />
-        </div>
-
-        <div class="form-group">
-            <label for="phone" class="form-label">Teléfono</label>
-            <input type="tel" 
-                   id="phone" 
-                   class="form-input" 
-                   @bind="FormModel.Phone" 
-                   placeholder="+1 234 567 8900" />
-            <ValidationMessage For="@(() => FormModel.Phone)" class="validation-message" />
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
             <label for="status" class="form-label">Estado*</label>
             <select id="status" class="form-input" @bind="FormModel.Status">
                 <option value="@TechnicianStatus.Active">Activo</option>
@@ -109,12 +28,62 @@
         </div>
 
         <div class="form-group">
-            <label for="hireDate" class="form-label">Fecha de Contratación*</label>
-            <input type="date" 
-                   id="hireDate" 
+            <label for="department" class="form-label">Departamento*</label>
+            @if (isLoadingDepartments)
+            {
+                <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                    <span>Cargando departamentos...</span>
+                </div>
+            }
+            else if (availableDepartments.Any())
+            {
+                <select id="department" class="form-input" @bind="FormModel.Section">
+                    @foreach (var dept in availableDepartments)
+                    {
+                        <option value="@dept">@dept</option>
+                    }
+                </select>
+            }
+            else
+            {
+                <input type="text" 
+                       id="department" 
+                       class="form-input" 
+                       @bind="FormModel.Section" 
+                       placeholder="Escriba el nombre del departamento" />
+            }
+            <ValidationMessage For="@(() => FormModel.Section)" class="validation-message" />
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+        <input type="password" 
+               id="password" 
+               class="form-input" 
+               @bind="FormModel.Password" 
+               placeholder="Mínimo 6 caracteres (opcional)" />
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label for="yearsOfExperience" class="form-label">Años de experiencia</label>
+            <input type="number" 
+                   id="yearsOfExperience" 
                    class="form-input" 
-                   @bind="FormModel.HireDate" />
-            <ValidationMessage For="@(() => FormModel.HireDate)" class="validation-message" />
+                   @bind="FormModel.YearsOfExperience" 
+                   placeholder="Ej: 5"
+                   min="0"
+                   max="50" />
+        </div>
+
+        <div class="form-group">
+            <label for="specialty" class="form-label">Especialidad</label>
+            <input type="text" 
+                   id="specialty" 
+                   class="form-input" 
+                   @bind="FormModel.Specialty" 
+                   placeholder="Ej: Redes, Servidores, etc." />
         </div>
     </div>
 
@@ -141,26 +110,19 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    private List<string> availableSpecialties = new();
-    private List<string> availableSections = new();
-    private bool isLoadingSpecialties = true;
-    private bool isLoadingSections = true;
+    private List<string> availableDepartments = new();
+    private bool isLoadingDepartments = true;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await LoadDepartments();
     }
 
-    private async Task LoadData()
+    private async Task LoadDepartments()
     {
-        isLoadingSpecialties = true;
-        isLoadingSections = true;
-        
-        availableSpecialties = await TechnicianService.GetSpecialtiesAsync();
-        availableSections = await TechnicianService.GetSectionsAsync();
-        
-        isLoadingSpecialties = false;
-        isLoadingSections = false;
+        isLoadingDepartments = true;
+        availableDepartments = await DepartmentService.GetAllDepartmentNamesAsync();
+        isLoadingDepartments = false;
     }
 
     private async Task HandleValidSubmit()

@@ -1,11 +1,11 @@
 namespace InfraGestion.Web.Features.Organization.DTOs;
 
+/// <summary>
+/// DTO para recibir datos de Departamento desde el API
+/// </summary>
 public class DepartmentDto
 {
-    public int Id { get; set; }
+    public int SectionId { get; set; }
+    public int DepartmentId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public int Status { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public List<SectionDto> Sections { get; set; } = new();
 }

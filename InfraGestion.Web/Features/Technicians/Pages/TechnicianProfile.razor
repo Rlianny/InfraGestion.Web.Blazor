@@ -43,7 +43,7 @@ else
                     </svg>
                     Exportar
                 </button>
-                <button class="btn-edit" @onclick="OpenEditModal">
+                <button class="btn-edit" @onclick="NavigateToEdit">
                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                         <path
                             d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
@@ -235,22 +235,12 @@ else
     </div>
 }
 
-<!-- Edit Technician Modal -->
-<Modal IsOpen="@showEditModal" Title="Editar Técnico" OnClose="@CloseEditModal">
-    <TechnicianFormEdit FormModel="@updateTechnicianRequest" OnValidSubmit="@HandleUpdateTechnician"
-        OnCancel="@CloseEditModal" />
-</Modal>
-
 @code {
     [Parameter]
     public int TechnicianId { get; set; }
 
     private TechnicianDetails? technician;
     private bool isLoading = true;
-
-    // Edit Modal
-    private bool showEditModal = false;
-    private UpdateTechnicianRequest updateTechnicianRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -269,38 +259,8 @@ else
         Navigation.NavigateTo("/technicians");
     }
 
-    // Edit Technician Modal Methods
-    private void OpenEditModal()
+    private void NavigateToEdit()
     {
-        if (technician != null)
-        {
-            updateTechnicianRequest = new UpdateTechnicianRequest
-            {
-                Id = technician.Id,
-                Name = technician.Name,
-                Specialty = $"Especialista en {technician.Specialty}",
-                Section = technician.Section,
-                PhotoUrl = technician.PhotoUrl,
-                Status = technician.Status,
-                Rating = technician.Rating,
-                Email = technician.Email,
-                Phone = technician.Phone,
-                HireDate = technician.HireDate
-            };
-            showEditModal = true;
-        }
-    }
-
-    private void CloseEditModal()
-    {
-        showEditModal = false;
-        updateTechnicianRequest = new UpdateTechnicianRequest();
-    }
-
-    private async Task HandleUpdateTechnician(UpdateTechnicianRequest request)
-    {
-        await TechnicianService.UpdateTechnicianAsync(request);
-        await LoadTechnicianDetails();
-        CloseEditModal();
+        Navigation.NavigateTo($"/technicians/edit/{TechnicianId}");
     }
 }

@@ -11,6 +11,5 @@ public class CreateDepartmentRequest
     [StringLength(100, ErrorMessage = "El nombre no puede exceder 100 caracteres")]
     public string Name { get; set; } = string.Empty;
 
-    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar una sección")]
     public int SectionId { get; set; }
 }

@@ -8,6 +8,7 @@ public class Technician
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Specialty { get; set; } = string.Empty;
+    public int YearsOfExperience { get; set; }
     public string Section { get; set; } = string.Empty;
     public string PhotoUrl { get; set; } = string.Empty;
     public TechnicianStatus Status { get; set; } = TechnicianStatus.Active;

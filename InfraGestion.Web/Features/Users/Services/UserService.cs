@@ -82,6 +82,24 @@ public class UserService
     }
 
     /// <summary>
+    /// Get user by name
+    /// </summary>
+    public async Task<User?> GetUserByNameAsync(string name)
+    {
+        try
+        {
+            // Get all users and filter by name
+            var allUsers = await GetAllUsersAsync();
+            return allUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener usuario por nombre {name}: {ex.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Search user with filters
     /// NOTE: the actual API has not search endpoint
     /// </summary>

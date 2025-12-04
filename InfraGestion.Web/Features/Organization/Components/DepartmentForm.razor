@@ -1,9 +1,6 @@
 @using InfraGestion.Web.Features.Organization.Models
-@using Microsoft.AspNetCore.Components.Forms
 
-<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
-    <DataAnnotationsValidator />
-    
+<div class="form-container">
     <div class="form-group">
         <label for="name" class="form-label">Nombre*</label>
         <input type="text" 
@@ -11,33 +8,39 @@
                class="form-input" 
                @bind="FormModel.Name" 
                placeholder="Conmutación y Enrutamiento Avanzado" />
-        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+        @if (showNameError)
+        {
+            <div class="validation-message">El nombre del departamento es requerido</div>
+        }
     </div>
 
     <div class="form-group">
         <label for="section" class="form-label">Sección*</label>
-        <select id="section" class="form-input" @bind="FormModel.SectionId">
-            <option value="0">Seleccione una sección</option>
+        <select id="section" class="form-input" value="@selectedSectionIdString" @onchange="OnSelectChanged">
+            <option value="">Seleccione una sección</option>
             @foreach (var sec in Sections)
             {
                 <option value="@sec.Id">@sec.Name</option>
             }
         </select>
-        <ValidationMessage For="@(() => FormModel.SectionId)" class="validation-message" />
+        @if (showSectionError)
+        {
+            <div class="validation-message">Debe seleccionar una sección</div>
+        }
     </div>
 
     <div class="form-actions">
         <button type="button" class="btn-cancel" @onclick="OnCancel">
             Cancelar
         </button>
-        <button type="submit" class="btn-save">
+        <button type="button" class="btn-save" @onclick="HandleSubmit">
             <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path d="M224,128a8,8,0,0,1-8,8H128v88a8,8,0,0,1-16,0V136H24a8,8,0,0,1,0-16h88V32a8,8,0,0,1,16,0v88h88A8,8,0,0,1,224,128Z"/>
             </svg>
             Crear Departamento
         </button>
     </div>
-</EditForm>
+</div>
 
 @code {
     [Parameter]
@@ -52,8 +55,51 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    private async Task HandleValidSubmit()
+    private string selectedSectionIdString = "";
+    private bool showSectionError = false;
+    private bool showNameError = false;
+
+    protected override void OnParametersSet()
     {
-        await OnValidSubmit.InvokeAsync(FormModel);
+        Console.WriteLine($"OnParametersSet - Sections.Count: {Sections.Count}");
+        foreach (var sec in Sections)
+        {
+            Console.WriteLine($"  Section: Id={sec.Id}, Name={sec.Name}");
+        }
+    }
+
+    private void OnSelectChanged(ChangeEventArgs e)
+    {
+        selectedSectionIdString = e.Value?.ToString() ?? "";
+        Console.WriteLine($"Select changed to: '{selectedSectionIdString}'");
+        showSectionError = false; // Clear error when user makes selection
+    }
+
+    private async Task HandleSubmit()
+    {
+        Console.WriteLine($"HandleSubmit - selectedSectionIdString: '{selectedSectionIdString}'");
+        
+        // Validar nombre
+        showNameError = string.IsNullOrWhiteSpace(FormModel.Name);
+        
+        // Validar y convertir sección (permitir IDs negativos del API)
+        if (!string.IsNullOrEmpty(selectedSectionIdString) && int.TryParse(selectedSectionIdString, out var sectionId) && sectionId != 0)
+        {
+            FormModel.SectionId = sectionId;
+            showSectionError = false;
+            Console.WriteLine($"SectionId set to: {sectionId}");
+        }
+        else
+        {
+            showSectionError = true;
+            Console.WriteLine($"Section validation failed - selectedSectionIdString was: '{selectedSectionIdString}'");
+        }
+
+        // Si todo es válido, enviar
+        if (!showNameError && !showSectionError)
+        {
+            Console.WriteLine($"Submitting form with SectionId: {FormModel.SectionId}");
+            await OnValidSubmit.InvokeAsync(FormModel);
+        }
     }
 }
