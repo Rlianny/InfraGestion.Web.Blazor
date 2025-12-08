@@ -1,0 +1,242 @@
+@page "/technician/equipment/{DeviceId:int}"
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Helpers
+@inject DeviceService DeviceService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalles del Equipo - InfraCom</PageTitle>
+
+@if (isLoading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Cargando detalles del equipo...</p>
+    </div>
+}
+else if (device == null)
+{
+    <div class="error-container">
+        <p>No se encontró el equipo solicitado.</p>
+        <button class="btn-back" @onclick="NavigateBack">Volver al inventario</button>
+    </div>
+}
+else
+{
+    <div class="device-details-page">
+        <!-- Header -->
+        <div class="details-header">
+            <div class="header-left">
+                <div class="header-content">
+                    <h1 class="device-title">@device.Name</h1>
+                    <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
+                        @OperationalStateHelper.GetStateDisplayName(device.State)
+                    </span>
+                </div>
+                <p class="page-description">Ficha Técnica detallada del equipo</p>
+            </div>
+            <div class="header-actions">
+                <!-- Maintenance button (Turquoise) -->
+                <button class="btn-maintenance" @onclick="RegisterMaintenance">
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <!-- ICON: Wrench/tool icon -->
+                        <path d="M232,96a72,72,0,0,1-100.94,66L79,222.22c-.12.14-.26.29-.39.42a32,32,0,0,1-45.26-45.26c.14-.13.28-.27.43-.39L94,124.94a72.07,72.07,0,0,1,83.54-98.78,8,8,0,0,1,3.93,13.19L144,80l5.66,26.35L176,112l40.65-37.52a8,8,0,0,1,13.19,3.93A72.6,72.6,0,0,1,232,96Z" />
+                    </svg>
+                    Agregar Mantenimiento
+                </button>
+                <!-- Decommission button (Red) -->
+                <button class="btn-decommission" @onclick="CreateDecommissionRequest">
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <!-- ICON: Decommission/box icon -->
+                        <path d="M223.16,68.42l-16-32A8,8,0,0,0,200,32H56a8,8,0,0,0-7.16,4.42l-16,32A8.08,8.08,0,0,0,32,72V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V72A8.08,8.08,0,0,0,223.16,68.42Zm-57.5,89.24-32,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32L120,164.69V104a8,8,0,0,1,16,0v60.69l18.34-18.35a8,8,0,0,1,11.32,11.32ZM52.94,64l8-16H195.06l8,16Z" />
+                    </svg>
+                    Crear propuesta de baja
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content: Details + Location -->
+        <div class="details-content">
+            <!-- Left Column: Detalles Principales -->
+            <div class="details-card">
+                <h2 class="card-title">Detalles Principales</h2>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo de Equipo</span>
+                        <span class="detail-value">@DeviceTypeHelper.GetTypeDisplayName(device.Type)</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Número de Identificación</span>
+                        <span class="detail-value device-id">@device.IdentificationNumber</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha de Adquisición</span>
+                        <span class="detail-value">@device.PurchaseDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Mantenimientos Realizados</span>
+                        <span class="detail-value">@device.MaintenanceCount</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Costo total en Mantenimientos</span>
+                        <span class="detail-value">@device.TotalMaintenanceCost.ToString("F2") USD</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha del último mantenimiento</span>
+                        <span class="detail-value">@(device.LastMaintenanceDate?.ToString("dd/MM/yyyy") ?? "N/A")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Ubicación -->
+            <div class="location-card">
+                <h2 class="card-title">Ubicación</h2>
+                <div class="location-info">
+                    <div class="location-item">
+                        <span class="location-label">Sección</span>
+                        <span class="location-value">@device.Section</span>
+                    </div>
+                    <div class="location-item">
+                        <span class="location-label">Departamento</span>
+                        <span class="location-value">@device.Department</span>
+                    </div>
+                    <div class="location-item">
+                        <span class="location-label">Responsable de Sección</span>
+                        <span class="location-value">@device.SectionManager</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial de Mantenimientos -->
+        <div class="history-section">
+            <h2 class="section-title">Historial de Mantenimientos</h2>
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA</th>
+                            <th>TIPO</th>
+                            <th>TÉCNICO</th>
+                            <th>NOTAS</th>
+                            <th>COSTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (device.MaintenanceHistory == null || !device.MaintenanceHistory.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="empty-cell">
+                                    No se encontraron registros de mantenimiento para este equipo
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var maintenance in device.MaintenanceHistory)
+                            {
+                                <tr>
+                                    <td>@maintenance.Date.ToString("dd/MM/yyyy")</td>
+                                    <td>@maintenance.Type</td>
+                                    <td>@maintenance.Technician</td>
+                                    <td>@maintenance.Notes</td>
+                                    <td>@maintenance.Cost.ToString("F2")</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Defectación inicial (NO incluir tabla de Traslados) -->
+        <div class="history-section">
+            <h2 class="section-title">Defectación incial</h2>
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA EMISIÓN</th>
+                            <th>SOLICITANTE</th>
+                            <th>TÉCNICO</th>
+                            <th>ESTADO</th>
+                            <th>FECHA RESPUESTA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (device.InitialDefect == null)
+                        {
+                            <tr>
+                                <td colspan="5" class="empty-cell">
+                                    No se encontró solicitud de defectación inicial
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td>@device.InitialDefect.SubmissionDate.ToString("dd/MM/yyyy")</td>
+                                <td>@device.InitialDefect.Requester</td>
+                                <td>@device.InitialDefect.Technician</td>
+                                <td>
+                                    <span class="defect-status @GetDefectStatusClass(device.InitialDefect.Status)">
+                                        @device.InitialDefect.Status
+                                    </span>
+                                </td>
+                                <td>@(device.InitialDefect.ResponseDate?.ToString("dd/MM/yyyy") ?? "Pendiente")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int DeviceId { get; set; }
+
+    private DeviceDetails? device;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDeviceDetails();
+    }
+
+    private async Task LoadDeviceDetails()
+    {
+        isLoading = true;
+        device = await DeviceService.GetDeviceDetailsAsync(DeviceId);
+        isLoading = false;
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/technician/equipment");
+    }
+
+    private string GetDefectStatusClass(string status)
+    {
+        return status switch
+        {
+            "Aprobado" => "status-approved",
+            "Pendiente" => "status-pending",
+            "Rechazado" => "status-rejected",
+            _ => "status-default"
+        };
+    }
+
+    private void RegisterMaintenance()
+    {
+        // TODO: Navigate to maintenance registration page
+        Navigation.NavigateTo($"/technician/maintenance/create?deviceId={DeviceId}");
+    }
+
+    private void CreateDecommissionRequest()
+    {
+        // TODO: Navigate to create decommission request page
+        Navigation.NavigateTo($"/technician/decommissioning/create?deviceId={DeviceId}");
+    }
+}

@@ -1,0 +1,72 @@
+/* Base button styles */
+.table-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.table-action-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Edit button - Blue */
+.table-action-btn.btn-edit {
+    background: var(--color-primary-light, rgba(9, 93, 208, 0.1));
+    color: var(--color-primary, rgb(9, 93, 208));
+}
+
+.table-action-btn.btn-edit:hover {
+    background: var(--color-primary, rgb(9, 93, 208));
+    color: white;
+}
+
+/* View button - Blue */
+.table-action-btn.btn-view {
+    background: var(--color-primary-light, rgba(9, 93, 208, 0.1));
+    color: var(--color-primary, rgb(9, 93, 208));
+}
+
+.table-action-btn.btn-view:hover {
+    background: var(--color-primary, rgb(9, 93, 208));
+    color: white;
+}
+
+/* Maintenance button - Teal/Turquoise */
+.table-action-btn.btn-maintenance {
+    background: rgba(20, 184, 166, 0.1);
+    color: rgb(20, 184, 166);
+}
+
+.table-action-btn.btn-maintenance:hover {
+    background: rgb(20, 184, 166);
+    color: white;
+}
+
+/* Decommission button - Red */
+.table-action-btn.btn-decommission {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.table-action-btn.btn-decommission:hover {
+    background: rgb(239, 68, 68);
+    color: white;
+}
+
+/* Delete button - Red */
+.table-action-btn.btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.table-action-btn.btn-delete:hover {
+    background: rgb(239, 68, 68);
+    color: white;
+}

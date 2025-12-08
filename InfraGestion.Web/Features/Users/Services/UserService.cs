@@ -155,8 +155,13 @@ public class UserService
                 Password = request.Password,
                 Role = MapRoleToString(request.Role),
                 DepartmentName = request.Department,
-                YearsOfExperience = null,
-                Specialty = null
+                // Only send technician fields when applicable to satisfy backend validation
+                YearsOfExperience = request.Role == UserRole.Technician
+                    ? request.YearsOfExperience
+                    : null,
+                Specialty = request.Role == UserRole.Technician
+                    ? request.Specialty
+                    : null
             };
 
             // POST /Users

@@ -1,0 +1,87 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Helpers
+
+<div class="table-container">
+    <table class="devices-table">
+        <thead>
+            <tr>
+                <th>ID de equipo</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Ubicación</th>
+                <th class="actions-column"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (IsLoading)
+            {
+                <tr>
+                    <td colspan="6" class="loading-cell">
+                        <div class="spinner"></div>
+                        <span>Cargando equipos...</span>
+                    </td>
+                </tr>
+            }
+            else if (Devices == null || !Devices.Any())
+            {
+                <tr>
+                    <td colspan="6" class="empty-cell">
+                        <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                        </svg>
+                        <p>No se encontraron equipos que coincidan con los filtros aplicados</p>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var device in Devices)
+                {
+                    <tr>
+                        <td class="id-cell">DEV@(device.Id.ToString("D3"))</td>
+                        <td class="name-cell">@device.Name</td>
+                        <td>
+                            <span class="type-badge @DeviceTypeHelper.GetTypeBadgeClass(device.Type)">
+                                @DeviceTypeHelper.GetTypeDisplayName(device.Type)
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
+                                @OperationalStateHelper.GetStateDisplayName(device.State)
+                            </span>
+                        </td>
+                        <td class="location-cell">@device.Location</td>
+                        <td class="actions-cell">
+                            @if (RowActions != null)
+                            {
+                                @RowActions(device)
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    /// <summary>
+    /// List of devices to display in the table
+    /// </summary>
+    [Parameter]
+    public List<Device> Devices { get; set; } = new();
+
+    /// <summary>
+    /// Indicates if the table is in loading state
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Template for custom row actions (buttons) per device
+    /// </summary>
+    [Parameter]
+    public RenderFragment<Device>? RowActions { get; set; }
+}
