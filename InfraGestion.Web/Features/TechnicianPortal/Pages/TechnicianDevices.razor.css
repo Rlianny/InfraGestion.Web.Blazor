@@ -229,35 +229,7 @@
     color: rgb(3, 105, 161);
 }
 
-/* Status Badges */
-.status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.status-operational {
-    background: rgba(34, 197, 94, 0.1);
-    color: rgb(22, 163, 74);
-}
-
-.status-maintenance {
-    background: rgba(234, 179, 8, 0.1);
-    color: rgb(161, 98, 7);
-}
-
-.status-decommissioned {
-    background: rgba(239, 68, 68, 0.1);
-    color: rgb(220, 38, 38);
-}
-
-.status-transferred {
-    background: rgba(59, 130, 246, 0.1);
-    color: rgb(29, 78, 216);
-}
+/* Status badges are now handled by the shared StatusBadge component */
 
 /* Actions - Technician specific with 3 buttons */
 .actions-column {

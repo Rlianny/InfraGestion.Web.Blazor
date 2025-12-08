@@ -29,9 +29,8 @@ else
             <div class="header-left">
                 <div class="header-content">
                     <h1 class="device-title">@device.Name</h1>
-                    <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
-                        @OperationalStateHelper.GetStateDisplayName(device.State)
-                    </span>
+                    <StatusBadge DisplayText="@OperationalStateHelper.GetStateDisplayName(device.State)" 
+                                 BadgeClass="@OperationalStateHelper.GetStateBadgeClass(device.State)" />
                 </div>
                 <p class="page-description">Ficha Técnica detallada del equipo</p>
             </div>
@@ -137,9 +136,9 @@ else
                             {
                                 <tr>
                                     <td>@maintenance.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@maintenance.Type</td>
-                                    <td>@maintenance.Technician</td>
-                                    <td>@maintenance.Notes</td>
+                                    <td>@maintenance.Type.ToString()</td>
+                                    <td>@maintenance.TechnicianName</td>
+                                    <td>@maintenance.Description</td>
                                     <td>@maintenance.Cost.ToString("F2")</td>
                                 </tr>
                             }
@@ -149,9 +148,9 @@ else
             </div>
         </div>
 
-        <!-- Defectación inicial (NO incluir tabla de Traslados) -->
+        <!-- Defectación inicial -->
         <div class="history-section">
-            <h2 class="section-title">Defectación incial</h2>
+            <h2 class="section-title">Defectación inicial</h2>
             <div class="table-container">
                 <table class="history-table">
                     <thead>
@@ -168,7 +167,7 @@ else
                         {
                             <tr>
                                 <td colspan="5" class="empty-cell">
-                                    No se encontró solicitud de defectación inicial
+                                    No se encontró registro de defectación inicial para este equipo
                                 </td>
                             </tr>
                         }
@@ -176,14 +175,52 @@ else
                         {
                             <tr>
                                 <td>@device.InitialDefect.SubmissionDate.ToString("dd/MM/yyyy")</td>
-                                <td>@device.InitialDefect.Requester</td>
-                                <td>@device.InitialDefect.Technician</td>
+                                <td>@device.InitialDefect.RequesterName</td>
+                                <td>@device.InitialDefect.TechnicianName</td>
                                 <td>
-                                    <span class="defect-status @GetDefectStatusClass(device.InitialDefect.Status)">
-                                        @device.InitialDefect.Status
-                                    </span>
+                                    <StatusBadge Status="@GetInitialDefectStatusLabel(device.InitialDefect.Status)" />
                                 </td>
                                 <td>@(device.InitialDefect.ResponseDate?.ToString("dd/MM/yyyy") ?? "Pendiente")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Solicitud de Baja -->
+        <div class="history-section">
+            <h2 class="section-title">Solicitud de Baja</h2>
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA SOLICITUD</th>
+                            <th>SOLICITANTE</th>
+                            <th>TÉCNICO</th>
+                            <th>ESTADO</th>
+                            <th>FECHA REVISIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (device.DecommissioningInfo == null)
+                        {
+                            <tr>
+                                <td colspan="5" class="empty-cell">
+                                    No se encontró solicitud de baja para este equipo
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <td>@device.DecommissioningInfo.RequestDate.ToString("dd/MM/yyyy")</td>
+                                <td>@device.DecommissioningInfo.ReceiverName</td>
+                                <td>@device.DecommissioningInfo.TechnicianName</td>
+                                <td>
+                                    <StatusBadge Status="@GetDecommissioningStatusLabel(device.DecommissioningInfo.Status)" />
+                                </td>
+                                <td>@(device.DecommissioningInfo.ReviewedDate?.ToString("dd/MM/yyyy") ?? "Pendiente")</td>
                             </tr>
                         }
                     </tbody>
@@ -217,14 +254,25 @@ else
         Navigation.NavigateTo("/technician/equipment");
     }
 
-    private string GetDefectStatusClass(string status)
+    private string GetDecommissioningStatusLabel(DecommissioningStatus status)
     {
         return status switch
         {
-            "Aprobado" => "status-approved",
-            "Pendiente" => "status-pending",
-            "Rechazado" => "status-rejected",
-            _ => "status-default"
+            DecommissioningStatus.Approved => "Aprobado",
+            DecommissioningStatus.Pending => "Pendiente",
+            DecommissioningStatus.Rejected => "Rechazado",
+            _ => "Desconocido"
+        };
+    }
+
+    private string GetInitialDefectStatusLabel(InitialDefectStatus status)
+    {
+        return status switch
+        {
+            InitialDefectStatus.Approved => "Aprobado",
+            InitialDefectStatus.Pending => "Pendiente",
+            InitialDefectStatus.Rejected => "Rechazado",
+            _ => "Desconocido"
         };
     }
 

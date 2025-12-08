@@ -38,17 +38,18 @@
         <div class="filter-group">
             <select class="filter-select" @bind="selectedRole" @bind:after="HandleFilterChange">
                 <option value="">Rol: Todos</option>
-                <option value="@UserRole.Director">Director</option>
-                <option value="@UserRole.Administrator">Administrador</option>
-                <option value="@UserRole.SectionManager">Responsable</option>
-                <option value="@UserRole.Technician">Técnico</option>
-                <option value="@UserRole.Logistician">Logística</option>
+                @foreach (var role in GetAvailableRoles())
+                {
+                    <option value="@role">@UserRoleHelper.GetRoleDisplayName(role)</option>
+                }
             </select>
 
             <select class="filter-select" @bind="selectedStatus" @bind:after="HandleFilterChange">
                 <option value="">Estado: Todos</option>
-                <option value="@UserStatus.Active">Activo</option>
-                <option value="@UserStatus.Inactive">Inactivo</option>
+                @foreach (var status in GetAvailableStatuses())
+                {
+                    <option value="@status">@(status == UserStatus.Active ? "Activo" : "Inactivo")</option>
+                }
             </select>
 
             <button class="btn-export">
@@ -159,6 +160,25 @@
 
     private bool showEditModal = false;
     private UpdateUserRequest updateUserRequest = new();
+
+    // Dynamic filter options based on actual data
+    private List<UserRole> GetAvailableRoles()
+    {
+        return allUsers
+            .Select(u => u.Role)
+            .Distinct()
+            .OrderBy(r => UserRoleHelper.GetRoleDisplayName(r))
+            .ToList();
+    }
+
+    private List<UserStatus> GetAvailableStatuses()
+    {
+        return allUsers
+            .Select(u => u.Status)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+    }
 
     private void NavigateToCreate()
     {

@@ -2,16 +2,22 @@ using System.Net.Http.Json;
 using InfraGestion.Web.Features.Inventory.Models;
 using InfraGestion.Web.Features.Inventory.DTOs;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Auth.Services;
+using InfraGestion.Web.Features.Organization.Services;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
 public class DeviceService
 {
     private readonly HttpClient _httpClient;
+    private readonly OrganizationService _organizationService;
+    private readonly AuthService _authService;
 
-    public DeviceService(HttpClient httpClient)
+    public DeviceService(HttpClient httpClient, OrganizationService organizationService, AuthService authService)
     {
         _httpClient = httpClient;
+        _organizationService = organizationService;
+        _authService = authService;
     }
 
     // GET ENDPOINTS
@@ -119,7 +125,12 @@ public class DeviceService
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
-                return MapDetailDtoToDeviceDetails(apiResponse.Data);
+                var deviceDetails = MapDetailDtoToDeviceDetails(apiResponse.Data);
+                
+                // Resolve location info from Organization service
+                await ResolveLocationInfoAsync(deviceDetails, apiResponse.Data.DepartmentId);
+                
+                return deviceDetails;
             }
 
             return null;
@@ -127,6 +138,38 @@ public class DeviceService
         catch (Exception ex)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Resolves Section and SectionManager from DepartmentId
+    /// Chain: Device → Department → Section → SectionManager
+    /// </summary>
+    private async Task ResolveLocationInfoAsync(DeviceDetails deviceDetails, int departmentId)
+    {
+        try
+        {
+            // Get department info (includes SectionId)
+            var department = await _organizationService.GetDepartmentByIdAsync(departmentId);
+            
+            if (department != null)
+            {
+                deviceDetails.DepartmentId = department.Id;
+                deviceDetails.Department = department.Name;
+                deviceDetails.SectionId = department.SectionId;
+                deviceDetails.Section = department.SectionName;
+                
+                // Get section to resolve SectionManager
+                var section = await _organizationService.GetSectionByIdAsync(department.SectionId);
+                if (section != null)
+                {
+                    deviceDetails.SectionManager = section.SectionManager;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Keep default values if resolution fails
         }
     }
 
@@ -252,11 +295,20 @@ public class DeviceService
     {
         try
         {
+            // Get current user (admin) who creates the request
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                return null;
+            }
+
             var dto = new InsertDeviceRequestDto
             {
                 Name = request.Name,
                 DeviceType = request.Type,
-                AcquisitionDate = request.PurchaseDate
+                AcquisitionDate = request.PurchaseDate,
+                TechnicianId = request.TechnicianId,
+                UserId = currentUser.Id
             };
 
             var response = await _httpClient.PostAsJsonAsync("inventory", dto);
@@ -511,6 +563,16 @@ public class DeviceService
 
     private DeviceDetails MapDetailDtoToDeviceDetails(DeviceDetailDto dto)
     {
+        // Map maintenance history
+        var maintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory);
+        
+        // Calculate maintenance statistics from history
+        var maintenanceCount = maintenanceHistory.Count;
+        var totalMaintenanceCost = maintenanceHistory.Sum(m => m.Cost);
+        var lastMaintenanceDate = maintenanceHistory.Any() 
+            ? maintenanceHistory.Max(m => m.Date) 
+            : (DateTime?)null;
+        
         return new DeviceDetails
         {
             Id = dto.DeviceId,
@@ -519,15 +581,21 @@ public class DeviceService
             Type = dto.DeviceType,
             State = dto.OperationalState,
             PurchaseDate = dto.AcquisitionDate,
+            // Location info - set defaults, will be resolved via ResolveLocationInfoAsync
+            DepartmentId = dto.DepartmentId,
             Department = NormalizeDepartmentName(dto.DepartmentName),
-            Section = dto.SectionName ?? "N/A",
-            SectionManager = dto.SectionManager ?? "N/A",
-            MaintenanceCount = dto.MaintenanceCount ?? 0,
-            TotalMaintenanceCost = dto.TotalMaintenanceCost ?? 0m,
-            LastMaintenanceDate = dto.LastMaintenanceDate,
-            MaintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory),
+            SectionId = 0,
+            Section = "Cargando...",
+            SectionManager = "Cargando...",
+            // Statistics
+            MaintenanceCount = maintenanceCount,
+            TotalMaintenanceCost = totalMaintenanceCost,
+            LastMaintenanceDate = lastMaintenanceDate,
+            // Related records
+            MaintenanceHistory = maintenanceHistory,
             TransferHistory = MapTransferHistory(dto.TransferHistory),
-            InitialDefect = MapInitialDefect(dto.InitialDefect)
+            InitialDefect = MapInitialDefect(dto.InitialDefect),
+            DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo)
         };
     }
 
@@ -550,26 +618,38 @@ public class DeviceService
 
         return dtos.Select(dto => new MaintenanceRecord
         {
-            Date = dto.Date,
-            Type = dto.Type,
-            Technician = dto.Technician,
-            Notes = dto.Notes,
-            Cost = dto.Cost
+            Id = dto.MaintenanceRecordId,
+            DeviceId = dto.DeviceId,
+            DeviceName = dto.DeviceName,
+            TechnicianId = dto.TechnicianId,
+            TechnicianName = dto.TechnicianName,
+            Date = dto.MaintenanceDate,
+            Type = dto.MaintenanceType,
+            Cost = (decimal)dto.Cost,
+            Description = dto.Description
         }).ToList();
     }
 
-    private List<TransferRecord> MapTransferHistory(List<TransferRecordDto>? dtos)
+    private List<TransferRecord> MapTransferHistory(List<TransferDto>? dtos)
     {
         if (dtos == null || !dtos.Any())
             return new List<TransferRecord>();
 
         return dtos.Select(dto => new TransferRecord
         {
-            Date = dto.Date,
-            Origin = dto.Origin,
-            Destination = dto.Destination,
-            Manager = dto.ResponsiblePerson,
-            Receiver = dto.Receiver
+            Id = dto.TransferId,
+            DeviceId = dto.DeviceId,
+            DeviceName = dto.DeviceName,
+            Date = dto.TransferDate,
+            SourceSectionId = dto.SourceSectionId,
+            SourceSectionName = dto.SourceSectionName,
+            DestinationSectionId = dto.DestinationSectionId,
+            DestinationSectionName = dto.DestinationSectionName,
+            ResponsiblePersonId = dto.ResponsiblePersonId,
+            ResponsiblePersonName = dto.ResponsiblePersonName,
+            ReceiverId = dto.DeviceReceiverId,
+            ReceiverName = dto.DeviceReceiverName,
+            Status = dto.Status
         }).ToList();
     }
 
@@ -580,11 +660,41 @@ public class DeviceService
 
         return new InitialDefect
         {
-            SubmissionDate = dto.IssueDate,
-            Requester = dto.Requester,
-            Technician = dto.Technician,
+            Id = dto.InitialDefectId,
+            DeviceId = dto.DeviceId,
+            DeviceName = dto.DeviceName,
+            SubmissionDate = dto.SubmissionDate,
+            RequesterId = dto.RequesterId,
+            RequesterName = dto.RequesterName,
+            TechnicianId = dto.TechnicianId,
+            TechnicianName = dto.TechnicianName,
             Status = dto.Status,
-            ResponseDate = dto.ResponseDate
+            ResponseDate = dto.ResponseDate,
+            Description = dto.Description
+        };
+    }
+
+    private DecommissioningRequest? MapDecommissioningInfo(DecommissioningRequestDto? dto)
+    {
+        if (dto == null)
+            return null;
+
+        return new DecommissioningRequest
+        {
+            Id = dto.DecommissioningRequestId,
+            DeviceId = dto.DeviceId,
+            DeviceName = dto.DeviceName,
+            TechnicianId = dto.TechnicianId,
+            TechnicianName = dto.TechnicianName,
+            ReceiverId = dto.DeviceReceiverId,
+            ReceiverName = dto.DeviceReceiverName,
+            RequestDate = dto.RequestDate,
+            Status = dto.Status,
+            Justification = dto.Justification,
+            Reason = dto.Reason,
+            ReviewedDate = dto.ReviewedDate,
+            ReviewedByUserId = dto.ReviewedByUserId,
+            ReviewedByUserName = dto.ReviewedByUserName
         };
     }
 }

@@ -14,5 +14,6 @@ public class CreateDeviceRequest
     public DateTime PurchaseDate { get; set; } = DateTime.Today;
 
     [Required(ErrorMessage = "El técnico es requerido")]
-    public string TechnicianName { get; set; } = string.Empty;
+    [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un técnico")]
+    public int TechnicianId { get; set; }
 }

@@ -48,9 +48,8 @@
                             </span>
                         </td>
                         <td>
-                            <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
-                                @OperationalStateHelper.GetStateDisplayName(device.State)
-                            </span>
+                            <StatusBadge DisplayText="@OperationalStateHelper.GetStateDisplayName(device.State)" 
+                                         BadgeClass="@OperationalStateHelper.GetStateBadgeClass(device.State)" />
                         </td>
                         <td class="location-cell">@device.Location</td>
                         <td class="actions-cell">

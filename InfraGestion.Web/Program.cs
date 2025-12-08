@@ -26,9 +26,9 @@ builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<DepartmentService>();
-builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<TechnicianService>();
 builder.Services.AddScoped<NavigationService>();

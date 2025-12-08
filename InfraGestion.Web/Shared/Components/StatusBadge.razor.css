@@ -1,0 +1,51 @@
+/* Base Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Operational - Green */
+.status-operational {
+    background: rgba(34, 197, 94, 0.1);
+    color: rgb(22, 163, 74);
+}
+
+/* Under Maintenance - Yellow/Amber */
+.status-maintenance {
+    background: rgba(234, 179, 8, 0.1);
+    color: rgb(161, 98, 7);
+}
+
+/* Decommissioned - Red */
+.status-decommissioned {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(220, 38, 38);
+}
+
+/* Being Transferred - Blue */
+.status-transferred {
+    background: rgba(59, 130, 246, 0.1);
+    color: rgb(29, 78, 216);
+}
+
+/* Under Revision / Pending - Yellow/Amber variant */
+.status-pending {
+    background: rgba(234, 179, 8, 0.15);
+    color: rgb(161, 98, 7);
+}
+
+/* Revised - Blue variant */
+.status-revised {
+    background: rgba(59, 130, 246, 0.12);
+    color: rgb(37, 99, 235);
+}
+
+/* Default fallback */
+.status-default {
+    background: rgba(148, 163, 184, 0.15);
+    color: rgb(100, 116, 139);
+}

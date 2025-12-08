@@ -54,26 +54,25 @@
         <div class="filter-group">
             <select class="filter-select" @bind="selectedType" @bind:after="HandleFilterChange">
                 <option value="">Tipo</option>
-                <option value="@DeviceType.ConnectivityAndNetwork">Conectividad y Red</option>
-                <option value="@DeviceType.ComputingAndIT">Cómputo e Informática</option>
-                <option value="@DeviceType.ElectricalInfrastructureAndSupport">Infraestructura y Soporte</option>
-                <option value="@DeviceType.CommunicationsAndTransmission">Comunicaciones y Transmisión</option>
-                <option value="@DeviceType.DiagnosticAndMeasurement">Diagnóstico y Medición</option>
+                @foreach (var type in GetAvailableTypes())
+                {
+                    <option value="@type">@DeviceTypeHelper.GetTypeDisplayName(type)</option>
+                }
             </select>
 
             <select class="filter-select" @bind="selectedState" @bind:after="HandleFilterChange">
                 <option value="">Estado</option>
-                <option value="@OperationalState.Operational">Operativo</option>
-                <option value="@OperationalState.UnderMaintenance">En Mantenimiento</option>
-                <option value="@OperationalState.Decommissioned">De Baja</option>
-                <option value="@OperationalState.BeingTransferred">Siendo Trasladado</option>
+                @foreach (var state in GetAvailableStates())
+                {
+                    <option value="@state">@OperationalStateHelper.GetStateDisplayName(state)</option>
+                }
             </select>
 
             <select class="filter-select" @bind="selectedLocation" @bind:after="HandleFilterChange">
                 <option value="">Ubicación Actual</option>
-                @foreach (var dept in availableDepartments)
+                @foreach (var location in GetAvailableLocations())
                 {
-                    <option value="@dept">@dept</option>
+                    <option value="@location">@location</option>
                 }
             </select>
         </div>
@@ -128,9 +127,8 @@
                                 </span>
                             </td>
                             <td>
-                                <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
-                                    @OperationalStateHelper.GetStateDisplayName(device.State)
-                                </span>
+                                <StatusBadge DisplayText="@OperationalStateHelper.GetStateDisplayName(device.State)" 
+                                             BadgeClass="@OperationalStateHelper.GetStateBadgeClass(device.State)" />
                             </td>
                             <td class="location-cell">@device.Location</td>
                             <td class="actions-cell">
@@ -186,6 +184,35 @@
 
     private List<string> availableDepartments = new();
 
+    // Dynamic filter options based on actual data
+    private List<DeviceType> GetAvailableTypes()
+    {
+        return allDevices
+            .Select(d => d.Type)
+            .Distinct()
+            .OrderBy(t => DeviceTypeHelper.GetTypeDisplayName(t))
+            .ToList();
+    }
+
+    private List<OperationalState> GetAvailableStates()
+    {
+        return allDevices
+            .Select(d => d.State)
+            .Distinct()
+            .OrderBy(s => OperationalStateHelper.GetStateDisplayName(s))
+            .ToList();
+    }
+
+    private List<string> GetAvailableLocations()
+    {
+        return allDevices
+            .Select(d => d.Location)
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .Distinct()
+            .OrderBy(l => l)
+            .ToList();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await LoadDepartments();
@@ -211,12 +238,12 @@
         statistics = await DeviceService.GetStatisticsAsync();
     }
 
-    private async Task HandleSearch()
+    private void HandleSearch()
     {
         ApplyLocalFilters();
     }
 
-    private async Task HandleFilterChange()
+    private void HandleFilterChange()
     {
         ApplyLocalFilters();
     }

@@ -12,4 +12,6 @@ public class InsertDeviceRequestDto
     public string? DepartmentName { get; set; }
     public DeviceType DeviceType { get; set; }
     public DateTime AcquisitionDate { get; set; }
+    public int TechnicianId { get; set; }
+    public int UserId { get; set; } // Admin/User who creates the request
 }

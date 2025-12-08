@@ -1,5 +1,8 @@
 @using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Technicians.Models
+@using InfraGestion.Web.Features.Technicians.Services
 @using System.ComponentModel.DataAnnotations
+@inject TechnicianService TechnicianService
 
 <EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -40,21 +43,28 @@
 
     <div class="form-group">
         <label for="technician" class="form-label">Nombre del Técnico que hará la defectación inicial:*</label>
-        <select id="technician" class="form-input" @bind="FormModel.TechnicianName">
-            <option value="">Seleccione un técnico</option>
-            <option value="Carlos Ruiz">Carlos Ruiz</option>
-            <option value="Ana López">Ana López</option>
-            <option value="Jorge Silva">Jorge Silva</option>
-            <option value="Elena Morales">Elena Morales</option>
+        <select id="technician" class="form-input" @bind="FormModel.TechnicianId">
+            <option value="0">Seleccione un técnico</option>
+            @if (isLoadingTechnicians)
+            {
+                <option value="0" disabled>Cargando técnicos...</option>
+            }
+            else
+            {
+                @foreach (var technician in technicians)
+                {
+                    <option value="@technician.Id">@technician.Name</option>
+                }
+            }
         </select>
-        <ValidationMessage For="@(() => FormModel.TechnicianName)" class="validation-message" />
+        <ValidationMessage For="@(() => FormModel.TechnicianId)" class="validation-message" />
     </div>
 
     <div class="form-actions">
         <button type="button" class="btn-cancel" @onclick="OnCancel">
             Cancelar
         </button>
-        <button type="submit" class="btn-save">
+        <button type="submit" class="btn-save" disabled="@isLoadingTechnicians">
             <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path d="M224,128a8,8,0,0,1-8,8H128v88a8,8,0,0,1-16,0V136H24a8,8,0,0,1,0-16h88V32a8,8,0,0,1,16,0v88h88A8,8,0,0,1,224,128Z"/>
             </svg>
@@ -72,6 +82,21 @@
 
     [Parameter]
     public EventCallback OnCancel { get; set; }
+
+    private List<Technician> technicians = new();
+    private bool isLoadingTechnicians = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTechnicians();
+    }
+
+    private async Task LoadTechnicians()
+    {
+        isLoadingTechnicians = true;
+        technicians = await TechnicianService.GetAllTechniciansAsync();
+        isLoadingTechnicians = false;
+    }
 
     private async Task HandleValidSubmit()
     {
