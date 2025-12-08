@@ -1,0 +1,276 @@
+@page "/technician/equipment"
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Departments.Services
+@inject DeviceService DeviceService
+@inject DepartmentService DepartmentService
+@inject NavigationManager Navigation
+
+<PageTitle>Inventario de Equipos - InfraCom</PageTitle>
+
+<div class="device-list-page">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Gestión de Inventario</h1>
+                <p class="page-description">Administración de equipos de infraestructura</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-value">@statistics["Total"]</div>
+            <div class="stat-label">Total de equipos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value stat-operational">@statistics["Operational"]</div>
+            <div class="stat-label">Operativos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value stat-maintenance">@statistics["UnderMaintenance"]</div>
+            <div class="stat-label">Mantenimiento</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value stat-decommissioned">@statistics["Decommissioned"]</div>
+            <div class="stat-label">Dado de baja</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input type="text" class="search-input" placeholder="Buscar por ID, nombre, ..." @bind="searchTerm"
+                @bind:event="oninput" @bind:after="HandleSearch" />
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" @bind="selectedType" @bind:after="HandleFilterChange">
+                <option value="">Tipo</option>
+                <option value="@DeviceType.ConnectivityAndNetwork">Conectividad y Red</option>
+                <option value="@DeviceType.ComputingAndIT">Cómputo e Informática</option>
+                <option value="@DeviceType.ElectricalInfrastructureAndSupport">Infraestructura y Soporte</option>
+                <option value="@DeviceType.CommunicationsAndTransmission">Comunicaciones y Transmisión</option>
+                <option value="@DeviceType.DiagnosticAndMeasurement">Diagnóstico y Medición</option>
+            </select>
+
+            <select class="filter-select" @bind="selectedState" @bind:after="HandleFilterChange">
+                <option value="">Estado</option>
+                <option value="@OperationalState.Operational">Operativo</option>
+                <option value="@OperationalState.UnderMaintenance">En Mantenimiento</option>
+                <option value="@OperationalState.Decommissioned">De Baja</option>
+                <option value="@OperationalState.BeingTransferred">Siendo Trasladado</option>
+            </select>
+
+            <select class="filter-select" @bind="selectedLocation" @bind:after="HandleFilterChange">
+                <option value="">Ubicación Actual</option>
+                @foreach (var dept in availableDepartments)
+                {
+                    <option value="@dept">@dept</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="devices-table">
+            <thead>
+                <tr>
+                    <th>ID de equipo</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Ubicación</th>
+                    <th class="actions-column"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading)
+                {
+                    <tr>
+                        <td colspan="6" class="loading-cell">
+                            <div class="spinner"></div>
+                            <span>Cargando equipos...</span>
+                        </td>
+                    </tr>
+                }
+                else if (filteredDevices == null || !filteredDevices.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="empty-cell">
+                            <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                            </svg>
+                            <p>No se encontraron equipos que coincidan con los filtros aplicados</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var device in filteredDevices)
+                    {
+                        <tr>
+                            <td class="id-cell">DEV@(device.Id.ToString("D3"))</td>
+                            <td class="name-cell">@device.Name</td>
+                            <td>
+                                <span class="type-badge @DeviceTypeHelper.GetTypeBadgeClass(device.Type)">
+                                    @DeviceTypeHelper.GetTypeDisplayName(device.Type)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @OperationalStateHelper.GetStateBadgeClass(device.State)">
+                                    @OperationalStateHelper.GetStateDisplayName(device.State)
+                                </span>
+                            </td>
+                            <td class="location-cell">@device.Location</td>
+                            <td class="actions-cell">
+                                <button class="btn-action btn-maintenance" @onclick="() => RegisterMaintenance(device.Id)" 
+                                    title="Registrar Mantenimiento">
+                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <!-- ICON: Put your wrench/tool icon path here -->
+                                        <path d="M232,96a72,72,0,0,1-100.94,66L79,222.22c-.12.14-.26.29-.39.42a32,32,0,0,1-45.26-45.26c.14-.13.28-.27.43-.39L94,124.94a72.07,72.07,0,0,1,83.54-98.78,8,8,0,0,1,3.93,13.19L144,80l5.66,26.35L176,112l40.65-37.52a8,8,0,0,1,13.19,3.93A72.6,72.6,0,0,1,232,96Z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-action btn-decommission" @onclick="() => CreateDecommissionRequest(device.Id)"
+                                    title="Crear solicitud de baja">
+                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <!-- ICON: Put your decommission/filled icon path here -->
+                                        <path d="M223.16,68.42l-16-32A8,8,0,0,0,200,32H56a8,8,0,0,0-7.16,4.42l-16,32A8.08,8.08,0,0,0,32,72V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V72A8.08,8.08,0,0,0,223.16,68.42Zm-57.5,89.24-32,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32L120,164.69V104a8,8,0,0,1,16,0v60.69l18.34-18.35a8,8,0,0,1,11.32,11.32ZM52.94,64l8-16H195.06l8,16Z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-action btn-view" @onclick="() => NavigateToDetails(device.Id)"
+                                    title="Ver detalles">
+                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,176H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm0-32H96a8,8,0,0,1,0-16h64a8,8,0,0,1,0,16Zm-8-56V44l44,44Z" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<Device> allDevices = new();
+    private List<Device> filteredDevices = new();
+    private Dictionary<string, int> statistics = new()
+    {
+        { "Total", 0 },
+        { "Operational", 0 },
+        { "UnderMaintenance", 0 },
+        { "Decommissioned", 0 }
+    };
+    private bool isLoading = true;
+
+    private string searchTerm = string.Empty;
+    private string selectedType = string.Empty;
+    private string selectedState = string.Empty;
+    private string selectedLocation = string.Empty;
+
+    private List<string> availableDepartments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartments();
+        await LoadDevices();
+        await LoadStatistics();
+    }
+
+    private async Task LoadDepartments()
+    {
+        availableDepartments = await DepartmentService.GetAllDepartmentNamesAsync();
+    }
+
+    private async Task LoadDevices()
+    {
+        isLoading = true;
+        allDevices = await DeviceService.GetAllDevicesAsync();
+        filteredDevices = allDevices;
+        isLoading = false;
+    }
+
+    private async Task LoadStatistics()
+    {
+        statistics = await DeviceService.GetStatisticsAsync();
+    }
+
+    private async Task HandleSearch()
+    {
+        ApplyLocalFilters();
+    }
+
+    private async Task HandleFilterChange()
+    {
+        ApplyLocalFilters();
+    }
+
+    private void ApplyLocalFilters()
+    {
+        var query = allDevices.AsEnumerable();
+
+        // Filter by search term
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(d =>
+                d.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                d.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Filter by type
+        if (!string.IsNullOrEmpty(selectedType))
+        {
+            var typeFilter = Enum.Parse<DeviceType>(selectedType);
+            query = query.Where(d => d.Type == typeFilter);
+        }
+
+        // Filter by state
+        if (!string.IsNullOrEmpty(selectedState))
+        {
+            var stateFilter = Enum.Parse<OperationalState>(selectedState);
+            query = query.Where(d => d.State == stateFilter);
+        }
+
+        // Filter by location
+        if (!string.IsNullOrEmpty(selectedLocation))
+        {
+            query = query.Where(d => d.Location.Equals(selectedLocation, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredDevices = query.ToList();
+    }
+
+    private void RegisterMaintenance(int deviceId)
+    {
+        // TODO: Navigate to maintenance registration page
+        Navigation.NavigateTo($"/technician/maintenance/create?deviceId={deviceId}");
+    }
+
+    private void CreateDecommissionRequest(int deviceId)
+    {
+        // TODO: Navigate to create decommission request page
+        Navigation.NavigateTo($"/technician/decommissioning/create?deviceId={deviceId}");
+    }
+
+    private void NavigateToDetails(int deviceId)
+    {
+        Navigation.NavigateTo($"/technician/equipment/{deviceId}");
+    }
+}

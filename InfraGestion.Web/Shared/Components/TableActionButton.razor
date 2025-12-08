@@ -1,0 +1,29 @@
+<button class="table-action-btn @ButtonClass" @onclick="OnClick" title="@Title">
+    @ChildContent
+</button>
+
+@code {
+    /// <summary>
+    /// CSS class for styling the button (e.g., btn-edit, btn-view, btn-maintenance)
+    /// </summary>
+    [Parameter]
+    public string ButtonClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tooltip text for the button
+    /// </summary>
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Click event callback
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    /// <summary>
+    /// SVG icon or other content for the button
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
