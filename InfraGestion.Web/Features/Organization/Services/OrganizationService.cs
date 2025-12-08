@@ -42,6 +42,7 @@ public class OrganizationService
                     {
                         Id = dto.SectionId,
                         Name = dto.Name,
+                        SectionManager = dto.SectionManager ?? string.Empty,
                         Status = OrganizationStatus.Active
                     }).ToList();
                 }
@@ -79,7 +80,8 @@ public class OrganizationService
             var dto = new SectionRequestDto
             {
                 SectionId = 0,
-                Name = request.Name
+                Name = request.Name,
+                SectionManager = request.ManagerName
             };
 
             var response = await _httpClient.PostAsJsonAsync($"{BASE_URL}/sections", dto);
@@ -101,7 +103,8 @@ public class OrganizationService
             var dto = new SectionRequestDto
             {
                 SectionId = request.Id,
-                Name = request.Name
+                Name = request.Name,
+                SectionManager = request.ManagerName
             };
 
             var response = await _httpClient.PutAsJsonAsync($"{BASE_URL}/sections", dto);
