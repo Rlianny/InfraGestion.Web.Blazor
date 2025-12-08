@@ -300,10 +300,28 @@ public class TechnicianService
     {
         try
         {
-            var technician = await GetTechnicianByIdAsync(id);
-            if (technician == null)
-                return null;
+            await EnsureAuthenticatedAsync();
+            
+            // Llamar al endpoint de detalles del técnico
+            var response = await _httpClient.GetAsync($"{BASE_URL}/technician/{id}/detail");
 
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error al obtener detalles del técnico: {response.StatusCode}");
+                return null;
+            }
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDetailDto>>();
+
+            if (apiResponse?.Success != true || apiResponse.Data == null)
+            {
+                Console.WriteLine("Respuesta de API no exitosa o sin datos");
+                return null;
+            }
+
+            var dto = apiResponse.Data;
+
+            // Obtener datos adicionales (performances, bonuses, penalties)
             var performances = await GetTechnicianPerformancesAsync(id);
             var bonuses = await GetTechnicianBonusesAsync(id);
             var penalties = await GetTechnicianPenaltiesAsync(id);
@@ -313,15 +331,41 @@ public class TechnicianService
                 ? performances.Average(p => p.Score) 
                 : 0;
 
+            // Mapear MaintenanceRecords a MaintenanceHistory
+            var maintenanceHistory = dto.MaintenanceRecords.Select(m => new MaintenanceRecord
+            {
+                Id = m.MaintenanceRecordId,
+                Date = m.MaintenanceDate,
+                Type = m.MaintenanceType,
+                TechnicianName = m.TechnicianName,
+                Notes = m.Description,
+                Cost = (decimal)m.Cost,
+                DeviceId = m.DeviceId.ToString(),
+                DeviceName = m.DeviceName
+            }).ToList();
+
+            // Mapear DecommissioningRequests a DecommissionProposals
+            var decommissionProposals = dto.DecommissioningRequests.Select(d => new DecommissionProposal
+            {
+                Id = d.DecommissioningRequestId,
+                Date = d.RequestDate,
+                DeviceId = d.DeviceId.ToString(),
+                Cause = d.Reason,
+                Receiver = d.DeviceReceiverName,
+                Status = d.Status
+            }).ToList();
+
             var details = new TechnicianDetails
             {
-                Id = technician.Id,
-                Name = technician.Name,
-                IdentificationNumber = $"TECH{technician.Id:D3}",
-                Specialty = technician.Specialty,
-                YearsOfExperience = technician.YearsOfExperience,
-                Status = technician.Status,
+                Id = dto.TechnicianId,
+                Name = dto.Name,
+                IdentificationNumber = $"TECH{dto.TechnicianId:D3}",
+                Specialty = dto.Specialty,
+                YearsOfExperience = dto.YearsOfExperience,
+                Status = TechnicianStatus.Active,
                 Rating = avgRating,
+                MaintenanceHistory = maintenanceHistory,
+                DecommissionProposals = decommissionProposals,
                 Ratings = performances.Select(p => new TechnicianRating
                 {
                     Id = p.RateId,
