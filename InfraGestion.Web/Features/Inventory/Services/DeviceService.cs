@@ -505,7 +505,7 @@ public class DeviceService
             Name = dto.Name,
             Type = dto.DeviceType,
             State = dto.OperationalState,
-            Location = dto.DepartmentName
+            Location = NormalizeDepartmentName(dto.DepartmentName)
         };
     }
 
@@ -519,7 +519,7 @@ public class DeviceService
             Type = dto.DeviceType,
             State = dto.OperationalState,
             PurchaseDate = dto.AcquisitionDate,
-            Department = dto.DepartmentName,
+            Department = NormalizeDepartmentName(dto.DepartmentName),
             Section = dto.SectionName ?? "N/A",
             SectionManager = dto.SectionManager ?? "N/A",
             MaintenanceCount = dto.MaintenanceCount ?? 0,
@@ -529,6 +529,18 @@ public class DeviceService
             TransferHistory = MapTransferHistory(dto.TransferHistory),
             InitialDefect = MapInitialDefect(dto.InitialDefect)
         };
+    }
+
+    private string NormalizeDepartmentName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "Almacen General";
+        }
+
+        return name.Equals("Mocking Department", StringComparison.OrdinalIgnoreCase)
+            ? "Almacen General"
+            : name;
     }
 
     private List<MaintenanceRecord> MapMaintenanceHistory(List<MaintenanceRecordDto>? dtos)
