@@ -85,6 +85,14 @@
     color: var(--color-primary);
 }
 
+.stat-value.stat-pending {
+    color: rgb(161, 98, 7);
+}
+
+.stat-value.stat-revised {
+    color: rgb(37, 99, 235);
+}
+
 .stat-value.stat-maintenance {
     /*color: rgb(234, 179, 8);*/
     color: var(--color-primary);
@@ -321,6 +329,16 @@
 .status-transferred {
     background: rgba(59, 130, 246, 0.1);
     color: rgb(29, 78, 216);
+}
+
+.status-pending {
+    background: rgba(234, 179, 8, 0.15);
+    color: rgb(161, 98, 7);
+}
+
+.status-revised {
+    background: rgba(59, 130, 246, 0.12);
+    color: rgb(37, 99, 235);
 }
 
 /* Actions */

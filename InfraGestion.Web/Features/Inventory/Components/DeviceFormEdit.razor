@@ -44,6 +44,8 @@
         <div class="form-group">
             <label for="state" class="form-label">Estado*</label>
             <select id="state" class="form-input" @bind="FormModel.State">
+                <option value="@OperationalState.UnderRevision">Pendiente de revision</option>
+                <option value="@OperationalState.Revised">Revisado</option>
                 <option value="@OperationalState.Operational">Operativo</option>
                 <option value="@OperationalState.UnderMaintenance">En Mantenimiento</option>
                 <option value="@OperationalState.Decommissioned">De Baja</option>

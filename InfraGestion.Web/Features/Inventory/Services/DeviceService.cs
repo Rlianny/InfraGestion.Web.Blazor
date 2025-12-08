@@ -277,8 +277,8 @@ public class DeviceService
                     Id = 0,
                     Name = request.Name,
                     Type = request.Type,
-                    State = OperationalState.Operational,
-                    Location = "Pending"
+                    State = OperationalState.UnderRevision,
+                    Location = "Pendiente de revision"
                 };
             }
 
@@ -486,6 +486,8 @@ public class DeviceService
         return new Dictionary<string, int>
         {
             ["Total"] = devices.Count,
+            ["UnderRevision"] = devices.Count(d => d.State == OperationalState.UnderRevision),
+            ["Revised"] = devices.Count(d => d.State == OperationalState.Revised),
             ["Operational"] = devices.Count(d => d.State == OperationalState.Operational),
             ["UnderMaintenance"] = devices.Count(d => d.State == OperationalState.UnderMaintenance),
             ["Decommissioned"] = devices.Count(d => d.State == OperationalState.Decommissioned),

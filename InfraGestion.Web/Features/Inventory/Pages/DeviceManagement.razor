@@ -34,6 +34,14 @@
             <div class="stat-label">Total de equipos</div>
         </div>
         <div class="stat-card">
+            <div class="stat-value stat-pending">@statistics["UnderRevision"]</div>
+            <div class="stat-label">Pendientes de revision</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value stat-revised">@statistics["Revised"]</div>
+            <div class="stat-label">Revisados</div>
+        </div>
+        <div class="stat-card">
             <div class="stat-value stat-operational">@statistics["Operational"]</div>
             <div class="stat-label">Operativos</div>
         </div>
@@ -70,6 +78,8 @@
 
             <select class="filter-select" @bind="selectedState" @bind:after="HandleFilterChange">
                 <option value="">Estado: Todos</option>
+                <option value="@OperationalState.UnderRevision">Pendiente de revision</option>
+                <option value="@OperationalState.Revised">Revisado</option>
                 <option value="@OperationalState.Operational">Operativo</option>
                 <option value="@OperationalState.UnderMaintenance">En Mantenimiento</option>
                 <option value="@OperationalState.Decommissioned">De Baja</option>
@@ -190,9 +200,12 @@
     private Dictionary<string, int> statistics = new()
     {
         { "Total", 0 },
+        { "UnderRevision", 0 },
+        { "Revised", 0 },
         { "Operational", 0 },
         { "UnderMaintenance", 0 },
-        { "Decommissioned", 0 }
+        { "Decommissioned", 0 },
+        { "BeingTransferred", 0 }
     };
     private bool isLoading = true;
 

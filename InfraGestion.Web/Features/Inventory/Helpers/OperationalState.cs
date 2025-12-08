@@ -8,6 +8,8 @@ public static class OperationalStateHelper
     {
         return state switch
         {
+            OperationalState.UnderRevision => "Pendiente de revision",
+            OperationalState.Revised => "Revisado",
             OperationalState.Operational => "Operativo",
             OperationalState.UnderMaintenance => "En Mantenimiento",
             OperationalState.Decommissioned => "De Baja",
@@ -20,6 +22,8 @@ public static class OperationalStateHelper
     {
         return state switch
         {
+            OperationalState.UnderRevision => "status-pending",
+            OperationalState.Revised => "status-revised",
             OperationalState.Operational => "status-operational",
             OperationalState.UnderMaintenance => "status-maintenance",
             OperationalState.Decommissioned => "status-decommissioned",

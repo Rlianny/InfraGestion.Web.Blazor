@@ -104,6 +104,16 @@
     color: rgb(29, 78, 216);
 }
 
+.status-pending {
+    background: rgba(234, 179, 8, 0.15);
+    color: rgb(161, 98, 7);
+}
+
+.status-revised {
+    background: rgba(59, 130, 246, 0.12);
+    color: rgb(37, 99, 235);
+}
+
 .page-description {
     color: var(--color-text-primary);
     font-size: 14px;
