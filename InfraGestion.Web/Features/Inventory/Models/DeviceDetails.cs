@@ -27,6 +27,5 @@ public class DeviceDetails
     // Related records
     public List<MaintenanceRecord> MaintenanceHistory { get; set; } = new();
     public List<TransferRecord> TransferHistory { get; set; } = new();
-    public InitialDefect? InitialDefect { get; set; }
     public DecommissioningRequest? DecommissioningInfo { get; set; }
 }

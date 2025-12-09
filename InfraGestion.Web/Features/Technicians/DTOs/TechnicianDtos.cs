@@ -37,9 +37,17 @@ public class MaintenanceRecordDto
     public int TechnicianId { get; set; }
     public string TechnicianName { get; set; } = string.Empty;
     public DateTime MaintenanceDate { get; set; }
-    public string MaintenanceType { get; set; } = string.Empty;
+    public int MaintenanceType { get; set; } // Enum value from backend
     public double Cost { get; set; }
     public string Description { get; set; } = string.Empty;
+
+    public string GetMaintenanceTypeName() => MaintenanceType switch
+    {
+        0 => "Preventivo",
+        1 => "Correctivo",
+        2 => "Predictivo",
+        _ => "Mantenimiento"
+    };
 }
 
 /// <summary>
@@ -55,12 +63,29 @@ public class DecommissioningRequestDto
     public int DeviceReceiverId { get; set; }
     public string DeviceReceiverName { get; set; } = string.Empty;
     public DateTime RequestDate { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public int Status { get; set; } // Enum value from backend
     public string Justification { get; set; } = string.Empty;
-    public string Reason { get; set; } = string.Empty;
+    public int Reason { get; set; } // Enum value from backend
     public DateTime? ReviewedDate { get; set; }
     public int? ReviewedByUserId { get; set; }
     public string? ReviewedByUserName { get; set; }
+
+    public string GetStatusName() => Status switch
+    {
+        0 => "Pendiente",
+        1 => "Aceptado",
+        2 => "Rechazado",
+        _ => "Pendiente"
+    };
+
+    public string GetReasonName() => Reason switch
+    {
+        0 => "Obsolescencia",
+        1 => "Daño irreparable",
+        2 => "Actualización",
+        3 => "Otro",
+        _ => "No especificado"
+    };
 }
 
 /// <summary>

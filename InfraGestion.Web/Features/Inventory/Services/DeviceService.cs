@@ -20,63 +20,101 @@ public class DeviceService
         _authService = authService;
     }
 
+    private async Task EnsureAuthenticatedAsync()
+    {
+        await _authService.GetCurrentUserAsync();
+    }
+
     // GET ENDPOINTS
 
     /// <summary>
     /// Gets all devices with optional filters
-    /// GET /inventory?userId={userId}&filter.xxx=yyy
+    /// GET /inventory?userID={userID}&filter.xxx=yyy
     /// </summary>
-    public async Task<List<Device>> GetAllDevicesAsync(int userId = 1, DeviceFilterDto? filter = null)
+    public async Task<List<Device>> GetAllDevicesAsync(int userId = 0, DeviceFilterDto? filter = null)
     {
         try
         {
+            // Asegurar autenticación
+            await EnsureAuthenticatedAsync();
+            
+            // Si no se proporciona userId, obtener el del usuario actual autenticado
+            if (userId == 0)
+            {
+                var currentUser = await _authService.GetCurrentUserAsync();
+                userId = currentUser?.Id ?? 1;
+            }
 
-            var queryParams = new List<string> { $"userId={userId}" };
+            var queryParams = new List<string> { $"userID={userId}" };
 
             if (filter != null)
             {
                 if (!string.IsNullOrEmpty(filter.SearchTerm))
                     queryParams.Add($"filter.SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
-                //Console.WriteLine("🔵 Fetching devices from API...");
                 if (filter.DeviceType.HasValue)
                     queryParams.Add($"filter.DeviceType={filter.DeviceType.Value}");
-
                 if (filter.OperationalState.HasValue)
                     queryParams.Add($"filter.OperationalState={filter.OperationalState.Value}");
-
                 if (!string.IsNullOrEmpty(filter.DepartmentName))
                     queryParams.Add($"filter.DepartmentName={Uri.EscapeDataString(filter.DepartmentName)}");
-
                 if (filter.DepartmentId.HasValue)
                     queryParams.Add($"filter.DepartmentId={filter.DepartmentId.Value}");
             }
 
             var url = $"inventory?{string.Join("&", queryParams)}";
+            Console.WriteLine($"[DEBUG] GetAllDevicesAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetAllDevicesAsync status: {response.StatusCode}, body: {content}");
 
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"[DEBUG] GetAllDevicesAsync failed with status: {response.StatusCode}");
                 return new List<Device>();
             }
 
-            // Soportar API con envoltura o lista directa
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
-            if (apiResponse?.Success == true && apiResponse.Data != null)
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions
             {
-                return apiResponse.Data.Select(MapDtoToDevice).ToList();
+                PropertyNameCaseInsensitive = true
+            };
+
+            // Intentar deserializar como lista de DeviceDto directamente
+            try
+            {
+                var rawList = System.Text.Json.JsonSerializer.Deserialize<List<DeviceDto>>(content, jsonOptions);
+                if (rawList != null && rawList.Any())
+                {
+                    Console.WriteLine($"[DEBUG] Mapped {rawList.Count} devices (DeviceDto)");
+                    return rawList.Select(MapDtoToDevice).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Failed to deserialize as List<DeviceDto>: {ex.Message}");
             }
 
-            var rawList = await response.Content.ReadFromJsonAsync<List<DeviceDto>>();
-            if (rawList != null)
+            // Si falla, intentar con DeviceDtoRaw (enums como int)
+            try
             {
-                return rawList.Select(MapDtoToDevice).ToList();
+                var rawListInt = System.Text.Json.JsonSerializer.Deserialize<List<DeviceDtoRaw>>(content, jsonOptions);
+                if (rawListInt != null && rawListInt.Any())
+                {
+                    Console.WriteLine($"[DEBUG] Mapped {rawListInt.Count} devices (DeviceDtoRaw)");
+                    return rawListInt.Select(d => MapDtoToDevice(d.ToDeviceDto())).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Failed to deserialize as List<DeviceDtoRaw>: {ex.Message}");
             }
 
+            Console.WriteLine($"[DEBUG] No devices could be deserialized");
             return new List<Device>();
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] GetAllDevicesAsync: {ex.Message}");
             return new List<Device>();
         }
     }
@@ -121,34 +159,35 @@ public class DeviceService
         try
         {
             var response = await _httpClient.GetAsync($"inventory/{id}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetDeviceDetailsAsync status: {response.StatusCode}, body: {content}");
 
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<DeviceDetailDto>>();
-
-            if (apiResponse?.Success == true && apiResponse.Data != null)
+            // Backend devuelve DeviceDetailDto directamente (sin ApiResponse wrapper)
+            var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(content, new System.Text.Json.JsonSerializerOptions
             {
-                var deviceDetails = MapDetailDtoToDeviceDetails(apiResponse.Data);
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (dto != null)
+            {
+                var deviceDetails = MapDetailDtoToDeviceDetails(dto);
                 
                 // Resolve location info from Organization service
-                await ResolveLocationInfoAsync(deviceDetails, apiResponse.Data.DepartmentId);
+                await ResolveLocationInfoAsync(deviceDetails, dto.DepartmentId);
                 
                 return deviceDetails;
-            }
-
-            var raw = await response.Content.ReadFromJsonAsync<DeviceDetailDto>();
-            if (raw != null)
-            {
-                return MapDetailDtoToDeviceDetails(raw);
             }
 
             return null;
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] GetDeviceDetailsAsync: {ex.Message}");
             return null;
         }
     }
@@ -590,8 +629,8 @@ public class DeviceService
             Id = dto.DeviceId,
             Name = dto.Name,
             IdentificationNumber = $"DEV{dto.DeviceId:D3}",
-            Type = dto.DeviceType,
-            State = dto.OperationalState,
+            Type = (DeviceType)dto.DeviceType,
+            State = (OperationalState)dto.OperationalState,
             PurchaseDate = dto.AcquisitionDate,
             // Location info - set defaults, will be resolved via ResolveLocationInfoAsync
             DepartmentId = dto.DepartmentId,
@@ -606,7 +645,6 @@ public class DeviceService
             // Related records
             MaintenanceHistory = maintenanceHistory,
             TransferHistory = MapTransferHistory(dto.TransferHistory),
-            InitialDefect = MapInitialDefect(dto.InitialDefect),
             DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo)
         };
     }
@@ -636,7 +674,7 @@ public class DeviceService
             TechnicianId = dto.TechnicianId,
             TechnicianName = dto.TechnicianName,
             Date = dto.MaintenanceDate,
-            Type = dto.MaintenanceType,
+            Type = (MaintenanceType)dto.MaintenanceType,
             Cost = (decimal)dto.Cost,
             Description = dto.Description
         }).ToList();
@@ -657,36 +695,13 @@ public class DeviceService
             SourceSectionName = dto.SourceSectionName,
             DestinationSectionId = dto.DestinationSectionId,
             DestinationSectionName = dto.DestinationSectionName,
-            ResponsiblePersonId = dto.ResponsiblePersonId,
-            ResponsiblePersonName = dto.ResponsiblePersonName,
             ReceiverId = dto.DeviceReceiverId,
             ReceiverName = dto.DeviceReceiverName,
-            Status = dto.Status
+            Status = (TransferStatus)dto.Status
         }).ToList();
     }
 
-    private InitialDefect? MapInitialDefect(InitialDefectDto? dto)
-    {
-        if (dto == null)
-            return null;
-
-        return new InitialDefect
-        {
-            Id = dto.InitialDefectId,
-            DeviceId = dto.DeviceId,
-            DeviceName = dto.DeviceName,
-            SubmissionDate = dto.SubmissionDate,
-            RequesterId = dto.RequesterId,
-            RequesterName = dto.RequesterName,
-            TechnicianId = dto.TechnicianId,
-            TechnicianName = dto.TechnicianName,
-            Status = dto.Status,
-            ResponseDate = dto.ResponseDate,
-            Description = dto.Description
-        };
-    }
-
-    private DecommissioningRequest? MapDecommissioningInfo(DecommissioningRequestDto? dto)
+    private DecommissioningRequest? MapDecommissioningInfo(DecommissioningDto? dto)
     {
         if (dto == null)
             return null;
@@ -696,17 +711,13 @@ public class DeviceService
             Id = dto.DecommissioningRequestId,
             DeviceId = dto.DeviceId,
             DeviceName = dto.DeviceName,
-            TechnicianId = dto.TechnicianId,
-            TechnicianName = dto.TechnicianName,
             ReceiverId = dto.DeviceReceiverId,
             ReceiverName = dto.DeviceReceiverName,
-            RequestDate = dto.RequestDate,
-            Status = dto.Status,
-            Justification = dto.Justification,
-            Reason = dto.Reason,
-            ReviewedDate = dto.ReviewedDate,
-            ReviewedByUserId = dto.ReviewedByUserId,
-            ReviewedByUserName = dto.ReviewedByUserName
+            ReceiverDepartmentId = dto.ReceiverDepartmentId,
+            ReceiverDepartmentName = dto.ReceiverDepartmentName,
+            DecommissioningDate = dto.DecommissioningDate,
+            Reason = (DecommissioningReason)dto.Reason,
+            FinalDestination = dto.FinalDestination
         };
     }
 }

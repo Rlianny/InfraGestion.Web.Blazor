@@ -174,50 +174,10 @@ else
                                     <td>@transfer.Date.ToString("dd/MM/yyyy")</td>
                                     <td>@transfer.SourceSectionName</td>
                                     <td>@transfer.DestinationSectionName</td>
-                                    <td>@transfer.ResponsiblePersonName</td>
                                     <td>@transfer.ReceiverName</td>
+                                    <td>@transfer.Status</td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Defectación inicial -->
-        <div class="history-section">
-            <h2 class="section-title">Defectación inicial</h2>
-            <div class="table-container">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>FECHA EMISIÓN</th>
-                            <th>SOLICITANTE</th>
-                            <th>TÉCNICO</th>
-                            <th>ESTADO</th>
-                            <th>FECHA RESPUESTA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (device.InitialDefect == null)
-                        {
-                            <tr>
-                                <td colspan="5" class="empty-cell">
-                                    No se encontró registro de defectación inicial para este equipo
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            <tr>
-                                <td>@device.InitialDefect.SubmissionDate.ToString("dd/MM/yyyy")</td>
-                                <td>@device.InitialDefect.RequesterName</td>
-                                <td>@device.InitialDefect.TechnicianName</td>
-                                <td>
-                                    <StatusBadge Status="@GetInitialDefectStatusLabel(device.InitialDefect.Status)" />
-                                </td>
-                                <td>@(device.InitialDefect.ResponseDate?.ToString("dd/MM/yyyy") ?? "Pendiente")</td>
-                            </tr>
                         }
                     </tbody>
                 </table>
@@ -231,11 +191,11 @@ else
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>FECHA SOLICITUD</th>
-                            <th>SOLICITANTE</th>
-                            <th>TÉCNICO</th>
-                            <th>ESTADO</th>
-                            <th>FECHA REVISIÓN</th>
+                            <th>FECHA BAJA</th>
+                            <th>RECEPTOR</th>
+                            <th>DEPARTAMENTO RECEPTOR</th>
+                            <th>RAZÓN</th>
+                            <th>DESTINO FINAL</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,13 +210,11 @@ else
                         else
                         {
                             <tr>
-                                <td>@device.DecommissioningInfo.RequestDate.ToString("dd/MM/yyyy")</td>
+                                <td>@device.DecommissioningInfo.DecommissioningDate.ToString("dd/MM/yyyy")</td>
                                 <td>@device.DecommissioningInfo.ReceiverName</td>
-                                <td>@device.DecommissioningInfo.TechnicianName</td>
-                                <td>
-                                    <StatusBadge Status="@GetDecommissioningStatusLabel(device.DecommissioningInfo.Status)" />
-                                </td>
-                                <td>@(device.DecommissioningInfo.ReviewedDate?.ToString("dd/MM/yyyy") ?? "Pendiente")</td>
+                                <td>@device.DecommissioningInfo.ReceiverDepartmentName</td>
+                                <td>@GetDecommissioningReasonLabel(device.DecommissioningInfo.Reason)</td>
+                                <td>@(device.DecommissioningInfo.FinalDestination ?? "No especificado")</td>
                             </tr>
                         }
                     </tbody>
@@ -299,25 +257,20 @@ else
         Navigation.NavigateTo("/inventory");
     }
 
-    private string GetDecommissioningStatusLabel(DecommissioningStatus status)
+    private string GetDecommissioningReasonLabel(DecommissioningReason reason)
     {
-        return status switch
+        return reason switch
         {
-            DecommissioningStatus.Approved => "Aprobado",
-            DecommissioningStatus.Pending => "Pendiente",
-            DecommissioningStatus.Rejected => "Rechazado",
-            _ => "Desconocido"
-        };
-    }
-
-    private string GetInitialDefectStatusLabel(InitialDefectStatus status)
-    {
-        return status switch
-        {
-            InitialDefectStatus.Approved => "Aprobado",
-            InitialDefectStatus.Pending => "Pendiente",
-            InitialDefectStatus.Rejected => "Rechazado",
-            _ => "Desconocido"
+            DecommissioningReason.IrreparableTechnicalFailure => "Fallo técnico irreparable",
+            DecommissioningReason.TechnologicalObsolescence => "Obsolescencia tecnológica",
+            DecommissioningReason.EOL => "Fin de vida útil",
+            DecommissioningReason.ExcessiveRepairCost => "Costo de reparación excesivo",
+            DecommissioningReason.SeverePhysicalDamage => "Daño físico severo",
+            DecommissioningReason.IncompatibilityWithNewInfrastructure => "Incompatibilidad con nueva infraestructura",
+            DecommissioningReason.PlannedTechnologyUpgrade => "Actualización tecnológica planificada",
+            DecommissioningReason.TheftOrLoss => "Robo o pérdida",
+            DecommissioningReason.CustomerContractTermination => "Terminación de contrato",
+            _ => "No especificado"
         };
     }
 

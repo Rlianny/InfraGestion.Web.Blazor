@@ -77,7 +77,9 @@ public class AuthService
                 Id = loginData.UserId,
                 Username = request.Username,
                 FullName = loginData.FullName,
-                Role = loginData.Role
+                Role = loginData.Role,
+                DepartmentId = loginData.DepartmentId,
+                DepartmentName = loginData.DepartmentName
             };
 
             await SaveTokenAsync(loginData.AccessToken);
@@ -106,13 +108,13 @@ public class AuthService
     /// </summary>
     private async Task<LoginResponse> LoginDemoAsync(LoginRequest request)
     {
-        var demoUsers = new Dictionary<string, (string password, string fullName, string role)>
+        var demoUsers = new Dictionary<string, (string password, string fullName, string role, int departmentId, string departmentName)>
         {
-            { "admin", ("admin", "Carlos Administrador", "Administrador") },
-            { "director", ("director", "Ana Directora", "Director") },
-            { "jefe", ("jefe", "Jorge Jefe de Sección", "Jefe de Sección") },
-            { "tecnico", ("tecnico", "Elena Técnica", "Técnico") },
-            { "logistica", ("logistica", "Luis Logística", "Logístico") }
+            { "admin", ("admin", "Carlos Administrador", "Administrador", 1, "Administración General") },
+            { "director", ("director", "Ana Directora", "Director", 1, "Dirección") },
+            { "jefe", ("jefe", "Jorge Jefe de Sección", "Jefe de Sección", 2, "Sección Técnica") },
+            { "tecnico", ("tecnico", "Elena Técnica", "Técnico", 3, "Departamento de Mantenimiento") },
+            { "logistica", ("logistica", "Luis Logística", "Logístico", 4, "Logística") }
         };
 
         if (demoUsers.TryGetValue(request.Username.ToLower(), out var userData))
@@ -124,7 +126,9 @@ public class AuthService
                     Id = Array.IndexOf(demoUsers.Keys.ToArray(), request.Username.ToLower()) + 1,
                     Username = request.Username,
                     FullName = userData.fullName,
-                    Role = userData.role
+                    Role = userData.role,
+                    DepartmentId = userData.departmentId,
+                    DepartmentName = userData.departmentName
                 };
 
                 var demoToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{request.Username}:{DateTime.UtcNow.Ticks}"));

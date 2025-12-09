@@ -1,5 +1,3 @@
-using InfraGestion.Web.Features.Technicians.DTOs;
-
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
@@ -28,8 +26,6 @@ public class TechnicianDetails
     public List<MaintenanceRecord> MaintenanceHistory { get; set; } = new();
     public List<DecommissionProposal> DecommissionProposals { get; set; } = new();
     public List<TechnicianRating> Ratings { get; set; } = new();
-    public List<BonusDto> Bonuses { get; set; } = new();
-    public List<PenaltyDto> Penalties { get; set; } = new();
 }
 
 /// <summary>

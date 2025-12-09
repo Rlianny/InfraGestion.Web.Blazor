@@ -4,6 +4,7 @@ using InfraGestion.Web.Features.Technicians.Models;
 using InfraGestion.Web.Features.Technicians.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Organization.Services;
 
 namespace InfraGestion.Web.Features.Technicians.Services;
 
@@ -11,12 +12,14 @@ public class TechnicianService
 {
     private readonly HttpClient _httpClient;
     private readonly AuthService _authService;
+    private readonly OrganizationService _organizationService;
     private const string BASE_URL = "personnel";
 
-    public TechnicianService(HttpClient httpClient, AuthService authService)
+    public TechnicianService(HttpClient httpClient, AuthService authService, OrganizationService organizationService)
     {
         _httpClient = httpClient;
         _authService = authService;
+        _organizationService = organizationService;
     }
 
     private async Task EnsureAuthenticatedAsync()
@@ -32,22 +35,51 @@ public class TechnicianService
         {
             await EnsureAuthenticatedAsync();
             var response = await _httpClient.GetAsync($"{BASE_URL}/technicians");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetAllTechniciansAsync status: {response.StatusCode}, response: {content}");
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<TechnicianDto>>>();
-
-                if (apiResponse?.Success == true && apiResponse.Data != null)
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
                 {
-                    return apiResponse.Data.Select(dto => new Technician
+                    PropertyNameCaseInsensitive = true
+                };
+
+                // Intentar deserializar como ApiResponse primero
+                try
+                {
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<List<TechnicianDto>>>(content, jsonOptions);
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
                     {
-                        Id = dto.TechnicianId,
-                        Name = dto.Name,
-                        Specialty = dto.Specialty,
-                        YearsOfExperience = dto.YearsOfExperience,
-                        Status = TechnicianStatus.Active
-                    }).OrderBy(t => t.Name).ToList();
+                        return apiResponse.Data.Select(dto => new Technician
+                        {
+                            Id = dto.TechnicianId,
+                            Name = dto.Name,
+                            Specialty = dto.Specialty,
+                            YearsOfExperience = dto.YearsOfExperience,
+                            Status = TechnicianStatus.Active
+                        }).OrderBy(t => t.Name).ToList();
+                    }
                 }
+                catch { }
+
+                // Si falla, intentar como lista directa
+                try
+                {
+                    var directList = System.Text.Json.JsonSerializer.Deserialize<List<TechnicianDto>>(content, jsonOptions);
+                    if (directList != null && directList.Any())
+                    {
+                        return directList.Select(dto => new Technician
+                        {
+                            Id = dto.TechnicianId,
+                            Name = dto.Name,
+                            Specialty = dto.Specialty,
+                            YearsOfExperience = dto.YearsOfExperience,
+                            Status = TechnicianStatus.Active
+                        }).OrderBy(t => t.Name).ToList();
+                    }
+                }
+                catch { }
             }
 
             return new List<Technician>();
@@ -65,23 +97,52 @@ public class TechnicianService
         {
             await EnsureAuthenticatedAsync();
             var response = await _httpClient.GetAsync($"{BASE_URL}/technician/{id}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetTechnicianByIdAsync status: {response.StatusCode}, response: {content}");
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDto>>();
-
-                if (apiResponse?.Success == true && apiResponse.Data != null)
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
                 {
-                    var dto = apiResponse.Data;
-                    return new Technician
+                    PropertyNameCaseInsensitive = true
+                };
+
+                // Intentar deserializar como ApiResponse primero
+                try
+                {
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<TechnicianDto>>(content, jsonOptions);
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
                     {
-                        Id = dto.TechnicianId,
-                        Name = dto.Name,
-                        Specialty = dto.Specialty,
-                        YearsOfExperience = dto.YearsOfExperience,
-                        Status = TechnicianStatus.Active
-                    };
+                        var dto = apiResponse.Data;
+                        return new Technician
+                        {
+                            Id = dto.TechnicianId,
+                            Name = dto.Name,
+                            Specialty = dto.Specialty,
+                            YearsOfExperience = dto.YearsOfExperience,
+                            Status = TechnicianStatus.Active
+                        };
+                    }
                 }
+                catch { }
+
+                // Si falla, intentar como objeto directo
+                try
+                {
+                    var directDto = System.Text.Json.JsonSerializer.Deserialize<TechnicianDto>(content, jsonOptions);
+                    if (directDto != null)
+                    {
+                        return new Technician
+                        {
+                            Id = directDto.TechnicianId,
+                            Name = directDto.Name,
+                            Specialty = directDto.Specialty,
+                            YearsOfExperience = directDto.YearsOfExperience,
+                            Status = TechnicianStatus.Active
+                        };
+                    }
+                }
+                catch { }
             }
 
             return null;
@@ -99,15 +160,37 @@ public class TechnicianService
         {
             await EnsureAuthenticatedAsync();
             var response = await _httpClient.GetAsync($"{BASE_URL}/bonuses/{technicianId}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetTechnicianBonusesAsync status: {response.StatusCode}, response: {content}");
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<BonusDto>>>();
-
-                if (apiResponse?.Success == true && apiResponse.Data != null)
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
                 {
-                    return apiResponse.Data;
+                    PropertyNameCaseInsensitive = true
+                };
+
+                // Intentar deserializar como ApiResponse primero
+                try
+                {
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<List<BonusDto>>>(content, jsonOptions);
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        return apiResponse.Data;
+                    }
                 }
+                catch { }
+
+                // Si falla, intentar como lista directa
+                try
+                {
+                    var directList = System.Text.Json.JsonSerializer.Deserialize<List<BonusDto>>(content, jsonOptions);
+                    if (directList != null)
+                    {
+                        return directList;
+                    }
+                }
+                catch { }
             }
 
             return new List<BonusDto>();
@@ -125,15 +208,37 @@ public class TechnicianService
         {
             await EnsureAuthenticatedAsync();
             var response = await _httpClient.GetAsync($"{BASE_URL}/penalties/{technicianId}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetTechnicianPenaltiesAsync status: {response.StatusCode}, response: {content}");
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<PenaltyDto>>>();
-
-                if (apiResponse?.Success == true && apiResponse.Data != null)
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
                 {
-                    return apiResponse.Data;
+                    PropertyNameCaseInsensitive = true
+                };
+
+                // Intentar deserializar como ApiResponse primero
+                try
+                {
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<List<PenaltyDto>>>(content, jsonOptions);
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        return apiResponse.Data;
+                    }
                 }
+                catch { }
+
+                // Si falla, intentar como lista directa
+                try
+                {
+                    var directList = System.Text.Json.JsonSerializer.Deserialize<List<PenaltyDto>>(content, jsonOptions);
+                    if (directList != null)
+                    {
+                        return directList;
+                    }
+                }
+                catch { }
             }
 
             return new List<PenaltyDto>();
@@ -151,15 +256,37 @@ public class TechnicianService
         {
             await EnsureAuthenticatedAsync();
             var response = await _httpClient.GetAsync($"{BASE_URL}/performances/{technicianId}");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetTechnicianPerformancesAsync status: {response.StatusCode}, response: {content}");
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<RateDto>>>();
-
-                if (apiResponse?.Success == true && apiResponse.Data != null)
+                var jsonOptions = new System.Text.Json.JsonSerializerOptions
                 {
-                    return apiResponse.Data;
+                    PropertyNameCaseInsensitive = true
+                };
+
+                // Intentar deserializar como ApiResponse primero
+                try
+                {
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<List<RateDto>>>(content, jsonOptions);
+                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    {
+                        return apiResponse.Data;
+                    }
                 }
+                catch { }
+
+                // Si falla, intentar como lista directa
+                try
+                {
+                    var directList = System.Text.Json.JsonSerializer.Deserialize<List<RateDto>>(content, jsonOptions);
+                    if (directList != null)
+                    {
+                        return directList;
+                    }
+                }
+                catch { }
             }
 
             return new List<RateDto>();
@@ -256,7 +383,7 @@ public class TechnicianService
         try
         {
             await EnsureAuthenticatedAsync();
-            
+
             var updateRequest = new
             {
                 FullName = request.Name,
@@ -264,7 +391,7 @@ public class TechnicianService
                 YearsOfExperience = (int?)null,
                 DepartmentId = (int?)null
             };
-            
+
             var response = await _httpClient.PutAsJsonAsync($"{BASE_URL}/technician/{request.Id}", updateRequest);
 
             if (response.IsSuccessStatusCode)
@@ -284,7 +411,7 @@ public class TechnicianService
                     };
                 }
             }
-            
+
             Console.WriteLine($"Error al actualizar técnico: {response.StatusCode}");
             return null;
         }
@@ -304,50 +431,45 @@ public class TechnicianService
             await EnsureAuthenticatedAsync();
 
             var response = await _httpClient.GetAsync($"{BASE_URL}/technician/{id}/detail");
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetTechnicianDetailsAsync status: {response.StatusCode}, response: {content}");
+            
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Error al obtener detalles del técnico: {response.StatusCode}");
-                return null;
+                // Intentar obtener datos básicos del técnico si el endpoint de detalle falla
+                return await GetBasicTechnicianDetailsAsync(id);
             }
 
-            // API puede devolver ApiResponse o el objeto directo
-            TechnicianDetailResponse? payload = null;
-            var apiWrapper = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDetailResponse>>();
+            // API devuelve ApiResponse<TechnicianDetailDto>
+            TechnicianDetailDto? payload = null;
+            
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            
+            var apiWrapper = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<TechnicianDetailDto>>(content, jsonOptions);
             if (apiWrapper?.Data != null)
             {
                 payload = apiWrapper.Data;
-            }
-            else
-            {
-                payload = await response.Content.ReadFromJsonAsync<TechnicianDetailResponse>();
             }
 
             if (payload == null)
             {
                 Console.WriteLine("La API no devolvió detalles del técnico.");
                 return null;
+            }
 
-            // Obtener datos adicionales (performances, bonuses, penalties)
-            var performances = await GetTechnicianPerformancesAsync(id);
-            var bonuses = await GetTechnicianBonusesAsync(id);
-            var penalties = await GetTechnicianPenaltiesAsync(id);
-
-            var ratings = performances.Select(p => new TechnicianRating
-            {
-                Id = p.RateId,
-                Date = p.Date,
-                Issuer = string.IsNullOrWhiteSpace(p.GiverName) ? $"Usuario {p.GiverId}" : p.GiverName,
-                Score = (decimal)p.Score,
-                Description = p.Comment
-            }).ToList();
-
-            var avgRating = ratings.Any() ? ratings.Average(r => r.Score) : (decimal)payload.Rating;
-
+            // Obtener valoraciones adicionales del endpoint de performances
+            var ratings = await GetTechnicianPerformancesAsync(id);
+            
+            // Mapear historiales
             var maintenanceHistory = payload.MaintenanceRecords.Select(m => new MaintenanceRecord
             {
                 Id = m.MaintenanceRecordId,
                 Date = m.MaintenanceDate,
-                Type = string.IsNullOrWhiteSpace(m.MaintenanceType) ? "Mantenimiento" : m.MaintenanceType,
+                Type = m.GetMaintenanceTypeName(),
                 TechnicianName = m.TechnicianName,
                 Notes = m.Description,
                 Cost = (decimal)m.Cost,
@@ -361,12 +483,180 @@ public class TechnicianService
                 Date = d.RequestDate,
                 DeviceId = d.DeviceId.ToString(),
                 DeviceName = d.DeviceName,
-                Cause = d.Reason,
+                Cause = d.GetReasonName(),
                 Receiver = d.DeviceReceiverName,
-                Status = string.IsNullOrWhiteSpace(d.Status) ? "Pendiente" : d.Status
+                Status = d.GetStatusName()
             }).ToList();
 
+            // Mapear valoraciones
+            var technicianRatings = ratings.Select(r => new TechnicianRating
+            {
+                Id = r.RateId,
+                Date = r.Date,
+                Issuer = r.GiverName,
+                Score = (decimal)r.Score,
+                Description = r.Comment
+            }).ToList();
+
+            // Calcular rating promedio
+            decimal averageRating = technicianRatings.Any() 
+                ? technicianRatings.Average(r => r.Score) 
+                : 0m;
+
+            // Calcular fecha de última intervención (último mantenimiento realizado)
+            DateTime? lastInterventionDate = maintenanceHistory.Any()
+                ? maintenanceHistory.Max(m => m.Date)
+                : null;
+
+            // Calcular fecha de contratación aproximada (basada en años de experiencia)
+            DateTime hireDate = DateTime.Now.AddYears(-payload.YearsOfExperience);
+
+            // Intentar obtener información de ubicación del usuario actual si es el mismo técnico
+            string sectionName = "Sección Técnica";
+            string departmentName = "Departamento de Mantenimiento";
+            string sectionManager = "No asignado";
+
+            // Intentar obtener información del usuario actual si coincide con el técnico
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser != null && currentUser.Id == id)
+            {
+                departmentName = !string.IsNullOrEmpty(currentUser.DepartmentName) 
+                    ? currentUser.DepartmentName 
+                    : departmentName;
+            }
+
+            // Intentar obtener información de ubicación desde las secciones
+            try
+            {
+                var sections = await _organizationService.GetAllSectionsAsync();
+                if (sections.Any())
+                {
+                    // Buscar una sección que coincida con la especialidad del técnico
+                    var matchingSection = sections.FirstOrDefault(s => 
+                        s.Name.Contains(payload.Specialty, StringComparison.OrdinalIgnoreCase) ||
+                        payload.Specialty.Contains(s.Name, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (matchingSection != null)
+                    {
+                        sectionName = matchingSection.Name;
+                        sectionManager = matchingSection.SectionManager ?? sectionManager;
+                    }
+                    else if (sections.Any())
+                    {
+                        // Usar la primera sección disponible como fallback
+                        var firstSection = sections.First();
+                        sectionName = firstSection.Name;
+                        sectionManager = firstSection.SectionManager ?? sectionManager;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] No se pudo obtener información de secciones: {ex.Message}");
+            }
+
             var details = new TechnicianDetails
+            {
+                Id = payload.TechnicianId,
+                Name = payload.Name,
+                IdentificationNumber = $"TECH{payload.TechnicianId:D3}",
+                Specialty = payload.Specialty,
+                YearsOfExperience = payload.YearsOfExperience,
+                Status = TechnicianStatus.Active,
+                Rating = averageRating,
+                HireDate = hireDate,
+                LastInterventionDate = lastInterventionDate,
+                Section = sectionName,
+                Department = departmentName,
+                SectionManager = sectionManager,
+                MaintenanceHistory = maintenanceHistory,
+                DecommissionProposals = decommissionProposals,
+                Ratings = technicianRatings
+            };
+
+            return details;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener detalles del tecnico: {ex.Message}");
+            // Intentar obtener datos básicos como fallback
+            return await GetBasicTechnicianDetailsAsync(id);
+        }
+    }
+
+    /// <summary>
+    /// Obtiene detalles básicos del técnico cuando el endpoint de detalle no está disponible
+    /// </summary>
+    private async Task<TechnicianDetails?> GetBasicTechnicianDetailsAsync(int id)
+    {
+        try
+        {
+            Console.WriteLine($"[DEBUG] Intentando obtener datos básicos del técnico {id}");
+            
+            // Obtener datos básicos del técnico
+            var technician = await GetTechnicianByIdAsync(id);
+            if (technician == null)
+            {
+                Console.WriteLine($"[DEBUG] No se encontró el técnico {id}");
+                return null;
+            }
+
+            // Obtener valoraciones
+            var ratings = await GetTechnicianPerformancesAsync(id);
+            var technicianRatings = ratings.Select(r => new TechnicianRating
+            {
+                Id = r.RateId,
+                Date = r.Date,
+                Issuer = r.GiverName,
+                Score = (decimal)r.Score,
+                Description = r.Comment
+            }).ToList();
+
+            decimal averageRating = technicianRatings.Any()
+                ? technicianRatings.Average(r => r.Score)
+                : 0m;
+
+            DateTime hireDate = DateTime.Now.AddYears(-technician.YearsOfExperience);
+
+            // Intentar obtener información de ubicación
+            string sectionName = "Sección Técnica";
+            string departmentName = "Departamento de Mantenimiento";
+            string sectionManager = "No asignado";
+
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser != null && !string.IsNullOrEmpty(currentUser.DepartmentName))
+            {
+                departmentName = currentUser.DepartmentName;
+            }
+
+            try
+            {
+                var sections = await _organizationService.GetAllSectionsAsync();
+                if (sections.Any())
+                {
+                    var matchingSection = sections.FirstOrDefault(s =>
+                        s.Name.Contains(technician.Specialty, StringComparison.OrdinalIgnoreCase) ||
+                        technician.Specialty.Contains(s.Name, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchingSection != null)
+                    {
+                        sectionName = matchingSection.Name;
+                        sectionManager = matchingSection.SectionManager ?? sectionManager;
+                    }
+                    else
+                    {
+                        var firstSection = sections.First();
+                        sectionName = firstSection.Name;
+                        sectionManager = firstSection.SectionManager ?? sectionManager;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] No se pudo obtener información de secciones: {ex.Message}");
+            }
+
+            return new TechnicianDetails
             {
                 Id = technician.Id,
                 Name = technician.Name,
@@ -374,22 +664,20 @@ public class TechnicianService
                 Specialty = technician.Specialty,
                 YearsOfExperience = technician.YearsOfExperience,
                 Status = technician.Status,
-                Rating = avgRating,
-                Ratings = performances.Select(p => new TechnicianRating
-                {
-                    Id = p.RateId,
-                    Date = p.Date,
-                    Issuer = p.RatedBy,
-                    Score = p.Score,
-                    Description = p.Comment
-                }).ToList(),
-                Bonuses = bonuses,
-                Penalties = penalties
+                Rating = averageRating,
+                HireDate = hireDate,
+                LastInterventionDate = null,
+                Section = sectionName,
+                Department = departmentName,
+                SectionManager = sectionManager,
+                MaintenanceHistory = new List<MaintenanceRecord>(),
+                DecommissionProposals = new List<DecommissionProposal>(),
+                Ratings = technicianRatings
             };
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al obtener detalles del tecnico: {ex.Message}");
+            Console.WriteLine($"[DEBUG] Error en GetBasicTechnicianDetailsAsync: {ex.Message}");
             return null;
         }
     }
