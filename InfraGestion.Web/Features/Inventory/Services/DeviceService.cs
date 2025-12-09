@@ -37,14 +37,25 @@ public class DeviceService
         {
             // Asegurar autenticación
             await EnsureAuthenticatedAsync();
-            
-            // Si no se proporciona userId, obtener el del usuario actual autenticado
+
+            // Obtener el ID del usuario autenticado si no se proporciona
             if (userId == 0)
             {
                 var currentUser = await _authService.GetCurrentUserAsync();
-                userId = currentUser?.Id ?? 1;
+                userId = currentUser?.Id ?? 0;
+                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - currentUser: {currentUser?.Username ?? "NULL"}, Id: {currentUser?.Id ?? 0}");
             }
+            
+            // ⚠️ DEBUG TEMPORAL: Si el userId es 0, usar -5 (rlopez) para pruebas
+            if (userId == 0)
+            {
+                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - userId was 0, using -5 (rlopez) for testing");
+                userId = -5;
+            }
+            
+            Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Final userId to send: {userId}");
 
+            // ⚠️ El backend REQUIERE el parámetro userID
             var queryParams = new List<string> { $"userID={userId}" };
 
             if (filter != null)
@@ -66,7 +77,8 @@ public class DeviceService
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync status: {response.StatusCode}, body: {content}");
+            Console.WriteLine($"[DEBUG] GetAllDevicesAsync status: {response.StatusCode}");
+            Console.WriteLine($"[DEBUG] GetAllDevicesAsync body length: {content?.Length ?? 0}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -74,43 +86,68 @@ public class DeviceService
                 return new List<Device>();
             }
 
-            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+            if (string.IsNullOrWhiteSpace(content))
             {
-                PropertyNameCaseInsensitive = true
-            };
+                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Empty response");
+                return new List<Device>();
+            }
 
-            // Intentar deserializar como lista de DeviceDto directamente
+            // Manejo flexible: array directo o ApiResponse { data: [] }
             try
             {
-                var rawList = System.Text.Json.JsonSerializer.Deserialize<List<DeviceDto>>(content, jsonOptions);
-                if (rawList != null && rawList.Any())
+                using var doc = System.Text.Json.JsonDocument.Parse(content);
+                var root = doc.RootElement;
+
+                System.Text.Json.JsonElement dataElement;
+
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Array)
                 {
-                    Console.WriteLine($"[DEBUG] Mapped {rawList.Count} devices (DeviceDto)");
-                    return rawList.Select(MapDtoToDevice).ToList();
+                    dataElement = root;
                 }
+                else if (root.ValueKind == System.Text.Json.JsonValueKind.Object && root.TryGetProperty("data", out var dataProp))
+                {
+                    dataElement = dataProp;
+                }
+                else
+                {
+                    Console.WriteLine("[DEBUG] Unexpected JSON shape for devices");
+                    return new List<Device>();
+                }
+
+                if (dataElement.ValueKind != System.Text.Json.JsonValueKind.Array || !dataElement.EnumerateArray().Any())
+                {
+                    Console.WriteLine("[DEBUG] Devices array empty or invalid");
+                    return new List<Device>();
+                }
+
+                var devices = new List<Device>();
+
+                foreach (var item in dataElement.EnumerateArray())
+                {
+                    var id = item.TryGetProperty("deviceId", out var idProp) ? idProp.GetInt32() : 0;
+                    var name = item.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? string.Empty : string.Empty;
+                    var typeVal = item.TryGetProperty("deviceType", out var typeProp) ? typeProp.GetInt32() : 0;
+                    var stateVal = item.TryGetProperty("operationalState", out var stateProp) ? stateProp.GetInt32() : 0;
+                    var dept = item.TryGetProperty("departmentName", out var deptProp) ? deptProp.GetString() ?? string.Empty : string.Empty;
+
+                    devices.Add(new Device
+                    {
+                        Id = id,
+                        Name = name,
+                        Type = (DeviceType)typeVal,
+                        State = (OperationalState)stateVal,
+                        Location = string.IsNullOrWhiteSpace(dept) ? "Almacen General" : dept
+                    });
+                }
+
+                Console.WriteLine($"[DEBUG] Parsed {devices.Count} devices");
+                return devices;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DEBUG] Failed to deserialize as List<DeviceDto>: {ex.Message}");
+                Console.WriteLine($"[DEBUG] Failed to parse devices JSON: {ex.Message}");
+                return new List<Device>();
             }
-
-            // Si falla, intentar con DeviceDtoRaw (enums como int)
-            try
-            {
-                var rawListInt = System.Text.Json.JsonSerializer.Deserialize<List<DeviceDtoRaw>>(content, jsonOptions);
-                if (rawListInt != null && rawListInt.Any())
-                {
-                    Console.WriteLine($"[DEBUG] Mapped {rawListInt.Count} devices (DeviceDtoRaw)");
-                    return rawListInt.Select(d => MapDtoToDevice(d.ToDeviceDto())).ToList();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DEBUG] Failed to deserialize as List<DeviceDtoRaw>: {ex.Message}");
-            }
-
-            Console.WriteLine($"[DEBUG] No devices could be deserialized");
-            return new List<Device>();
         }
         catch (Exception ex)
         {
