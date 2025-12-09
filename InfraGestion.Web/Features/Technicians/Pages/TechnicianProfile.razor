@@ -117,6 +117,7 @@ else
                         <tr>
                             <th>FECHA</th>
                             <th>TIPO</th>
+                            <th>EQUIPO</th>
                             <th>TÉCNICO</th>
                             <th>NOTAS</th>
                             <th>COSTO</th>
@@ -138,6 +139,7 @@ else
                                 <tr>
                                     <td>@maintenance.Date.ToString("dd/MM/yyyy")</td>
                                     <td>@maintenance.Type</td>
+                                    <td>@(string.IsNullOrWhiteSpace(maintenance.DeviceName) ? maintenance.DeviceId : maintenance.DeviceName)</td>
                                     <td>@maintenance.TechnicianName</td>
                                     <td>@maintenance.Notes</td>
                                     <td>@maintenance.Cost.ToString("F2")</td>
@@ -178,7 +180,7 @@ else
                             {
                                 <tr>
                                     <td>@proposal.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@proposal.DeviceId</td>
+                                    <td>@(string.IsNullOrWhiteSpace(proposal.DeviceName) ? proposal.DeviceId : proposal.DeviceName)</td>
                                     <td>@proposal.Cause</td>
                                     <td>@proposal.Receiver</td>
                                     <td>

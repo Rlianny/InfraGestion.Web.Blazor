@@ -60,11 +60,17 @@ public class DeviceService
                 return new List<Device>();
             }
 
+            // Soportar API con envoltura o lista directa
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
-
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return apiResponse.Data.Select(MapDtoToDevice).ToList();
+            }
+
+            var rawList = await response.Content.ReadFromJsonAsync<List<DeviceDto>>();
+            if (rawList != null)
+            {
+                return rawList.Select(MapDtoToDevice).ToList();
             }
 
             return new List<Device>();
@@ -131,6 +137,12 @@ public class DeviceService
                 await ResolveLocationInfoAsync(deviceDetails, apiResponse.Data.DepartmentId);
                 
                 return deviceDetails;
+            }
+
+            var raw = await response.Content.ReadFromJsonAsync<DeviceDetailDto>();
+            if (raw != null)
+            {
+                return MapDetailDtoToDeviceDetails(raw);
             }
 
             return null;

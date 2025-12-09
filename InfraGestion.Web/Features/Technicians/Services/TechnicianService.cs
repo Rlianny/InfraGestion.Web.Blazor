@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Linq;
 using InfraGestion.Web.Features.Technicians.Models;
 using InfraGestion.Web.Features.Technicians.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
@@ -301,42 +302,52 @@ public class TechnicianService
         try
         {
             await EnsureAuthenticatedAsync();
-            
-            // Llamar al endpoint de detalles del técnico
-            var response = await _httpClient.GetAsync($"{BASE_URL}/technician/{id}/detail");
 
+            var response = await _httpClient.GetAsync($"{BASE_URL}/technician/{id}/detail");
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Error al obtener detalles del técnico: {response.StatusCode}");
                 return null;
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDetailDto>>();
-
-            if (apiResponse?.Success != true || apiResponse.Data == null)
+            // API puede devolver ApiResponse o el objeto directo
+            TechnicianDetailResponse? payload = null;
+            var apiWrapper = await response.Content.ReadFromJsonAsync<ApiResponse<TechnicianDetailResponse>>();
+            if (apiWrapper?.Data != null)
             {
-                Console.WriteLine("Respuesta de API no exitosa o sin datos");
-                return null;
+                payload = apiWrapper.Data;
+            }
+            else
+            {
+                payload = await response.Content.ReadFromJsonAsync<TechnicianDetailResponse>();
             }
 
-            var dto = apiResponse.Data;
+            if (payload == null)
+            {
+                Console.WriteLine("La API no devolvió detalles del técnico.");
+                return null;
 
             // Obtener datos adicionales (performances, bonuses, penalties)
             var performances = await GetTechnicianPerformancesAsync(id);
             var bonuses = await GetTechnicianBonusesAsync(id);
             var penalties = await GetTechnicianPenaltiesAsync(id);
 
-            // Calcular rating promedio
-            decimal avgRating = performances.Any() 
-                ? performances.Average(p => p.Score) 
-                : 0;
+            var ratings = performances.Select(p => new TechnicianRating
+            {
+                Id = p.RateId,
+                Date = p.Date,
+                Issuer = string.IsNullOrWhiteSpace(p.GiverName) ? $"Usuario {p.GiverId}" : p.GiverName,
+                Score = (decimal)p.Score,
+                Description = p.Comment
+            }).ToList();
 
-            // Mapear MaintenanceRecords a MaintenanceHistory
-            var maintenanceHistory = dto.MaintenanceRecords.Select(m => new MaintenanceRecord
+            var avgRating = ratings.Any() ? ratings.Average(r => r.Score) : (decimal)payload.Rating;
+
+            var maintenanceHistory = payload.MaintenanceRecords.Select(m => new MaintenanceRecord
             {
                 Id = m.MaintenanceRecordId,
                 Date = m.MaintenanceDate,
-                Type = m.MaintenanceType,
+                Type = string.IsNullOrWhiteSpace(m.MaintenanceType) ? "Mantenimiento" : m.MaintenanceType,
                 TechnicianName = m.TechnicianName,
                 Notes = m.Description,
                 Cost = (decimal)m.Cost,
@@ -344,28 +355,26 @@ public class TechnicianService
                 DeviceName = m.DeviceName
             }).ToList();
 
-            // Mapear DecommissioningRequests a DecommissionProposals
-            var decommissionProposals = dto.DecommissioningRequests.Select(d => new DecommissionProposal
+            var decommissionProposals = payload.DecommissioningRequests.Select(d => new DecommissionProposal
             {
                 Id = d.DecommissioningRequestId,
                 Date = d.RequestDate,
                 DeviceId = d.DeviceId.ToString(),
+                DeviceName = d.DeviceName,
                 Cause = d.Reason,
                 Receiver = d.DeviceReceiverName,
-                Status = d.Status
+                Status = string.IsNullOrWhiteSpace(d.Status) ? "Pendiente" : d.Status
             }).ToList();
 
             var details = new TechnicianDetails
             {
-                Id = dto.TechnicianId,
-                Name = dto.Name,
-                IdentificationNumber = $"TECH{dto.TechnicianId:D3}",
-                Specialty = dto.Specialty,
-                YearsOfExperience = dto.YearsOfExperience,
-                Status = TechnicianStatus.Active,
+                Id = technician.Id,
+                Name = technician.Name,
+                IdentificationNumber = $"TECH{technician.Id:D3}",
+                Specialty = technician.Specialty,
+                YearsOfExperience = technician.YearsOfExperience,
+                Status = technician.Status,
                 Rating = avgRating,
-                MaintenanceHistory = maintenanceHistory,
-                DecommissionProposals = decommissionProposals,
                 Ratings = performances.Select(p => new TechnicianRating
                 {
                     Id = p.RateId,
@@ -377,8 +386,6 @@ public class TechnicianService
                 Bonuses = bonuses,
                 Penalties = penalties
             };
-
-            return details;
         }
         catch (Exception ex)
         {

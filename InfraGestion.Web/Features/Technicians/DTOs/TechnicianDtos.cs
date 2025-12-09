@@ -1,3 +1,5 @@
+using InfraGestion.Web.Features.Technicians.Models;
+
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
@@ -91,11 +93,61 @@ public class PenaltyDto
 public class RateDto
 {
     public int RateId { get; set; }
-    public int TechnicianId { get; set; }
-    public decimal Score { get; set; }
+    public int GiverId { get; set; }
+    public string GiverName { get; set; } = string.Empty;
+    public double Score { get; set; }
     public string Comment { get; set; } = string.Empty;
     public DateTime Date { get; set; }
-    public string RatedBy { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Respuesta extendida de detalles de técnico
+/// </summary>
+public class TechnicianDetailResponse
+{
+    public int TechnicianId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int YearsOfExperience { get; set; }
+    public string Specialty { get; set; } = string.Empty;
+    public string IdentificationNumber { get; set; } = string.Empty;
+    public string Section { get; set; } = string.Empty;
+    public string Department { get; set; } = string.Empty;
+    public string SectionManager { get; set; } = string.Empty;
+    public string PhotoUrl { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public decimal Rating { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime? HireDate { get; set; }
+    public DateTime? LastInterventionDate { get; set; }
+    public List<MaintenanceRecordDetailDto> MaintenanceRecords { get; set; } = new();
+    public List<DecommissioningRequestDetailDto> DecommissioningRequests { get; set; } = new();
+    public List<RateDto> Ratings { get; set; } = new();
+    public List<BonusDto> Bonuses { get; set; } = new();
+    public List<PenaltyDto> Penalties { get; set; } = new();
+}
+
+public class MaintenanceRecordDetailDto
+{
+    public int MaintenanceRecordId { get; set; }
+    public int DeviceId { get; set; }
+    public string DeviceName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public DateTime MaintenanceDate { get; set; }
+    public string MaintenanceType { get; set; } = string.Empty;
+    public double Cost { get; set; }
+    public string TechnicianName { get; set; } = string.Empty;
+}
+
+public class DecommissioningRequestDetailDto
+{
+    public int DecommissioningRequestId { get; set; }
+    public int DeviceId { get; set; }
+    public string DeviceName { get; set; } = string.Empty;
+    public string DeviceReceiverName { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
+    public DateTime RequestDate { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>
