@@ -757,4 +757,126 @@ public class DeviceService
             FinalDestination = dto.FinalDestination
         };
     }
+
+    // ==========================================
+    // RECEIVING INSPECTION (Initial Defect) ENDPOINTS
+    // ==========================================
+
+    /// <summary>
+    /// Gets pending receiving inspection requests for a technician
+    /// GET /inventory/pendingFirstInspection/{technicianId}
+    /// Note: Backend uses literal 'technicianId' in route, parameter passed as query string
+    /// </summary>
+    public async Task<List<ReceivingInspectionRequestDto>> GetPendingReceivingInspectionRequestsAsync(int technicianId)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            // Backend route: [HttpGet("pendingFirstInspection/technicianId")]
+            // This means the literal string "technicianId" is in the route, parameter comes via query
+            var url = $"inventory/pendingFirstInspection/technicianId?technicianId={technicianId}";
+            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync URL: {url}");
+
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync status: {response.StatusCode}");
+            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync content: {content}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[ERROR] Failed to get pending inspection requests: {content}");
+                return new List<ReceivingInspectionRequestDto>();
+            }
+
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            // Backend returns ApiResponse<IEnumerable<ReceivingInspectionRequestDto>>
+            using var document = System.Text.Json.JsonDocument.Parse(content);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("data", out var dataElement))
+            {
+                var requests = System.Text.Json.JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
+                    dataElement.GetRawText(), options);
+                return requests ?? new List<ReceivingInspectionRequestDto>();
+            }
+
+            return new List<ReceivingInspectionRequestDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] GetPendingReceivingInspectionRequestsAsync: {ex.Message}");
+            return new List<ReceivingInspectionRequestDto>();
+        }
+    }
+
+    /// <summary>
+    /// Processes the inspection decision (approve or reject a device)
+    /// POST /inventory/inspection-decision
+    /// </summary>
+    public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionRequestDto request)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var url = "inventory/inspection-decision";
+            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync URL: {url}");
+            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync request: DeviceId={request.DeviceId}, TechnicianId={request.TechnicianId}, IsApproved={request.IsApproved}, Reason={request.Reason}");
+
+            var response = await _httpClient.PostAsJsonAsync(url, request);
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync status: {response.StatusCode}");
+            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync content: {content}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[ERROR] Failed to process inspection decision: {content}");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] ProcessInspectionDecisionAsync: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Approves a device inspection
+    /// </summary>
+    public async Task<bool> ApproveDeviceInspectionAsync(int deviceId, int technicianId)
+    {
+        var request = new InspectionDecisionRequestDto
+        {
+            DeviceId = deviceId,
+            TechnicianId = technicianId,
+            IsApproved = true,
+            Reason = DecommissioningReason.IrreparableTechnicalFailure // Not used for approval
+        };
+
+        return await ProcessInspectionDecisionAsync(request);
+    }
+
+    /// <summary>
+    /// Rejects a device inspection with a reason
+    /// </summary>
+    public async Task<bool> RejectDeviceInspectionAsync(int deviceId, int technicianId, DecommissioningReason reason)
+    {
+        var request = new InspectionDecisionRequestDto
+        {
+            DeviceId = deviceId,
+            TechnicianId = technicianId,
+            IsApproved = false,
+            Reason = reason
+        };
+
+        return await ProcessInspectionDecisionAsync(request);
+    }
 }
