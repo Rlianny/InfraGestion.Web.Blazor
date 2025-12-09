@@ -1,5 +1,6 @@
 @page "/organization"
 @using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Organization.DTOs
 @using InfraGestion.Web.Features.Organization.Services
 @using InfraGestion.Web.Features.Organization.Helpers
 @using InfraGestion.Web.Features.Organization.Components
@@ -220,6 +221,7 @@
 <!-- Create Section Modal -->
 <Modal IsOpen="@showCreateSectionModal" Title="Agregar Sección" OnClose="@CloseCreateSectionModal">
     <SectionForm FormModel="@createSectionRequest" 
+                 Managers="@sectionManagers"
                  OnValidSubmit="@HandleCreateSection" 
                  OnCancel="@CloseCreateSectionModal" />
 </Modal>
@@ -227,6 +229,7 @@
 <!-- Edit Section Modal -->
 <Modal IsOpen="@showEditSectionModal" Title="Editar Sección" OnClose="@CloseEditSectionModal">
     <SectionFormEdit FormModel="@updateSectionRequest" 
+                     Managers="@sectionManagers"
                      OnValidSubmit="@HandleUpdateSection" 
                      OnCancel="@CloseEditSectionModal" />
 </Modal>
@@ -258,6 +261,7 @@
     private List<Department> allDepartments = new();
     private List<Department> filteredDepartments = new();
     private List<(int Id, string Name)> sectionOptions = new();
+    private List<SectionManagerDto> sectionManagers = new();
     private bool isLoading = true;
 
     // Filters
@@ -279,16 +283,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
+    private async Task LoadDataAsync()
     {
         isLoading = true;
         
-        allSections = await OrganizationService.GetAllSectionsAsync();
-        allDepartments = await OrganizationService.GetAllDepartmentsAsync();
-        sectionOptions = await OrganizationService.GetSectionNamesAsync();
+        // Cargar datos en paralelo para mejor rendimiento
+        var sectionsTask = OrganizationService.GetAllSectionsAsync();
+        var departmentsTask = OrganizationService.GetAllDepartmentsAsync();
+        var managersTask = OrganizationService.GetSectionManagersAsync();
+        
+        await Task.WhenAll(sectionsTask, departmentsTask, managersTask);
+        
+        allSections = sectionsTask.Result;
+        allDepartments = departmentsTask.Result;
+        sectionManagers = managersTask.Result;
+        sectionOptions = await OrganizationService.GetSectionOptionsAsync();
         
         ApplyFilters();
         isLoading = false;
@@ -401,7 +413,7 @@
     private async Task HandleCreateSection(CreateSectionRequest request)
     {
         await OrganizationService.CreateSectionAsync(request);
-        await LoadData();
+        await LoadDataAsync();
         CloseCreateSectionModal();
     }
 
@@ -414,7 +426,7 @@
             {
                 Id = section.Id,
                 Name = section.Name,
-                ManagerName = section.SectionManager,
+                SectionManager = section.SectionManager,
                 Status = section.Status
             };
             showEditSectionModal = true;
@@ -430,14 +442,14 @@
     private async Task HandleUpdateSection(UpdateSectionRequest request)
     {
         await OrganizationService.UpdateSectionAsync(request);
-        await LoadData();
+        await LoadDataAsync();
         CloseEditSectionModal();
     }
 
     private async Task ToggleSectionStatus(int sectionId)
     {
-        await OrganizationService.ToggleSectionStatusAsync(sectionId);
-        await LoadData();
+        await OrganizationService.DisableSectionAsync(sectionId);
+        await LoadDataAsync();
     }
 
     // Department modal handlers
@@ -456,7 +468,7 @@
     private async Task HandleCreateDepartment(CreateDepartmentRequest request)
     {
         await OrganizationService.CreateDepartmentAsync(request);
-        await LoadData();
+        await LoadDataAsync();
         CloseCreateDepartmentModal();
     }
 
@@ -485,13 +497,13 @@
     private async Task HandleUpdateDepartment(UpdateDepartmentRequest request)
     {
         await OrganizationService.UpdateDepartmentAsync(request);
-        await LoadData();
+        await LoadDataAsync();
         CloseEditDepartmentModal();
     }
 
     private async Task ToggleDepartmentStatus(int departmentId)
     {
-        await OrganizationService.ToggleDepartmentStatusAsync(departmentId);
-        await LoadData();
+        await OrganizationService.DisableDepartmentAsync(departmentId);
+        await LoadDataAsync();
     }
 }

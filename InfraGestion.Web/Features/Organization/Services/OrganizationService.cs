@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
-using InfraGestion.Web.Features.Organization.Models;
-using InfraGestion.Web.Features.Organization.DTOs;
-using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Auth.Services;
+using InfraGestion.Web.Features.Organization.DTOs;
+using InfraGestion.Web.Features.Organization.Models;
 
 namespace InfraGestion.Web.Features.Organization.Services;
 
@@ -10,7 +10,7 @@ public class OrganizationService
 {
     private readonly HttpClient _httpClient;
     private readonly AuthService _authService;
-    private const string BASE_URL = "organization";
+    private const string BaseUrl = "organization";
 
     public OrganizationService(HttpClient httpClient, AuthService authService)
     {
@@ -18,57 +18,38 @@ public class OrganizationService
         _authService = authService;
     }
 
-    private async Task EnsureAuthenticatedAsync()
-    {
-        await _authService.GetCurrentUserAsync();
-    }
-
-    // ==================== SECTION METHODS ====================
+    #region Sections
 
     public async Task<List<Section>> GetAllSectionsAsync()
     {
         try
         {
             await EnsureAuthenticatedAsync();
-            var response = await _httpClient.GetAsync($"{BASE_URL}/sections");
+            var response = await _httpClient.GetAsync($"{BaseUrl}/sections");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<SectionDto>>>();
-                
-                if (apiResponse?.Success == true && apiResponse.Data != null)
-                {
-                    return apiResponse.Data.Select(dto => new Section
-                    {
-                        Id = dto.SectionId,
-                        Name = dto.Name,
-                        SectionManager = dto.SectionManager ?? string.Empty,
-                        Status = OrganizationStatus.Active
-                    }).ToList();
-                }
-            }
+            if (!response.IsSuccessStatusCode)
+                return new List<Section>();
 
-            return new List<Section>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<List<SectionDto>>
+            >();
+
+            if (apiResponse?.Success != true || apiResponse.Data == null)
+                return new List<Section>();
+
+            return apiResponse.Data.Select(MapToSection).ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al obtener secciones: {ex.Message}");
+            LogError("obtener secciones", ex);
             return new List<Section>();
         }
     }
 
     public async Task<Section?> GetSectionByIdAsync(int id)
     {
-        try
-        {
-            var sections = await GetAllSectionsAsync();
-            return sections.FirstOrDefault(s => s.Id == id);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al obtener seccion: {ex.Message}");
-            return null;
-        }
+        var sections = await GetAllSectionsAsync();
+        return sections.FirstOrDefault(s => s.Id == id);
     }
 
     public async Task<bool> CreateSectionAsync(CreateSectionRequest request)
@@ -81,15 +62,15 @@ public class OrganizationService
             {
                 SectionId = 0,
                 Name = request.Name,
-                SectionManager = request.ManagerName
+                SectionManager = request.SectionManager,
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{BASE_URL}/sections", dto);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/sections", dto);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al crear seccion: {ex.Message}");
+            LogError("crear sección", ex);
             return false;
         }
     }
@@ -104,15 +85,15 @@ public class OrganizationService
             {
                 SectionId = request.Id,
                 Name = request.Name,
-                SectionManager = request.ManagerName
+                SectionManager = request.SectionManager,
             };
 
-            var response = await _httpClient.PutAsJsonAsync($"{BASE_URL}/sections", dto);
+            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/sections", dto);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al actualizar seccion: {ex.Message}");
+            LogError("actualizar sección", ex);
             return false;
         }
     }
@@ -122,59 +103,32 @@ public class OrganizationService
         try
         {
             await EnsureAuthenticatedAsync();
-
-            var section = await GetSectionByIdAsync(id);
-            if (section == null) return false;
-
-            var dto = new SectionRequestDto
-            {
-                SectionId = id,
-                Name = section.Name
-            };
-
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/sections")
-            {
-                Content = JsonContent.Create(dto)
-            };
-
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.DeleteAsync($"{BaseUrl}/sections/{id}");
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar seccion: {ex.Message}");
+            LogError("eliminar sección", ex);
             return false;
         }
     }
 
-    public async Task<bool> ToggleSectionStatusAsync(int id)
-    {
-        return await DeleteSectionAsync(id);
-    }
-
-    public async Task<bool> AssignSectionResponsibleAsync(int sectionId, int userId)
+    public async Task<bool> DisableSectionAsync(int id)
     {
         try
         {
             await EnsureAuthenticatedAsync();
-
-            var dto = new AssignSectionResponsibleRequestDto
-            {
-                SectionId = sectionId,
-                UserId = userId
-            };
-
-            var response = await _httpClient.PostAsJsonAsync($"{BASE_URL}/sections/managers", dto);
+            var response = await _httpClient.PostAsync($"{BaseUrl}/sections/disable/{id}", null);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al asignar responsable: {ex.Message}");
+            LogError("desactivar sección", ex);
             return false;
         }
     }
 
-    public async Task<List<(int Id, string Name)>> GetSectionNamesAsync()
+    public async Task<List<(int Id, string Name)>> GetSectionOptionsAsync()
     {
         var sections = await GetAllSectionsAsync();
         return sections
@@ -183,56 +137,73 @@ public class OrganizationService
             .ToList();
     }
 
-    // ==================== DEPARTMENT METHODS ====================
+    #endregion
+
+    #region Section Managers
+
+    public async Task<List<SectionManagerDto>> GetSectionManagersAsync()
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.GetAsync($"{BaseUrl}/sections/managers");
+
+            if (!response.IsSuccessStatusCode)
+                return new List<SectionManagerDto>();
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<List<SectionManagerDto>>
+            >();
+
+            return apiResponse?.Success == true && apiResponse.Data != null
+                ? apiResponse.Data
+                : new List<SectionManagerDto>();
+        }
+        catch (Exception ex)
+        {
+            LogError("obtener managers", ex);
+            return new List<SectionManagerDto>();
+        }
+    }
+
+    #endregion
+
+    #region Departments
 
     public async Task<List<Department>> GetAllDepartmentsAsync()
     {
         try
         {
             await EnsureAuthenticatedAsync();
-            var response = await _httpClient.GetAsync($"{BASE_URL}/departments");
+            var response = await _httpClient.GetAsync($"{BaseUrl}/departments");
 
-            if (response.IsSuccessStatusCode)
-            {
-                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<DepartmentDto>>>();
-                
-                if (apiResponse?.Success == true && apiResponse.Data != null)
-                {
-                    // Obtener secciones para mapear nombres
-                    var sections = await GetAllSectionsAsync();
-                    
-                    return apiResponse.Data.Select(dto => new Department
-                    {
-                        Id = dto.DepartmentId,
-                        Name = dto.Name,
-                        SectionId = dto.SectionId,
-                        SectionName = sections.FirstOrDefault(s => s.Id == dto.SectionId)?.Name ?? string.Empty,
-                        Status = OrganizationStatus.Active
-                    }).ToList();
-                }
-            }
+            if (!response.IsSuccessStatusCode)
+                return new List<Department>();
 
-            return new List<Department>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<List<DepartmentDto>>
+            >();
+
+            if (apiResponse?.Success != true || apiResponse.Data == null)
+                return new List<Department>();
+
+            // Cargar nombres de secciones para mostrar
+            var sections = await GetAllSectionsAsync();
+            var sectionNames = sections.ToDictionary(s => s.Id, s => s.Name);
+
+            return apiResponse.Data.Select(dto => MapToDepartment(dto, sectionNames)).ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al obtener departamentos: {ex.Message}");
+            LogError("obtener departamentos", ex);
             return new List<Department>();
         }
     }
 
     public async Task<Department?> GetDepartmentByIdAsync(int id)
     {
-        try
-        {
-            var departments = await GetAllDepartmentsAsync();
-            return departments.FirstOrDefault(d => d.Id == id);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al obtener departamento: {ex.Message}");
-            return null;
-        }
+        var departments = await GetAllDepartmentsAsync();
+        return departments.FirstOrDefault(d => d.Id == id);
     }
 
     public async Task<bool> CreateDepartmentAsync(CreateDepartmentRequest request)
@@ -243,17 +214,17 @@ public class OrganizationService
 
             var dto = new DepartmentRequestDto
             {
-                SectionId = request.SectionId,
                 DepartmentId = 0,
-                Name = request.Name
+                SectionId = request.SectionId,
+                Name = request.Name,
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{BASE_URL}/departments", dto);
+            var response = await _httpClient.PostAsJsonAsync($"{BaseUrl}/departments", dto);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al crear departamento: {ex.Message}");
+            LogError("crear departamento", ex);
             return false;
         }
     }
@@ -266,17 +237,17 @@ public class OrganizationService
 
             var dto = new DepartmentRequestDto
             {
-                SectionId = request.SectionId,
                 DepartmentId = request.Id,
-                Name = request.Name
+                SectionId = request.SectionId,
+                Name = request.Name,
             };
 
-            var response = await _httpClient.PutAsJsonAsync($"{BASE_URL}/departments", dto);
+            var response = await _httpClient.PutAsJsonAsync($"{BaseUrl}/departments", dto);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al actualizar departamento: {ex.Message}");
+            LogError("actualizar departamento", ex);
             return false;
         }
     }
@@ -286,34 +257,66 @@ public class OrganizationService
         try
         {
             await EnsureAuthenticatedAsync();
-
-            var department = await GetDepartmentByIdAsync(id);
-            if (department == null) return false;
-
-            var dto = new DepartmentRequestDto
-            {
-                SectionId = department.SectionId,
-                DepartmentId = id,
-                Name = department.Name
-            };
-
-            var request = new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/departments")
-            {
-                Content = JsonContent.Create(dto)
-            };
-
-            var response = await _httpClient.SendAsync(request);
+            var response = await _httpClient.DeleteAsync($"{BaseUrl}/departments/{id}");
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar departamento: {ex.Message}");
+            LogError("eliminar departamento", ex);
             return false;
         }
     }
 
-    public async Task<bool> ToggleDepartmentStatusAsync(int id)
+    public async Task<bool> DisableDepartmentAsync(int id)
     {
-        return await DeleteDepartmentAsync(id);
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.PostAsync($"{BaseUrl}/departments/disable/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            LogError("desactivar departamento", ex);
+            return false;
+        }
     }
+
+    #endregion
+
+    #region Private Helpers
+
+    private async Task EnsureAuthenticatedAsync()
+    {
+        await _authService.GetCurrentUserAsync();
+    }
+
+    private static Section MapToSection(SectionDto dto) =>
+        new()
+        {
+            Id = dto.SectionId,
+            Name = dto.Name,
+            SectionManager = dto.SectionManager ?? string.Empty,
+            Status = OrganizationStatus.Active,
+        };
+
+    private static Department MapToDepartment(
+        DepartmentDto dto,
+        Dictionary<int, string> sectionNames
+    ) =>
+        new()
+        {
+            Id = dto.DepartmentId,
+            Name = dto.Name,
+            SectionId = dto.SectionId,
+            SectionName = sectionNames.GetValueOrDefault(dto.SectionId, string.Empty),
+            Status = OrganizationStatus.Active,
+        };
+
+    private static void LogError(string operation, Exception ex)
+    {
+        Console.WriteLine($"Error al {operation}: {ex.Message}");
+    }
+
+    #endregion
 }

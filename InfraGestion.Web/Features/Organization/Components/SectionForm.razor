@@ -1,4 +1,5 @@
 @using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Organization.DTOs
 @using Microsoft.AspNetCore.Components.Forms
 
 <EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
@@ -10,20 +11,20 @@
                id="name" 
                class="form-input" 
                @bind="FormModel.Name" 
-               placeholder="Operaciones de Red Corporativa" />
+               placeholder="Ej: Operaciones de Red" />
         <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
     </div>
 
     <div class="form-group">
-        <label for="manager" class="form-label">Responsable de Sección*</label>
-        <select id="manager" class="form-input" @bind="FormModel.ManagerName">
-            <option value="">Seleccione un responsable</option>
+        <label for="manager" class="form-label">Responsable de Sección</label>
+        <select id="manager" class="form-input" @bind="FormModel.SectionManager">
+            <option value="">Sin asignar</option>
             @foreach (var manager in Managers)
             {
-                <option value="@manager">@manager</option>
+                <option value="@manager.Username">@manager.FullName</option>
             }
         </select>
-        <ValidationMessage For="@(() => FormModel.ManagerName)" class="validation-message" />
+        <ValidationMessage For="@(() => FormModel.SectionManager)" class="validation-message" />
     </div>
 
     <div class="form-actions">
@@ -44,14 +45,7 @@
     public CreateSectionRequest FormModel { get; set; } = new();
 
     [Parameter]
-    public List<string> Managers { get; set; } = new()
-    {
-        "Isabel Castro",
-        "Sofía Ramírez",
-        "Alejandro Torres",
-        "Ricardo Díaz",
-        "María González"
-    };
+    public List<SectionManagerDto> Managers { get; set; } = new();
 
     [Parameter]
     public EventCallback<CreateSectionRequest> OnValidSubmit { get; set; }

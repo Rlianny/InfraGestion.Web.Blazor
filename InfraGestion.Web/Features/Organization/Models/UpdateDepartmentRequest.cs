@@ -2,9 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InfraGestion.Web.Features.Organization.Models;
 
-/// <summary>
-/// Request para actualizar un Departamento (subdivisión de una Sección)
-/// </summary>
+
 public class UpdateDepartmentRequest
 {
     public int Id { get; set; }
