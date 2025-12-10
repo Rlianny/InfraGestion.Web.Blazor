@@ -10,7 +10,7 @@ public record UserDto
     public required string DepartmentName { get; init; }
     public required bool IsActive { get; init; }
     public required DateTime CreatedAt { get; init; }
-    
+
     // Optionals
     public int? YearsOfExperience { get; init; }
     public string? Specialty { get; init; }

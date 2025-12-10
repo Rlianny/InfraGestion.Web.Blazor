@@ -6,7 +6,7 @@ public class DeviceDto
 {
     public int DeviceId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public DeviceType DeviceType { get; set; } 
+    public DeviceType DeviceType { get; set; }
     public OperationalState OperationalState { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
 }
@@ -18,7 +18,7 @@ public class DeviceDtoRaw
 {
     public int DeviceId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int DeviceType { get; set; } 
+    public int DeviceType { get; set; }
     public int OperationalState { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
 

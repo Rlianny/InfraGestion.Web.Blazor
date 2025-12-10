@@ -1,6 +1,6 @@
 namespace InfraGestion.Web.Features.Organization.DTOs;
 
-public class DepartmentDto
+public class DepartmentRequestDto
 {
     public int SectionId { get; set; }
     public int DepartmentId { get; set; }

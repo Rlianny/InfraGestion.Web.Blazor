@@ -13,11 +13,11 @@ public class DeviceDetailDto
     public string Name { get; set; } = string.Empty;
     public int DeviceType { get; set; } // Enum as int from backend
     public int OperationalState { get; set; } // Enum as int from backend
-    
+
     // Location info from backend
     public int DepartmentId { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
-    
+
     // DeviceDetailDto specific
     public DateTime AcquisitionDate { get; set; }
     public List<MaintenanceRecordDto> MaintenanceHistory { get; set; } = new();

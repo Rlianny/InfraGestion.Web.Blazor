@@ -23,21 +23,21 @@ public class UserService
         {
             // GET /Users
             var response = await _httpClient.GetAsync("Users");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"Error HTTP {response.StatusCode} al obtener usuarios");
                 return new List<User>();
             }
-            
+
             // Deserialize ApiResponse<IEnumerable<UserDto>>
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
-            
+
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return apiResponse.Data.Select(MapDtoToUser).ToList();
             }
-            
+
             return new List<User>();
         }
         catch (HttpRequestException ex)
@@ -61,17 +61,17 @@ public class UserService
         {
             // GET /Users/{id}
             var response = await _httpClient.GetAsync($"Users/{id}");
-            
+
             if (!response.IsSuccessStatusCode)
                 return null;
-            
+
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
-            
+
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return MapDtoToUser(apiResponse.Data);
             }
-            
+
             return null;
         }
         catch (Exception ex)
@@ -109,7 +109,7 @@ public class UserService
         {
             // Get users
             var allUsers = await GetAllUsersAsync();
-            
+
             // Filetr in client (because API has not search endpoint)
             var query = allUsers.AsEnumerable();
 
@@ -166,21 +166,21 @@ public class UserService
 
             // POST /Users
             var response = await _httpClient.PostAsJsonAsync("Users", dto);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Error al crear usuario: {error}");
                 return null;
             }
-            
+
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
-            
+
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return MapDtoToUser(apiResponse.Data);
             }
-            
+
             return null;
         }
         catch (Exception ex)
@@ -210,17 +210,17 @@ public class UserService
 
             // PUT /Users/{id}
             var response = await _httpClient.PutAsJsonAsync($"Users/{request.Id}", dto);
-            
+
             if (!response.IsSuccessStatusCode)
                 return null;
-            
+
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<UserDto>>();
-            
+
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return MapDtoToUser(apiResponse.Data);
             }
-            
+
             return null;
         }
         catch (Exception ex)
@@ -246,7 +246,7 @@ public class UserService
 
             // POST /Users/{id}/deactivate
             var response = await _httpClient.PostAsJsonAsync($"Users/{id}/deactivate", dto);
-            
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -267,7 +267,7 @@ public class UserService
             if (user == null) return false;
 
             HttpResponseMessage response;
-            
+
             if (user.Status == UserStatus.Active)
             {
                 var dto = new
@@ -281,7 +281,7 @@ public class UserService
             {
                 response = await _httpClient.PostAsync($"Users/{id}/activate", null);
             }
-            
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -300,17 +300,17 @@ public class UserService
         {
             // GET /Users/department/{id}
             var response = await _httpClient.GetAsync($"Users/department/{departmentId}");
-            
+
             if (!response.IsSuccessStatusCode)
                 return new List<User>();
-            
+
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
-            
+
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
                 return apiResponse.Data.Select(MapDtoToUser).ToList();
             }
-            
+
             return new List<User>();
         }
         catch (Exception ex)

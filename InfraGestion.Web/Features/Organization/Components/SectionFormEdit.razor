@@ -17,14 +17,14 @@
 
     <div class="form-group">
         <label for="manager" class="form-label">Responsable de Sección</label>
-        <select id="manager" class="form-input" @bind="FormModel.SectionManager">
+        <select id="manager" class="form-input" @bind="FormModel.SectionManagerId">
             <option value="">Sin asignar</option>
             @foreach (var manager in Managers)
             {
-                <option value="@manager.Username">@manager.FullName</option>
+                <option value="@manager.UserId">@manager.FullName</option>
             }
         </select>
-        <ValidationMessage For="@(() => FormModel.SectionManager)" class="validation-message" />
+        <ValidationMessage For="@(() => FormModel.SectionManagerId)" class="validation-message" />
     </div>
 
     <div class="form-actions">

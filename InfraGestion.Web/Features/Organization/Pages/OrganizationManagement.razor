@@ -124,7 +124,7 @@
                         {
                             <tr>
                                 <td class="section-cell">@FormatName(sec.Name)</td>
-                                <td class="manager-cell">@sec.SectionManager</td>
+                                <td class="manager-cell">@sec.SectionManagerFullName</td>
                                 <td>
                                     <span class="status-badge @OrganizationStatusHelper.GetStatusBadgeClass(sec.Status)">
                                         <span class="status-dot"></span>
@@ -347,7 +347,7 @@
             {
                 query = query.Where(s =>
                     s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    s.SectionManager.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    s.SectionManagerFullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrEmpty(selectedStatus))
@@ -426,7 +426,7 @@
             {
                 Id = section.Id,
                 Name = section.Name,
-                SectionManager = section.SectionManager,
+                SectionManagerId = section.SectionManagerId,
                 Status = section.Status
             };
             showEditSectionModal = true;

@@ -9,7 +9,7 @@ public static class Roles
     public const string Technician = "Technician";
     public const string Specialist = "Specialist";
     public const string User = "User";
-    
+
     /// <summary>
     /// Todos los roles disponibles en el sistema
     /// </summary>

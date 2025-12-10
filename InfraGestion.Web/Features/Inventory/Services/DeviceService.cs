@@ -45,14 +45,14 @@ public class DeviceService
                 userId = currentUser?.Id ?? 0;
                 Console.WriteLine($"[DEBUG] GetAllDevicesAsync - currentUser: {currentUser?.Username ?? "NULL"}, Id: {currentUser?.Id ?? 0}");
             }
-            
+
             // ⚠️ DEBUG TEMPORAL: Si el userId es 0, usar -5 (rlopez) para pruebas
             if (userId == 0)
             {
                 Console.WriteLine($"[DEBUG] GetAllDevicesAsync - userId was 0, using -5 (rlopez) for testing");
                 userId = -5;
             }
-            
+
             Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Final userId to send: {userId}");
 
             // ⚠️ El backend REQUIERE el parámetro userID
@@ -213,10 +213,10 @@ public class DeviceService
             if (dto != null)
             {
                 var deviceDetails = MapDetailDtoToDeviceDetails(dto);
-                
+
                 // Resolve location info from Organization service
                 await ResolveLocationInfoAsync(deviceDetails, dto.DepartmentId);
-                
+
                 return deviceDetails;
             }
 
@@ -239,19 +239,19 @@ public class DeviceService
         {
             // Get department info (includes SectionId)
             var department = await _organizationService.GetDepartmentByIdAsync(departmentId);
-            
+
             if (department != null)
             {
                 deviceDetails.DepartmentId = department.Id;
                 deviceDetails.Department = department.Name;
                 deviceDetails.SectionId = department.SectionId;
                 deviceDetails.Section = department.SectionName;
-                
+
                 // Get section to resolve SectionManager
                 var section = await _organizationService.GetSectionByIdAsync(department.SectionId);
                 if (section != null)
                 {
-                    deviceDetails.SectionManager = section.SectionManager;
+                    deviceDetails.SectionManager = section.SectionManagerFullName;
                 }
             }
         }
@@ -653,14 +653,14 @@ public class DeviceService
     {
         // Map maintenance history
         var maintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory);
-        
+
         // Calculate maintenance statistics from history
         var maintenanceCount = maintenanceHistory.Count;
         var totalMaintenanceCost = maintenanceHistory.Sum(m => m.Cost);
-        var lastMaintenanceDate = maintenanceHistory.Any() 
-            ? maintenanceHistory.Max(m => m.Date) 
+        var lastMaintenanceDate = maintenanceHistory.Any()
+            ? maintenanceHistory.Max(m => m.Date)
             : (DateTime?)null;
-        
+
         return new DeviceDetails
         {
             Id = dto.DeviceId,
