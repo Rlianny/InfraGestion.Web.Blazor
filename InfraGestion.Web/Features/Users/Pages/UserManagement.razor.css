@@ -308,6 +308,21 @@
     transform: scale(1.05);
 }
 
+.btn-delete {
+    background: rgb(239, 68, 68);
+}
+
+.btn-delete:hover {
+    background: rgb(252, 176, 176);
+    transform: scale(1.05);
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0) invert(1);
+}
+
 .btn-edit img {
     width: 18px;
     height: 18px;

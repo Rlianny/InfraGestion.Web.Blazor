@@ -116,13 +116,9 @@
         
         try
         {
-            if (currentTechnicianId <= 0)
-            {
-                Console.WriteLine("[WARNING] TechnicianDashboard - No technician ID available");
-                pendingRequests = new List<PendingDefectRequest>();
-                isLoading = false;
-                return;
-            }
+            // Allow negative IDs for currentTechnicianId
+            // Removed restriction for currentTechnicianId <= 0
+            Console.WriteLine("[INFO] TechnicianDashboard - Allowing negative technician IDs");
 
             // Get pending inspection requests from backend
             List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await DeviceService.GetPendingReceivingInspectionRequestsAsync(currentTechnicianId);

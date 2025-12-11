@@ -262,6 +262,15 @@
     transform: scale(1.05);
 }
 
+.btn-delete {
+    background: rgb(239, 68, 68);
+}
+
+.btn-delete:hover {
+    background: rgb(220, 38, 38);
+    transform: scale(1.05);
+}
+
 /* Empty State */
 .empty-cell {
     text-align: center;
