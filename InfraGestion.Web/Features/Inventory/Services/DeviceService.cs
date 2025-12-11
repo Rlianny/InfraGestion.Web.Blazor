@@ -195,7 +195,7 @@ public class DeviceService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"inventory/{id}");
+            var response = await _httpClient.GetAsync($"inventory/deviceDetail/{id}");
             var content = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[DEBUG] GetDeviceDetailsAsync status: {response.StatusCode}, body: {content}");
 
