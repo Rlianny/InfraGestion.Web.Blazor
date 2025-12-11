@@ -119,7 +119,7 @@ public class TechnicianService
         try
         {
             var response = await _httpClient.GetAsync(
-                $"{BASE_URL}/technician/{technicianId}/detail"
+                $"{BASE_URL}/technician/{technicianId}/details"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -141,7 +141,7 @@ public class TechnicianService
                 return await BuildBasicTechnicianDetailsAsync(technicianId);
             }
 
-            return await MapToTechnicianDetailsAsync(apiResponse.Data, technicianId);
+            return MapToTechnicianDetails(apiResponse.Data);
         }
         catch (Exception ex)
         {
@@ -415,70 +415,8 @@ public class TechnicianService
     /// <summary>
     /// Mapea TechnicianDetailDto a modelo TechnicianDetails para UI
     /// </summary>
-    private async Task<TechnicianDetails> MapToTechnicianDetailsAsync(
-        TechnicianDetailDto dto,
-        int technicianId
-    )
+    private static TechnicianDetails MapToTechnicianDetails(TechnicianDetailDto dto)
     {
-        // Obtener valoraciones del endpoint de performances
-        var ratings = await GetTechnicianPerformancesAsync(technicianId);
-
-        // Mapear historial de mantenimientos
-        var maintenanceHistory = dto
-            .MaintenanceRecords.Select(m => new MaintenanceRecord
-            {
-                Id = m.MaintenanceRecordId,
-                Date = m.MaintenanceDate,
-                Type = m.GetMaintenanceTypeName(),
-                TechnicianName = m.TechnicianName,
-                Notes = m.Description,
-                Cost = (decimal)m.Cost,
-                DeviceId = m.DeviceId.ToString(),
-                DeviceName = m.DeviceName,
-            })
-            .ToList();
-
-        // Mapear proposiciones de baja
-        var decommissionProposals = dto
-            .DecommissioningRequests.Select(d => new DecommissionProposal
-            {
-                Id = d.DecommissioningRequestId,
-                Date = d.RequestDate,
-                DeviceId = d.DeviceId.ToString(),
-                DeviceName = d.DeviceName,
-                Cause = d.GetReasonName(),
-                Receiver = d.DeviceReceiverName,
-                Status = d.GetStatusName(),
-            })
-            .ToList();
-
-        // Mapear valoraciones
-        var technicianRatings = ratings
-            .Select(r => new TechnicianRating
-            {
-                Id = r.RateId,
-                Date = r.Date,
-                Issuer = r.GiverName,
-                Score = (decimal)r.Score,
-                Description = r.Comment,
-            })
-            .ToList();
-
-        // Calcular valores derivados
-        decimal averageRating = technicianRatings.Any()
-            ? technicianRatings.Average(r => r.Score)
-            : 0m;
-
-        DateTime? lastInterventionDate = maintenanceHistory.Any()
-            ? maintenanceHistory.Max(m => m.Date)
-            : null;
-
-        // Obtener información de ubicación
-        var (sectionName, departmentName, sectionManager) = await GetLocationInfoAsync(
-            dto.Specialty,
-            technicianId
-        );
-
         return new TechnicianDetails
         {
             Id = dto.TechnicianId,
@@ -487,15 +425,51 @@ public class TechnicianService
             Specialty = dto.Specialty,
             YearsOfExperience = dto.YearsOfExperience,
             Status = TechnicianStatus.Active,
-            Rating = averageRating,
-            HireDate = DateTime.Now.AddYears(-dto.YearsOfExperience),
-            LastInterventionDate = lastInterventionDate,
-            Section = sectionName,
-            Department = departmentName,
-            SectionManager = sectionManager,
-            MaintenanceHistory = maintenanceHistory,
-            DecommissionProposals = decommissionProposals,
-            Ratings = technicianRatings,
+            Rating = (decimal)dto.AverageRating,
+            HireDate = dto.CreatedAt,
+            CreatedAt = dto.CreatedAt,
+            LastInterventionDate = dto.LastInterventionDate,
+            Section = dto.SectionName,
+            Department = dto.DepartmentName,
+            SectionManager = dto.SectionManagerName,
+
+            MaintenanceHistory = dto
+                .MaintenanceRecords.Select(m => new MaintenanceRecord
+                {
+                    Id = m.MaintenanceRecordId,
+                    Date = m.MaintenanceDate,
+                    Type = m.GetMaintenanceTypeName(),
+                    TechnicianName = m.TechnicianName,
+                    Notes = m.Description,
+                    Cost = (decimal)m.Cost,
+                    DeviceId = m.DeviceId.ToString(),
+                    DeviceName = m.DeviceName,
+                })
+                .ToList(),
+
+            DecommissionProposals = dto
+                .DecommissioningRequests.Select(d => new DecommissionProposal
+                {
+                    Id = d.DecommissioningRequestId,
+                    Date = d.RequestDate,
+                    DeviceId = d.DeviceId.ToString(),
+                    DeviceName = d.DeviceName,
+                    Cause = d.ReasonDescription,
+                    Receiver = d.DeviceReceiverName,
+                    Status = d.GetStatusName(),
+                })
+                .ToList(),
+
+            Ratings = dto
+                .Ratings.Select(r => new TechnicianRating
+                {
+                    Id = r.RateId,
+                    Date = r.Date,
+                    Issuer = r.GiverName,
+                    Score = (decimal)r.Score,
+                    Description = r.Comment,
+                })
+                .ToList(),
         };
     }
 
@@ -526,11 +500,6 @@ public class TechnicianService
             ? technicianRatings.Average(r => r.Score)
             : 0m;
 
-        var (sectionName, departmentName, sectionManager) = await GetLocationInfoAsync(
-            technician.Specialty,
-            technicianId
-        );
-
         return new TechnicianDetails
         {
             Id = technician.Id,
@@ -542,71 +511,13 @@ public class TechnicianService
             Rating = averageRating,
             HireDate = technician.HireDate,
             LastInterventionDate = null,
-            Section = sectionName,
-            Department = departmentName,
-            SectionManager = sectionManager,
+            Section = "N/A",
+            Department = "N/A",
+            SectionManager = "N/A",
             MaintenanceHistory = new List<MaintenanceRecord>(),
             DecommissionProposals = new List<DecommissionProposal>(),
             Ratings = technicianRatings,
         };
-    }
-
-    /// <summary>
-    /// Obtiene información de ubicación (sección, departamento, manager) desde servicios relacionados
-    /// </summary>
-    private async Task<(
-        string sectionName,
-        string departmentName,
-        string sectionManager
-    )> GetLocationInfoAsync(string specialty, int technicianId)
-    {
-        string sectionName = "Sección Técnica";
-        string departmentName = "Departamento de Mantenimiento";
-        string sectionManager = "No asignado";
-
-        try
-        {
-            // Intentar obtener departamento del usuario actual si coincide
-            var currentUser = await _authService.GetCurrentUserAsync();
-            if (
-                currentUser != null
-                && currentUser.Id == technicianId
-                && !string.IsNullOrEmpty(currentUser.DepartmentName)
-            )
-            {
-                departmentName = currentUser.DepartmentName;
-            }
-
-            // Intentar obtener sección que coincida con la especialidad
-            var sections = await _organizationService.GetAllSectionsAsync();
-            if (sections.Any())
-            {
-                var matchingSection = sections.FirstOrDefault(s =>
-                    s.Name.Contains(specialty, StringComparison.OrdinalIgnoreCase)
-                    || specialty.Contains(s.Name, StringComparison.OrdinalIgnoreCase)
-                );
-
-                if (matchingSection != null)
-                {
-                    sectionName = matchingSection.Name;
-                    sectionManager = matchingSection.SectionManagerFullName ?? sectionManager;
-                }
-                else
-                {
-                    var firstSection = sections.First();
-                    sectionName = firstSection.Name;
-                    sectionManager = firstSection.SectionManagerFullName ?? sectionManager;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                $"[TechnicianService] No se pudo obtener información de ubicación: {ex.Message}"
-            );
-        }
-
-        return (sectionName, departmentName, sectionManager);
     }
 
     #endregion

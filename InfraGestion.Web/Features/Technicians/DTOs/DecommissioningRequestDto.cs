@@ -17,7 +17,10 @@ public class DecommissioningRequestDto
     public string DeviceName { get; set; } = string.Empty;
 
     [JsonPropertyName("reason")]
-    public string Reason { get; set; } = string.Empty;
+    public int ReasonId { get; set; }
+
+    [JsonPropertyName("reasonDescription")]
+    public string ReasonDescription { get; set; } = string.Empty;
 
     [JsonPropertyName("requestDate")]
     public DateTime RequestDate { get; set; }
@@ -48,9 +51,4 @@ public class DecommissioningRequestDto
         };
     }
 
-    public string GetReasonName()
-    {
-        // Reason ya viene como string del backend, solo lo devolvemos
-        return string.IsNullOrEmpty(Reason) ? "Sin especificar" : Reason;
-    }
 }

@@ -19,6 +19,27 @@ public class TechnicianDetailDto
     [JsonPropertyName("specialty")]
     public string Specialty { get; set; } = string.Empty;
 
+    [JsonPropertyName("averageRating")]
+    public double AverageRating { get; set; }
+
+    [JsonPropertyName("lastInterventionDate")]
+    public DateTime? LastInterventionDate { get; set; }
+
+    [JsonPropertyName("createdAt")]
+    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("departmentName")]
+    public string DepartmentName { get; set; } = string.Empty;
+
+    [JsonPropertyName("sectionName")]
+    public string SectionName { get; set; } = string.Empty;
+
+    [JsonPropertyName("sectionManagerName")]
+    public string SectionManagerName { get; set; } = string.Empty;
+
+    [JsonPropertyName("ratings")]
+    public List<RateDto> Ratings { get; set; } = new();
+
     [JsonPropertyName("maintenanceRecords")]
     public List<MaintenanceRecordDto> MaintenanceRecords { get; set; } = new();
 
