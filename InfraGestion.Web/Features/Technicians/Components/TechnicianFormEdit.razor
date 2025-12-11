@@ -1,7 +1,7 @@
 @using InfraGestion.Web.Features.Technicians.Models
-@using InfraGestion.Web.Features.Departments.Services
+@using InfraGestion.Web.Features.Organization.Services
 @using System.ComponentModel.DataAnnotations
-@inject DepartmentService DepartmentService
+@inject OrganizationService OrganizationService
 
 <EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -11,24 +11,14 @@
         <input type="text" 
                id="name" 
                class="form-input" 
-               @bind="FormModel.Name" 
+               @bind="FormModel.FullName" 
                placeholder="Ingrese el nombre completo" />
-        <ValidationMessage For="@(() => FormModel.Name)" class="validation-message" />
+        <ValidationMessage For="@(() => FormModel.FullName)" class="validation-message" />
     </div>
 
     <div class="form-row">
         <div class="form-group">
-            <label for="status" class="form-label">Estado*</label>
-            <select id="status" class="form-input" @bind="FormModel.Status">
-                <option value="@TechnicianStatus.Active">Activo</option>
-                <option value="@TechnicianStatus.Inactive">Inactivo</option>
-                <option value="@TechnicianStatus.OnLeave">De Permiso</option>
-            </select>
-            <ValidationMessage For="@(() => FormModel.Status)" class="validation-message" />
-        </div>
-
-        <div class="form-group">
-            <label for="department" class="form-label">Departamento*</label>
+            <label for="department" class="form-label">Departamento</label>
             @if (isLoadingDepartments)
             {
                 <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
@@ -37,35 +27,21 @@
             }
             else if (availableDepartments.Any())
             {
-                <select id="department" class="form-input" @bind="FormModel.Section">
+                <select id="department" class="form-input" @bind="FormModel.DepartmentId">
+                    <option value="">Sin asignar</option>
                     @foreach (var dept in availableDepartments)
                     {
-                        <option value="@dept">@dept</option>
+                        <option value="@dept.Id">@dept.Name</option>
                     }
                 </select>
             }
             else
             {
-                <input type="text" 
-                       id="department" 
-                       class="form-input" 
-                       @bind="FormModel.Section" 
-                       placeholder="Escriba el nombre del departamento" />
+                <p class="text-muted">No hay departamentos disponibles</p>
             }
-            <ValidationMessage For="@(() => FormModel.Section)" class="validation-message" />
+            <ValidationMessage For="@(() => FormModel.DepartmentId)" class="validation-message" />
         </div>
-    </div>
 
-    <div class="form-group">
-        <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
-        <input type="password" 
-               id="password" 
-               class="form-input" 
-               @bind="FormModel.Password" 
-               placeholder="Mínimo 6 caracteres (opcional)" />
-    </div>
-
-    <div class="form-row">
         <div class="form-group">
             <label for="yearsOfExperience" class="form-label">Años de experiencia</label>
             <input type="number" 
@@ -76,15 +52,15 @@
                    min="0"
                    max="50" />
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="specialty" class="form-label">Especialidad</label>
-            <input type="text" 
-                   id="specialty" 
-                   class="form-input" 
-                   @bind="FormModel.Specialty" 
-                   placeholder="Ej: Redes, Servidores, etc." />
-        </div>
+    <div class="form-group">
+        <label for="specialty" class="form-label">Especialidad</label>
+        <input type="text" 
+               id="specialty" 
+               class="form-input" 
+               @bind="FormModel.Specialty" 
+               placeholder="Ej: Redes, Servidores, etc." />
     </div>
 
     <div class="form-actions">
@@ -110,7 +86,7 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
-    private List<string> availableDepartments = new();
+    private List<(int Id, string Name)> availableDepartments = new();
     private bool isLoadingDepartments = true;
 
     protected override async Task OnInitializedAsync()
@@ -121,7 +97,7 @@
     private async Task LoadDepartments()
     {
         isLoadingDepartments = true;
-        availableDepartments = await DepartmentService.GetAllDepartmentNamesAsync();
+        availableDepartments = await OrganizationService.GetSectionOptionsAsync();
         isLoadingDepartments = false;
     }
 
