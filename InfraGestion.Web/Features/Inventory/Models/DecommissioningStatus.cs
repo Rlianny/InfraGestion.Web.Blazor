@@ -5,7 +5,5 @@ namespace InfraGestion.Web.Features.Inventory.Models;
 /// </summary>
 public enum DecommissioningStatus
 {
-    Pending,        // Pendiente
-    Approved,       // Aprobado
-    Rejected        // Rechazado
+    Pending, Approved, Rejected
 }

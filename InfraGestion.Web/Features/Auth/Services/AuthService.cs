@@ -37,15 +37,23 @@ public class AuthService
         }
         catch (HttpRequestException)
         {
-            // If API fails, try demo login
-            Console.WriteLine("⚠️ API no disponible, usando login demo");
-            return await LoginDemoAsync(request);
+            // If API fails
+            Console.WriteLine("⚠️ API no disponible");
+            return new LoginResponse
+            {
+                Success = false,
+                Message = "API no disponible"
+            };
         }
         catch (Exception)
         {
-            // If occurs any other error, use demo
+            // If occurs any other error
             Console.WriteLine("⚠️ Error inesperado, usando login demo");
-            return await LoginDemoAsync(request);
+            return new LoginResponse
+            {
+                Success = false,
+                Message = "Error inesperado"
+            };
         }
     }
 

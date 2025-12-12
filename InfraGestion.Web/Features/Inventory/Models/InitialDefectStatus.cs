@@ -5,7 +5,5 @@ namespace InfraGestion.Web.Features.Inventory.Models;
 /// </summary>
 public enum InitialDefectStatus
 {
-    Pending,
-    Approved,
-    Rejected
+    Pending, Approved, Rejected
 }
