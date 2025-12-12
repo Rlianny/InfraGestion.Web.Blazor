@@ -35,27 +35,14 @@ public class DeviceService
     {
         try
         {
-            // Asegurar autenticación
             await EnsureAuthenticatedAsync();
 
-            // Obtener el ID del usuario autenticado si no se proporciona
             if (userId == 0)
             {
                 var currentUser = await _authService.GetCurrentUserAsync();
                 userId = currentUser?.Id ?? 0;
-                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - currentUser: {currentUser?.Username ?? "NULL"}, Id: {currentUser?.Id ?? 0}");
             }
 
-            // ⚠️ DEBUG TEMPORAL: Si el userId es 0, usar -5 (rlopez) para pruebas
-            if (userId == 0)
-            {
-                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - userId was 0, using -5 (rlopez) for testing");
-                userId = -5;
-            }
-
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Final userId to send: {userId}");
-
-            // ⚠️ El backend REQUIERE el parámetro userID
             var queryParams = new List<string> { $"userID={userId}" };
 
             if (filter != null)
@@ -73,26 +60,20 @@ public class DeviceService
             }
 
             var url = $"inventory?{string.Join("&", queryParams)}";
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync status: {response.StatusCode}");
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync body length: {content?.Length ?? 0}");
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[DEBUG] GetAllDevicesAsync failed with status: {response.StatusCode}");
                 return new List<Device>();
             }
 
             if (string.IsNullOrWhiteSpace(content))
             {
-                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Empty response");
                 return new List<Device>();
             }
 
-            // Manejo flexible: array directo o ApiResponse { data: [] }
             try
             {
                 using var doc = System.Text.Json.JsonDocument.Parse(content);
@@ -110,13 +91,11 @@ public class DeviceService
                 }
                 else
                 {
-                    Console.WriteLine("[DEBUG] Unexpected JSON shape for devices");
                     return new List<Device>();
                 }
 
                 if (dataElement.ValueKind != System.Text.Json.JsonValueKind.Array || !dataElement.EnumerateArray().Any())
                 {
-                    Console.WriteLine("[DEBUG] Devices array empty or invalid");
                     return new List<Device>();
                 }
 
@@ -136,11 +115,10 @@ public class DeviceService
                         Name = name,
                         Type = (DeviceType)typeVal,
                         State = (OperationalState)stateVal,
-                        Location = string.IsNullOrWhiteSpace(dept) ? "Almacen General" : dept
+                        Location = string.IsNullOrWhiteSpace(dept) ? "Almacén General" : dept
                     });
                 }
 
-                Console.WriteLine($"[DEBUG] Parsed {devices.Count} devices");
                 return devices;
             }
             catch (Exception ex)
@@ -197,30 +175,56 @@ public class DeviceService
         {
             var response = await _httpClient.GetAsync($"inventory/deviceDetail/{id}");
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetDeviceDetailsAsync status: {response.StatusCode}, body: {content}");
-
             if (!response.IsSuccessStatusCode)
             {
                 return null;
             }
 
-            // Backend devuelve DeviceDetailDto directamente (sin ApiResponse wrapper)
-            var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(content, new System.Text.Json.JsonSerializerOptions
+            // Try to handle API responses that may be wrapped in a { success/data/... } envelope
+            try
             {
-                PropertyNameCaseInsensitive = true
-            });
+                using var doc = System.Text.Json.JsonDocument.Parse(content);
+                var root = doc.RootElement;
 
-            if (dto != null)
-            {
-                var deviceDetails = MapDetailDtoToDeviceDetails(dto);
+                System.Text.Json.JsonElement dataElement;
 
-                // Resolve location info from Organization service
-                await ResolveLocationInfoAsync(deviceDetails, dto.DepartmentId);
+                if (root.ValueKind == System.Text.Json.JsonValueKind.Object && root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    dataElement = dataProp;
+                }
+                else if (root.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    // Assume the root object is the DTO itself
+                    dataElement = root;
+                }
+                else
+                {
+                    // Unexpected shape
+                    Console.WriteLine("[WARN] GetDeviceDetailsAsync - unexpected JSON shape for device detail");
+                    return null;
+                }
 
-                return deviceDetails;
+                var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(dataElement.GetRawText(), new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (dto != null)
+                {
+                    var deviceDetails = MapDetailDtoToDeviceDetails(dto);
+
+                    // Resolve location info from Organization service (departmentId may be 0 if not present)
+                    await ResolveLocationInfoAsync(deviceDetails, dto.DepartmentId);
+                    return deviceDetails;
+                }
+
+                return null;
             }
-
-            return null;
+            catch (System.Text.Json.JsonException jex)
+            {
+                Console.WriteLine($"[ERROR] GetDeviceDetailsAsync - JSON parse error: {jex.Message}");
+                return null;
+            }
         }
         catch (Exception ex)
         {
@@ -562,20 +566,13 @@ public class DeviceService
         }
     }
 
-
-    // DELETE - NOT AVAILABLE
-
     /// <summary>
     /// Deletes a device
-    /// ⚠️ WARNING: DELETE endpoint does NOT exist in API
-    /// Use RejectDeviceAsync instead
     /// </summary>
     public async Task<bool> DeleteDeviceAsync(int id)
     {
         try
         {
-            Console.WriteLine($"🔵 Deleting device {id}...");
-
             var response = await _httpClient.DeleteAsync($"inventory/{id}");
 
             if (!response.IsSuccessStatusCode)
