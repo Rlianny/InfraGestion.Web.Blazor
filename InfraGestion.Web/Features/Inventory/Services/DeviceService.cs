@@ -4,6 +4,7 @@ using InfraGestion.Web.Features.Inventory.DTOs;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Organization.Services;
+using InfraGestion.Web.Core.Constants;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
@@ -29,7 +30,7 @@ public class DeviceService
 
     /// <summary>
     /// Gets all devices with optional filters
-    /// GET /inventory?userID={userID}&filter.xxx=yyy
+    /// GET /api/devices/user/{userId}
     /// </summary>
     public async Task<List<Device>> GetAllDevicesAsync(int userId = 0, DeviceFilterDto? filter = null)
     {
@@ -55,11 +56,13 @@ public class DeviceService
 
             Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Final userId to send: {userId}");
 
-            // ⚠️ El backend REQUIERE el parámetro userID
-            var queryParams = new List<string> { $"userID={userId}" };
+            // v2.1: New route /api/devices/user/{userId}
+            var url = ApiRoutes.Devices.GetAllDevices(userId);
 
+            // Add optional filters as query parameters
             if (filter != null)
             {
+                var queryParams = new List<string>();
                 if (!string.IsNullOrEmpty(filter.SearchTerm))
                     queryParams.Add($"filter.SearchTerm={Uri.EscapeDataString(filter.SearchTerm)}");
                 if (filter.DeviceType.HasValue)
@@ -70,9 +73,11 @@ public class DeviceService
                     queryParams.Add($"filter.DepartmentName={Uri.EscapeDataString(filter.DepartmentName)}");
                 if (filter.DepartmentId.HasValue)
                     queryParams.Add($"filter.DepartmentId={filter.DepartmentId.Value}");
+
+                if (queryParams.Any())
+                    url += $"?{string.Join("&", queryParams)}";
             }
 
-            var url = $"inventory?{string.Join("&", queryParams)}";
             Console.WriteLine($"[DEBUG] GetAllDevicesAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
@@ -189,13 +194,13 @@ public class DeviceService
 
     /// <summary>
     /// Gets detailed device information
-    /// GET /inventory/{id}
+    /// GET /api/devices/{id}
     /// </summary>
     public async Task<DeviceDetails?> GetDeviceDetailsAsync(int id)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"inventory/deviceDetail/{id}");
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetDeviceById(id));
             var content = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"[DEBUG] GetDeviceDetailsAsync status: {response.StatusCode}, body: {content}");
 
@@ -263,13 +268,21 @@ public class DeviceService
 
     /// <summary>
     /// Gets all company devices
-    /// GET /inventory/company/devices
+    /// GET /api/devices/user/{userId}
     /// </summary>
     public async Task<List<Device>> GetCompanyDevicesAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync("inventory/company/devices");
+            var currentUser = await _authService.GetCurrentUserAsync();
+            var userId = currentUser?.Id ?? 0;
+            
+            if (userId == 0)
+            {
+                return new List<Device>();
+            }
+
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetAllDevices(userId));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -293,13 +306,21 @@ public class DeviceService
 
     /// <summary>
     /// Gets devices from a specific section
-    /// GET /inventory/sections/{sectionId}
+    /// GET /api/devices/user/{userId}/sections/{sectionId}
     /// </summary>
     public async Task<List<Device>> GetSectionDevicesAsync(int sectionId)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"inventory/sections/{sectionId}");
+            var currentUser = await _authService.GetCurrentUserAsync();
+            var userId = currentUser?.Id ?? 0;
+            
+            if (userId == 0)
+            {
+                return new List<Device>();
+            }
+
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetDevicesBySection(userId, sectionId));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -323,14 +344,22 @@ public class DeviceService
 
     /// <summary>
     /// Gets devices from authenticated user's section
-    /// GET /inventory/ownedSection
+    /// GET /api/devices/user/{userId}/my-section-devices
     /// Requires JWT token
     /// </summary>
     public async Task<List<Device>> GetOwnSectionDevicesAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync("inventory/ownedSection");
+            var currentUser = await _authService.GetCurrentUserAsync();
+            var userId = currentUser?.Id ?? 0;
+            
+            if (userId == 0)
+            {
+                return new List<Device>();
+            }
+
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetMySectionDevices(userId));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -377,7 +406,8 @@ public class DeviceService
 
     /// <summary>
     /// Creates a new device
-    /// POST /inventory
+    /// POST /api/devices
+    /// Returns 201 Created on success
     /// </summary>
     public async Task<Device?> CreateDeviceAsync(CreateDeviceRequest request)
     {
@@ -390,7 +420,7 @@ public class DeviceService
                 return null;
             }
 
-            var dto = new InsertDeviceRequestDto
+            var dto = new RegisterNewDeviceDto
             {
                 Name = request.Name,
                 DeviceType = request.Type,
@@ -399,9 +429,10 @@ public class DeviceService
                 UserId = currentUser.Id
             };
 
-            var response = await _httpClient.PostAsJsonAsync("inventory", dto);
+            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Devices.CreateDevice, dto);
 
-            if (!response.IsSuccessStatusCode)
+            // v2.1: Now returns 201 Created on success
+            if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Created)
             {
                 var error = await response.Content.ReadAsStringAsync();
                 return null;
@@ -491,13 +522,16 @@ public class DeviceService
 
     /// <summary>
     /// Assigns device for inspection
-    /// POST /inventory/reviews
+    /// POST /api/inspections/assign
+    /// DEPRECATED: Use InspectionService.AssignInspectionAsync instead
     /// </summary>
+    [Obsolete("Use InspectionService.AssignInspectionAsync instead")]
     public async Task<bool> AssignDeviceForReviewAsync(AssignDeviceForInspectionRequestDto request)
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("inventory/reviews", request);
+            // v2.1: New route /api/inspections/assign
+            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Inspections.AssignInspection, request);
 
             if (response.IsSuccessStatusCode)
             {
@@ -516,7 +550,7 @@ public class DeviceService
 
     /// <summary>
     /// Updates an existing device
-    /// PUT /inventory
+    /// PUT /api/devices
     /// </summary>
     public async Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
     {
@@ -532,7 +566,7 @@ public class DeviceService
                 Date = request.PurchaseDate
             };
 
-            var response = await _httpClient.PutAsJsonAsync("inventory", dto);
+            var response = await _httpClient.PutAsJsonAsync(ApiRoutes.Devices.UpdateDevice, dto);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -567,8 +601,8 @@ public class DeviceService
 
     /// <summary>
     /// Deletes a device
-    /// ⚠️ WARNING: DELETE endpoint does NOT exist in API
-    /// Use RejectDeviceAsync instead
+    /// DELETE /api/devices/{id}
+    /// Returns 204 No Content on success (v2.1)
     /// </summary>
     public async Task<bool> DeleteDeviceAsync(int id)
     {
@@ -576,7 +610,13 @@ public class DeviceService
         {
             Console.WriteLine($"🔵 Deleting device {id}...");
 
-            var response = await _httpClient.DeleteAsync($"inventory/{id}");
+            var response = await _httpClient.DeleteAsync(ApiRoutes.Devices.DeleteDevice(id));
+
+            // v2.1: Now returns 204 No Content on success
+            if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return true;
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -760,23 +800,25 @@ public class DeviceService
 
     // ==========================================
     // RECEIVING INSPECTION (Initial Defect) ENDPOINTS
+    // NOTE: These methods are DEPRECATED in v2.1
+    // Use InspectionService instead for new code
     // ==========================================
 
     /// <summary>
     /// Gets pending receiving inspection requests for a technician
-    /// GET /inventory/pendingFirstInspection/{technicianId}
-    /// Note: Backend uses literal 'technicianId' in route, parameter passed as query string
+    /// GET /api/inspections/technician/{technicianId}/pending
+    /// DEPRECATED: Use InspectionService.GetPendingInspectionsAsync instead
     /// </summary>
+    [Obsolete("Use InspectionService.GetPendingInspectionsAsync instead")]
     public async Task<List<ReceivingInspectionRequestDto>> GetPendingReceivingInspectionRequestsAsync(int technicianId)
     {
         try
         {
             await EnsureAuthenticatedAsync();
 
-            // Backend route: [HttpGet("pendingFirstInspection/technicianId")]
-            // This means the literal string "technicianId" is in the route, parameter comes via query
-            var url = $"inventory/pendingFirstInspection/technicianId?technicianId={technicianId}";
-            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync URL: {url}");
+            // v2.1: New route /api/inspections/technician/{technicianId}/pending
+            var url = ApiRoutes.Inspections.GetPendingInspections(technicianId);
+            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync URL: {url}");;
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -816,15 +858,18 @@ public class DeviceService
 
     /// <summary>
     /// Processes the inspection decision (approve or reject a device)
-    /// POST /inventory/inspection-decision
+    /// POST /api/inspections/decision
+    /// DEPRECATED: Use InspectionService.ProcessInspectionDecisionAsync instead
     /// </summary>
+    [Obsolete("Use InspectionService.ProcessInspectionDecisionAsync instead")]
     public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionRequestDto request)
     {
         try
         {
             await EnsureAuthenticatedAsync();
 
-            var url = "inventory/inspection-decision";
+            // v2.1: New route /api/inspections/decision
+            var url = ApiRoutes.Inspections.ProcessDecision;
             Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync URL: {url}");
             Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync request: DeviceId={request.DeviceId}, TechnicianId={request.TechnicianId}, IsApproved={request.IsApproved}, Reason={request.Reason}");
 

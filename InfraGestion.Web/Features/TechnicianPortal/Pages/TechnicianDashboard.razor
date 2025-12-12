@@ -5,7 +5,7 @@
 @using InfraGestion.Web.Features.TechnicianPortal.Components
 @using static InfraGestion.Web.Features.TechnicianPortal.Components.InitialDefectReviewForm
 @inject AuthService AuthService
-@inject DeviceService DeviceService
+@inject InspectionService InspectionService
 
 <PageTitle>Dashboard Técnico - InfraCom</PageTitle>
 
@@ -120,8 +120,8 @@
             // Removed restriction for currentTechnicianId <= 0
             Console.WriteLine("[INFO] TechnicianDashboard - Allowing negative technician IDs");
 
-            // Get pending inspection requests from backend
-            List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await DeviceService.GetPendingReceivingInspectionRequestsAsync(currentTechnicianId);
+            // v2.1: Use InspectionService instead of DeviceService for inspection operations
+            List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await InspectionService.GetPendingInspectionsAsync(currentTechnicianId);
             
             Console.WriteLine($"[DEBUG] TechnicianDashboard - Received {requests.Count} pending requests");
 
@@ -179,7 +179,8 @@
             if (result.IsApproved)
             {
                 Console.WriteLine($"[DEBUG] Processing approval for device {result.DeviceId} by technician {result.TechnicianId}");
-                success = await DeviceService.ApproveDeviceInspectionAsync(result.DeviceId, result.TechnicianId);
+                // v2.1: Use InspectionService
+                success = await InspectionService.ApproveDeviceInspectionAsync(result.DeviceId, result.TechnicianId);
                 
                 if (success)
                 {
@@ -199,7 +200,8 @@
                 }
 
                 Console.WriteLine($"[DEBUG] Processing rejection for device {result.DeviceId} by technician {result.TechnicianId} with reason {result.RejectionReason}");
-                success = await DeviceService.RejectDeviceInspectionAsync(result.DeviceId, result.TechnicianId, result.RejectionReason.Value);
+                // v2.1: Use InspectionService
+                success = await InspectionService.RejectDeviceInspectionAsync(result.DeviceId, result.TechnicianId, result.RejectionReason.Value);
                 
                 if (success)
                 {

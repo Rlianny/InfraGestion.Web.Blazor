@@ -2,27 +2,48 @@ using System.Net.Http.Json;
 using InfraGestion.Web.Features.Users.Models;
 using InfraGestion.Web.Features.Users.DTOs;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Auth.Services;
+using InfraGestion.Web.Core.Constants;
 
 namespace InfraGestion.Web.Features.Users.Services;
 
 public class UserService
 {
     private readonly HttpClient _httpClient;
+    private readonly AuthService _authService;
 
-    public UserService(HttpClient httpClient)
+    public UserService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
+    }
+
+    /// <summary>
+    /// Get current user ID from session
+    /// </summary>
+    private async Task<int> GetCurrentUserIdAsync()
+    {
+        var user = await _authService.GetCurrentUserAsync();
+        return user?.Id ?? 0;
     }
 
     /// <summary>
     /// Get users from API
+    /// GET /Users/user/{currentUserId}
     /// </summary>
     public async Task<List<User>> GetAllUsersAsync()
     {
         try
         {
-            // GET /Users
-            var response = await _httpClient.GetAsync("Users");
+            var currentUserId = await GetCurrentUserIdAsync();
+            if (currentUserId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el usuario actual");
+                return new List<User>();
+            }
+
+            // GET /Users/user/{currentUserId}
+            var response = await _httpClient.GetAsync(ApiRoutes.Users.GetAllUsers(currentUserId));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -54,13 +75,14 @@ public class UserService
 
     /// <summary>
     /// Get user by ID
+    /// GET /Users/{id}
     /// </summary>
     public async Task<User?> GetUserByIdAsync(int id)
     {
         try
         {
             // GET /Users/{id}
-            var response = await _httpClient.GetAsync($"Users/{id}");
+            var response = await _httpClient.GetAsync(ApiRoutes.Users.GetUserById(id));
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -142,11 +164,19 @@ public class UserService
 
     /// <summary>
     /// Create a new user
+    /// POST /Users/administrator/{administratorId}
     /// </summary>
     public async Task<User?> CreateUserAsync(CreateUserRequest request)
     {
         try
         {
+            var administratorId = await GetCurrentUserIdAsync();
+            if (administratorId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el ID del administrador");
+                return null;
+            }
+
             // Convert CreateUserRequest to CreateUserRequestDto
             var dto = new CreateUserRequestDto
             {
@@ -164,8 +194,8 @@ public class UserService
                     : null
             };
 
-            // POST /Users
-            var response = await _httpClient.PostAsJsonAsync("Users", dto);
+            // POST /Users/administrator/{administratorId}
+            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.CreateUser(administratorId), dto);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -192,11 +222,19 @@ public class UserService
 
     /// <summary>
     /// Update an existent user
+    /// PUT /Users/administrator/{administratorId}/{id}
     /// </summary>
     public async Task<User?> UpdateUserAsync(UpdateUserRequest request)
     {
         try
         {
+            var administratorId = await GetCurrentUserIdAsync();
+            if (administratorId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el ID del administrador");
+                return null;
+            }
+
             var dto = new UpdateUserRequestDto
             {
                 UserId = request.Id,
@@ -208,8 +246,8 @@ public class UserService
                 Specialty = request.Specialty
             };
 
-            // PUT /Users/{id}
-            var response = await _httpClient.PutAsJsonAsync($"Users/{request.Id}", dto);
+            // PUT /Users/administrator/{administratorId}/{id}
+            var response = await _httpClient.PutAsJsonAsync(ApiRoutes.Users.UpdateUser(administratorId, request.Id), dto);
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -232,11 +270,19 @@ public class UserService
 
     /// <summary>
     /// Disable user (la API usa desactivación)
+    /// POST /Users/administrator/{administratorId}/{id}/deactivate
     /// </summary>
     public async Task<bool> DeleteUserAsync(int id)
     {
         try
         {
+            var administratorId = await GetCurrentUserIdAsync();
+            if (administratorId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el ID del administrador");
+                return false;
+            }
+
             // Disable
             var dto = new
             {
@@ -244,8 +290,8 @@ public class UserService
                 Reason = "Eliminado desde la interfaz de usuario"
             };
 
-            // POST /Users/{id}/deactivate
-            var response = await _httpClient.PostAsJsonAsync($"Users/{id}/deactivate", dto);
+            // POST /Users/administrator/{administratorId}/{id}/deactivate
+            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.DeactivateUser(administratorId, id), dto);
 
             return response.IsSuccessStatusCode;
         }
@@ -258,11 +304,19 @@ public class UserService
 
     /// <summary>
     /// Enable/Disable user
+    /// POST /Users/administrator/{administratorId}/{id}/activate or /deactivate
     /// </summary>
     public async Task<bool> ToggleUserStatusAsync(int id)
     {
         try
         {
+            var administratorId = await GetCurrentUserIdAsync();
+            if (administratorId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el ID del administrador");
+                return false;
+            }
+
             var user = await GetUserByIdAsync(id);
             if (user == null) return false;
 
@@ -275,11 +329,11 @@ public class UserService
                     UserId = id,
                     Reason = "Desactivado manualmente"
                 };
-                response = await _httpClient.PostAsJsonAsync($"Users/{id}/deactivate", dto);
+                response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.DeactivateUser(administratorId, id), dto);
             }
             else
             {
-                response = await _httpClient.PostAsync($"Users/{id}/activate", null);
+                response = await _httpClient.PostAsync(ApiRoutes.Users.ActivateUser(administratorId, id), null);
             }
 
             return response.IsSuccessStatusCode;
@@ -293,13 +347,21 @@ public class UserService
 
     /// <summary>
     /// Get users by department
+    /// GET /Users/user/{currentUserId}/department/{departmentId}
     /// </summary>
     public async Task<List<User>> GetUsersByDepartmentAsync(int departmentId)
     {
         try
         {
-            // GET /Users/department/{id}
-            var response = await _httpClient.GetAsync($"Users/department/{departmentId}");
+            var currentUserId = await GetCurrentUserIdAsync();
+            if (currentUserId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el usuario actual");
+                return new List<User>();
+            }
+
+            // GET /Users/user/{currentUserId}/department/{departmentId}
+            var response = await _httpClient.GetAsync(ApiRoutes.Users.GetUsersByDepartment(currentUserId, departmentId));
 
             if (!response.IsSuccessStatusCode)
                 return new List<User>();
