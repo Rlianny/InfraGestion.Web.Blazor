@@ -1,10 +1,10 @@
 using System.Net.Http.Json;
-using InfraGestion.Web.Features.Inventory.Models;
-using InfraGestion.Web.Features.Inventory.DTOs;
+using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
+using InfraGestion.Web.Features.Inventory.DTOs;
+using InfraGestion.Web.Features.Inventory.Models;
 using InfraGestion.Web.Features.Organization.Services;
-using InfraGestion.Web.Core.Constants;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
@@ -14,7 +14,11 @@ public class DeviceService
     private readonly OrganizationService _organizationService;
     private readonly AuthService _authService;
 
-    public DeviceService(HttpClient httpClient, OrganizationService organizationService, AuthService authService)
+    public DeviceService(
+        HttpClient httpClient,
+        OrganizationService organizationService,
+        AuthService authService
+    )
     {
         _httpClient = httpClient;
         _organizationService = organizationService;
@@ -30,33 +34,28 @@ public class DeviceService
 
     /// <summary>
     /// Gets all devices with optional filters
-    /// GET /api/devices/user/{userId}
+    /// GET /api/devices
     /// </summary>
-    public async Task<List<Device>> GetAllDevicesAsync(int userId = 0, DeviceFilterDto? filter = null)
+    public async Task<List<Device>> GetAllDevicesAsync(DeviceFilterDto? filter = null)
     {
         try
         {
-            await EnsureAuthenticatedAsync();
-
-            if (userId == 0)
+            var currentUser = await _authService.GetCurrentUserAsync();
+            if (currentUser == null)
             {
-                var currentUser = await _authService.GetCurrentUserAsync();
-                userId = currentUser?.Id ?? 0;
+                Console.WriteLine("[ERROR] GetAllDevicesAsync - No authenticated user found");
+                return new List<Device>();
             }
 
-            // ⚠️ DEBUG TEMPORAL: Si el userId es 0, usar -5 (rlopez) para pruebas
-            if (userId == 0)
-            {
-                Console.WriteLine($"[DEBUG] GetAllDevicesAsync - userId was 0, using -5 (rlopez) for testing");
-                userId = -5;
-            }
+            Console.WriteLine(
+                $"[DEBUG] GetAllDevicesAsync - Authenticated user: {currentUser.Username} (ID: {currentUser.Id})"
+            );
+            Console.WriteLine(
+                $"[DEBUG] GetAllDevicesAsync - Auth header present: {_httpClient.DefaultRequestHeaders.Authorization != null}"
+            );
 
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync - Final userId to send: {userId}");
+            var url = ApiRoutes.Devices.GetAllDevices;
 
-            // v2.1: New route /api/devices/user/{userId}
-            var url = ApiRoutes.Devices.GetAllDevices(userId);
-
-            // Add optional filters as query parameters
             if (filter != null)
             {
                 var queryParams = new List<string>();
@@ -67,7 +66,9 @@ public class DeviceService
                 if (filter.OperationalState.HasValue)
                     queryParams.Add($"filter.OperationalState={filter.OperationalState.Value}");
                 if (!string.IsNullOrEmpty(filter.DepartmentName))
-                    queryParams.Add($"filter.DepartmentName={Uri.EscapeDataString(filter.DepartmentName)}");
+                    queryParams.Add(
+                        $"filter.DepartmentName={Uri.EscapeDataString(filter.DepartmentName)}"
+                    );
                 if (filter.DepartmentId.HasValue)
                     queryParams.Add($"filter.DepartmentId={filter.DepartmentId.Value}");
 
@@ -101,7 +102,10 @@ public class DeviceService
                 {
                     dataElement = root;
                 }
-                else if (root.ValueKind == System.Text.Json.JsonValueKind.Object && root.TryGetProperty("data", out var dataProp))
+                else if (
+                    root.ValueKind == System.Text.Json.JsonValueKind.Object
+                    && root.TryGetProperty("data", out var dataProp)
+                )
                 {
                     dataElement = dataProp;
                 }
@@ -110,7 +114,10 @@ public class DeviceService
                     return new List<Device>();
                 }
 
-                if (dataElement.ValueKind != System.Text.Json.JsonValueKind.Array || !dataElement.EnumerateArray().Any())
+                if (
+                    dataElement.ValueKind != System.Text.Json.JsonValueKind.Array
+                    || !dataElement.EnumerateArray().Any()
+                )
                 {
                     return new List<Device>();
                 }
@@ -119,20 +126,32 @@ public class DeviceService
 
                 foreach (var item in dataElement.EnumerateArray())
                 {
-                    var id = item.TryGetProperty("deviceId", out var idProp) ? idProp.GetInt32() : 0;
-                    var name = item.TryGetProperty("name", out var nameProp) ? nameProp.GetString() ?? string.Empty : string.Empty;
-                    var typeVal = item.TryGetProperty("deviceType", out var typeProp) ? typeProp.GetInt32() : 0;
-                    var stateVal = item.TryGetProperty("operationalState", out var stateProp) ? stateProp.GetInt32() : 0;
-                    var dept = item.TryGetProperty("departmentName", out var deptProp) ? deptProp.GetString() ?? string.Empty : string.Empty;
+                    var id = item.TryGetProperty("deviceId", out var idProp)
+                        ? idProp.GetInt32()
+                        : 0;
+                    var name = item.TryGetProperty("name", out var nameProp)
+                        ? nameProp.GetString() ?? string.Empty
+                        : string.Empty;
+                    var typeVal = item.TryGetProperty("deviceType", out var typeProp)
+                        ? typeProp.GetInt32()
+                        : 0;
+                    var stateVal = item.TryGetProperty("operationalState", out var stateProp)
+                        ? stateProp.GetInt32()
+                        : 0;
+                    var dept = item.TryGetProperty("departmentName", out var deptProp)
+                        ? deptProp.GetString() ?? string.Empty
+                        : string.Empty;
 
-                    devices.Add(new Device
-                    {
-                        Id = id,
-                        Name = name,
-                        Type = (DeviceType)typeVal,
-                        State = (OperationalState)stateVal,
-                        Location = string.IsNullOrWhiteSpace(dept) ? "Almacén General" : dept
-                    });
+                    devices.Add(
+                        new Device
+                        {
+                            Id = id,
+                            Name = name,
+                            Type = (DeviceType)typeVal,
+                            State = (OperationalState)stateVal,
+                            Location = string.IsNullOrWhiteSpace(dept) ? "Almacén General" : dept,
+                        }
+                    );
                 }
 
                 return devices;
@@ -169,7 +188,7 @@ public class DeviceService
                     Type = details.Type,
                     State = details.State,
                     Location = details.Department,
-                    AcquisitionDate = details.PurchaseDate
+                    AcquisitionDate = details.PurchaseDate,
                 };
             }
 
@@ -204,7 +223,11 @@ public class DeviceService
 
                 System.Text.Json.JsonElement dataElement;
 
-                if (root.ValueKind == System.Text.Json.JsonValueKind.Object && root.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == System.Text.Json.JsonValueKind.Object)
+                if (
+                    root.ValueKind == System.Text.Json.JsonValueKind.Object
+                    && root.TryGetProperty("data", out var dataProp)
+                    && dataProp.ValueKind == System.Text.Json.JsonValueKind.Object
+                )
                 {
                     dataElement = dataProp;
                 }
@@ -216,14 +239,19 @@ public class DeviceService
                 else
                 {
                     // Unexpected shape
-                    Console.WriteLine("[WARN] GetDeviceDetailsAsync - unexpected JSON shape for device detail");
+                    Console.WriteLine(
+                        "[WARN] GetDeviceDetailsAsync - unexpected JSON shape for device detail"
+                    );
                     return null;
                 }
 
-                var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(dataElement.GetRawText(), new System.Text.Json.JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(
+                    dataElement.GetRawText(),
+                    new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    }
+                );
 
                 if (dto != null)
                 {
@@ -238,7 +266,9 @@ public class DeviceService
             }
             catch (System.Text.Json.JsonException jex)
             {
-                Console.WriteLine($"[ERROR] GetDeviceDetailsAsync - JSON parse error: {jex.Message}");
+                Console.WriteLine(
+                    $"[ERROR] GetDeviceDetailsAsync - JSON parse error: {jex.Message}"
+                );
                 return null;
             }
         }
@@ -283,28 +313,31 @@ public class DeviceService
 
     /// <summary>
     /// Gets all company devices
-    /// GET /api/devices/user/{userId}
+    /// GET /api/devices
     /// </summary>
     public async Task<List<Device>> GetCompanyDevicesAsync()
     {
         try
         {
             var currentUser = await _authService.GetCurrentUserAsync();
-            var userId = currentUser?.Id ?? 0;
-            
-            if (userId == 0)
+            if (currentUser == null)
             {
+                Console.WriteLine("[ERROR] GetCompanyDevicesAsync - No authenticated user found");
                 return new List<Device>();
             }
 
-            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetAllDevices(userId));
+            Console.WriteLine($"[DEBUG] GetCompanyDevicesAsync - User authenticated");
+
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetAllDevices);
 
             if (!response.IsSuccessStatusCode)
             {
                 return new List<Device>();
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<DeviceDto>>
+            >();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
@@ -321,28 +354,33 @@ public class DeviceService
 
     /// <summary>
     /// Gets devices from a specific section
-    /// GET /api/devices/user/{userId}/sections/{sectionId}
+    /// GET /api/devices/sections/{sectionId}
     /// </summary>
     public async Task<List<Device>> GetSectionDevicesAsync(int sectionId)
     {
         try
         {
             var currentUser = await _authService.GetCurrentUserAsync();
-            var userId = currentUser?.Id ?? 0;
-            
-            if (userId == 0)
+            if (currentUser == null)
             {
+                Console.WriteLine("[ERROR] GetSectionDevicesAsync - No authenticated user found");
                 return new List<Device>();
             }
 
-            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetDevicesBySection(userId, sectionId));
+            Console.WriteLine($"[DEBUG] GetSectionDevicesAsync - sectionId: {sectionId}");
+
+            var response = await _httpClient.GetAsync(
+                ApiRoutes.Devices.GetDevicesBySection(sectionId)
+            );
 
             if (!response.IsSuccessStatusCode)
             {
                 return new List<Device>();
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<DeviceDto>>
+            >();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
@@ -359,29 +397,33 @@ public class DeviceService
 
     /// <summary>
     /// Gets devices from authenticated user's section
-    /// GET /api/devices/user/{userId}/my-section-devices
-    /// Requires JWT token
+    /// GET /api/devices/my-section
     /// </summary>
     public async Task<List<Device>> GetOwnSectionDevicesAsync()
     {
         try
         {
             var currentUser = await _authService.GetCurrentUserAsync();
-            var userId = currentUser?.Id ?? 0;
-            
-            if (userId == 0)
+            if (currentUser == null)
             {
+                Console.WriteLine(
+                    "[ERROR] GetOwnSectionDevicesAsync - No authenticated user found"
+                );
                 return new List<Device>();
             }
 
-            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetMySectionDevices(userId));
+            Console.WriteLine($"[DEBUG] GetOwnSectionDevicesAsync - Fetching my section devices");
+
+            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetMySectionDevices);
 
             if (!response.IsSuccessStatusCode)
             {
                 return new List<Device>();
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<DeviceDto>>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<DeviceDto>>
+            >();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
@@ -404,17 +446,18 @@ public class DeviceService
         string searchTerm = "",
         DeviceType? type = null,
         OperationalState? state = null,
-        string location = "")
+        string location = ""
+    )
     {
         var filter = new DeviceFilterDto
         {
             SearchTerm = searchTerm,
             DeviceType = type,
             OperationalState = state,
-            DepartmentName = location
+            DepartmentName = location,
         };
 
-        return await GetAllDevicesAsync(1, filter);
+        return await GetAllDevicesAsync(filter);
     }
 
     // POST ENDPOINTS
@@ -422,50 +465,43 @@ public class DeviceService
     /// <summary>
     /// Creates a new device
     /// POST /api/devices
-    /// Returns 201 Created on success
     /// </summary>
     public async Task<Device?> CreateDeviceAsync(CreateDeviceRequest request)
     {
         try
         {
-            // Get current user (admin) who creates the request
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
                 return null;
             }
 
-            var dto = new RegisterNewDeviceDto
+            var dto = new RegisterDeviceDto
             {
                 Name = request.Name,
                 DeviceType = request.Type,
                 AcquisitionDate = request.PurchaseDate,
                 TechnicianId = request.TechnicianId,
-                UserId = currentUser.Id
             };
 
             var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Devices.CreateDevice, dto);
 
-            // v2.1: Now returns 201 Created on success
-            if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Created)
+            if (
+                !response.IsSuccessStatusCode
+                && response.StatusCode != System.Net.HttpStatusCode.Created
+            )
             {
                 var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ERROR] CreateDeviceAsync - API error: {error}");
                 return null;
             }
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string?>>();
+            // API returns ApiResponse<DeviceDto> with the created device data
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<DeviceDto>>();
 
-            if (apiResponse?.Success == true)
+            if (apiResponse?.Success == true && apiResponse.Data != null)
             {
-                // Return local representation (API doesn't return created device)
-                return new Device
-                {
-                    Id = 0,
-                    Name = request.Name,
-                    Type = request.Type,
-                    State = OperationalState.UnderRevision,
-                    Location = "Pendiente de revision"
-                };
+                return MapDtoToDevice(apiResponse.Data);
             }
 
             return null;
@@ -488,7 +524,7 @@ public class DeviceService
             {
                 DeviceID = deviceId,
                 TechnicianID = technicianId,
-                Reason = reason
+                Reason = reason,
             };
 
             var response = await _httpClient.PostAsJsonAsync("inventory/rejections", dto);
@@ -517,36 +553,10 @@ public class DeviceService
             var dto = new AcceptDeviceRequestDto
             {
                 DeviceId = deviceId,
-                TechnicianId = technicianId
+                TechnicianId = technicianId,
             };
 
             var response = await _httpClient.PostAsJsonAsync("inventory/approbals", dto);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch (Exception ex)
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Assigns device for inspection
-    /// POST /api/inspections/assign
-    /// DEPRECATED: Use InspectionService.AssignInspectionAsync instead
-    /// </summary>
-    [Obsolete("Use InspectionService.AssignInspectionAsync instead")]
-    public async Task<bool> AssignDeviceForReviewAsync(AssignDeviceForInspectionRequestDto request)
-    {
-        try
-        {
-            // v2.1: New route /api/inspections/assign
-            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Inspections.AssignInspection, request);
 
             if (response.IsSuccessStatusCode)
             {
@@ -565,7 +575,7 @@ public class DeviceService
 
     /// <summary>
     /// Updates an existing device
-    /// PUT /api/devices
+    /// PUT /api/devices/{id}
     /// </summary>
     public async Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
     {
@@ -578,10 +588,13 @@ public class DeviceService
                 DeviceType = request.Type,
                 OperationalState = request.State,
                 DepartmentName = request.Location,
-                Date = request.PurchaseDate
+                Date = request.PurchaseDate,
             };
 
-            var response = await _httpClient.PutAsJsonAsync(ApiRoutes.Devices.UpdateDevice, dto);
+            var response = await _httpClient.PutAsJsonAsync(
+                ApiRoutes.Devices.UpdateDevice(request.Id),
+                dto
+            );
 
             if (!response.IsSuccessStatusCode)
             {
@@ -599,7 +612,7 @@ public class DeviceService
                     Name = request.Name,
                     Type = request.Type,
                     State = request.State,
-                    Location = request.Location
+                    Location = request.Location,
                 };
             }
 
@@ -614,7 +627,6 @@ public class DeviceService
     /// <summary>
     /// Deletes a device
     /// DELETE /api/devices/{id}
-    /// Returns 204 No Content on success (v2.1)
     /// </summary>
     public async Task<bool> DeleteDeviceAsync(int id)
     {
@@ -624,7 +636,6 @@ public class DeviceService
 
             var response = await _httpClient.DeleteAsync(ApiRoutes.Devices.DeleteDevice(id));
 
-            // v2.1: Now returns 204 No Content on success
             if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
             {
                 return true;
@@ -683,7 +694,7 @@ public class DeviceService
             ["Operational"] = devices.Count(d => d.State == OperationalState.Operational),
             ["UnderMaintenance"] = devices.Count(d => d.State == OperationalState.UnderMaintenance),
             ["Decommissioned"] = devices.Count(d => d.State == OperationalState.Decommissioned),
-            ["BeingTransferred"] = devices.Count(d => d.State == OperationalState.BeingTransferred)
+            ["BeingTransferred"] = devices.Count(d => d.State == OperationalState.BeingTransferred),
         };
     }
 
@@ -697,7 +708,7 @@ public class DeviceService
             Name = dto.Name,
             Type = dto.DeviceType,
             State = dto.OperationalState,
-            Location = NormalizeDepartmentName(dto.DepartmentName)
+            Location = NormalizeDepartmentName(dto.DepartmentName),
         };
     }
 
@@ -734,7 +745,7 @@ public class DeviceService
             // Related records
             MaintenanceHistory = maintenanceHistory,
             TransferHistory = MapTransferHistory(dto.TransferHistory),
-            DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo)
+            DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo),
         };
     }
 
@@ -756,17 +767,18 @@ public class DeviceService
             return new List<MaintenanceRecord>();
 
         return dtos.Select(dto => new MaintenanceRecord
-        {
-            Id = dto.MaintenanceRecordId,
-            DeviceId = dto.DeviceId,
-            DeviceName = dto.DeviceName,
-            TechnicianId = dto.TechnicianId,
-            TechnicianName = dto.TechnicianName,
-            Date = dto.MaintenanceDate,
-            Type = (MaintenanceType)dto.MaintenanceType,
-            Cost = (decimal)dto.Cost,
-            Description = dto.Description
-        }).ToList();
+            {
+                Id = dto.MaintenanceRecordId,
+                DeviceId = dto.DeviceId,
+                DeviceName = dto.DeviceName,
+                TechnicianId = dto.TechnicianId,
+                TechnicianName = dto.TechnicianName,
+                Date = dto.MaintenanceDate,
+                Type = (MaintenanceType)dto.MaintenanceType,
+                Cost = (decimal)dto.Cost,
+                Description = dto.Description,
+            })
+            .ToList();
     }
 
     private List<TransferRecord> MapTransferHistory(List<TransferDto>? dtos)
@@ -775,19 +787,20 @@ public class DeviceService
             return new List<TransferRecord>();
 
         return dtos.Select(dto => new TransferRecord
-        {
-            Id = dto.TransferId,
-            DeviceId = dto.DeviceId,
-            DeviceName = dto.DeviceName,
-            Date = dto.TransferDate,
-            SourceSectionId = dto.SourceSectionId,
-            SourceSectionName = dto.SourceSectionName,
-            DestinationSectionId = dto.DestinationSectionId,
-            DestinationSectionName = dto.DestinationSectionName,
-            ReceiverId = dto.DeviceReceiverId,
-            ReceiverName = dto.DeviceReceiverName,
-            Status = (TransferStatus)dto.Status
-        }).ToList();
+            {
+                Id = dto.TransferId,
+                DeviceId = dto.DeviceId,
+                DeviceName = dto.DeviceName,
+                Date = dto.TransferDate,
+                SourceSectionId = dto.SourceSectionId,
+                SourceSectionName = dto.SourceSectionName,
+                DestinationSectionId = dto.DestinationSectionId,
+                DestinationSectionName = dto.DestinationSectionName,
+                ReceiverId = dto.DeviceReceiverId,
+                ReceiverName = dto.DeviceReceiverName,
+                Status = (TransferStatus)dto.Status,
+            })
+            .ToList();
     }
 
     private DecommissioningRequest? MapDecommissioningInfo(DecommissioningDto? dto)
@@ -806,134 +819,9 @@ public class DeviceService
             ReceiverDepartmentName = dto.ReceiverDepartmentName,
             DecommissioningDate = dto.DecommissioningDate,
             Reason = (DecommissioningReason)dto.Reason,
-            FinalDestination = dto.FinalDestination
+            FinalDestination = dto.FinalDestination,
         };
     }
 
-    // ==========================================
-    // RECEIVING INSPECTION (Initial Defect) ENDPOINTS
-    // NOTE: These methods are DEPRECATED in v2.1
-    // Use InspectionService instead for new code
-    // ==========================================
-
-    /// <summary>
-    /// Gets pending receiving inspection requests for a technician
-    /// GET /api/inspections/technician/{technicianId}/pending
-    /// DEPRECATED: Use InspectionService.GetPendingInspectionsAsync instead
-    /// </summary>
-    [Obsolete("Use InspectionService.GetPendingInspectionsAsync instead")]
-    public async Task<List<ReceivingInspectionRequestDto>> GetPendingReceivingInspectionRequestsAsync(int technicianId)
-    {
-        try
-        {
-            await EnsureAuthenticatedAsync();
-
-            // v2.1: New route /api/inspections/technician/{technicianId}/pending
-            var url = ApiRoutes.Inspections.GetPendingInspections(technicianId);
-            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync URL: {url}");;
-
-            var response = await _httpClient.GetAsync(url);
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync status: {response.StatusCode}");
-            Console.WriteLine($"[DEBUG] GetPendingReceivingInspectionRequestsAsync content: {content}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"[ERROR] Failed to get pending inspection requests: {content}");
-                return new List<ReceivingInspectionRequestDto>();
-            }
-
-            var options = new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-
-            // Backend returns ApiResponse<IEnumerable<ReceivingInspectionRequestDto>>
-            using var document = System.Text.Json.JsonDocument.Parse(content);
-            var root = document.RootElement;
-
-            if (root.TryGetProperty("data", out var dataElement))
-            {
-                var requests = System.Text.Json.JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(), options);
-                return requests ?? new List<ReceivingInspectionRequestDto>();
-            }
-
-            return new List<ReceivingInspectionRequestDto>();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] GetPendingReceivingInspectionRequestsAsync: {ex.Message}");
-            return new List<ReceivingInspectionRequestDto>();
-        }
-    }
-
-    /// <summary>
-    /// Processes the inspection decision (approve or reject a device)
-    /// POST /api/inspections/decision
-    /// DEPRECATED: Use InspectionService.ProcessInspectionDecisionAsync instead
-    /// </summary>
-    [Obsolete("Use InspectionService.ProcessInspectionDecisionAsync instead")]
-    public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionRequestDto request)
-    {
-        try
-        {
-            await EnsureAuthenticatedAsync();
-
-            // v2.1: New route /api/inspections/decision
-            var url = ApiRoutes.Inspections.ProcessDecision;
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync URL: {url}");
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync request: DeviceId={request.DeviceId}, TechnicianId={request.TechnicianId}, IsApproved={request.IsApproved}, Reason={request.Reason}");
-
-            var response = await _httpClient.PostAsJsonAsync(url, request);
-            var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync status: {response.StatusCode}");
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync content: {content}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"[ERROR] Failed to process inspection decision: {content}");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] ProcessInspectionDecisionAsync: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Approves a device inspection
-    /// </summary>
-    public async Task<bool> ApproveDeviceInspectionAsync(int deviceId, int technicianId)
-    {
-        var request = new InspectionDecisionRequestDto
-        {
-            DeviceId = deviceId,
-            TechnicianId = technicianId,
-            IsApproved = true,
-            Reason = DecommissioningReason.IrreparableTechnicalFailure // Not used for approval
-        };
-
-        return await ProcessInspectionDecisionAsync(request);
-    }
-
-    /// <summary>
-    /// Rejects a device inspection with a reason
-    /// </summary>
-    public async Task<bool> RejectDeviceInspectionAsync(int deviceId, int technicianId, DecommissioningReason reason)
-    {
-        var request = new InspectionDecisionRequestDto
-        {
-            DeviceId = deviceId,
-            TechnicianId = technicianId,
-            IsApproved = false,
-            Reason = reason
-        };
-
-        return await ProcessInspectionDecisionAsync(request);
-    }
+    
 }
