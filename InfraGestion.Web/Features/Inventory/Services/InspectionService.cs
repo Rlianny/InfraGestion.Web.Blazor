@@ -49,11 +49,9 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.GetTechnicianRequests(technicianId);
-            Console.WriteLine($"[DEBUG] GetTechnicianInspectionRequestsAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetTechnicianInspectionRequestsAsync status: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -92,11 +90,9 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.GetPendingInspections(technicianId);
-            Console.WriteLine($"[DEBUG] GetPendingInspectionsAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetPendingInspectionsAsync status: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -138,11 +134,9 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.GetRevisedDevices(adminId);
-            Console.WriteLine($"[DEBUG] GetRevisedDevicesAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetRevisedDevicesAsync status: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -180,11 +174,9 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.GetAdminRequests(adminId);
-            Console.WriteLine($"[DEBUG] GetAdminInspectionRequestsAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] GetAdminInspectionRequestsAsync status: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -226,13 +218,8 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.ProcessDecision;
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync URL: {url}");
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync request: DeviceId={request.DeviceId}, TechnicianId={request.TechnicianId}, IsApproved={request.IsApproved}, Reason={request.Reason}");
-
             var response = await _httpClient.PostAsJsonAsync(url, request);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync status: {response.StatusCode}");
-            Console.WriteLine($"[DEBUG] ProcessInspectionDecisionAsync content: {content}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -260,12 +247,9 @@ public class InspectionService
             await EnsureAuthenticatedAsync();
 
             var url = ApiRoutes.Inspections.AssignInspection;
-            Console.WriteLine($"[DEBUG] AssignInspectionAsync URL: {url}");
 
             var response = await _httpClient.PostAsJsonAsync(url, request);
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"[DEBUG] AssignInspectionAsync status: {response.StatusCode}");
-
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine($"[ERROR] Failed to assign inspection: {content}");

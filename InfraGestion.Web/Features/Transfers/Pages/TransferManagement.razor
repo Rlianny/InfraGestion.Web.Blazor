@@ -289,11 +289,7 @@
 
     private async Task HandleDeleteTransfer()
     {
-        Console.WriteLine($"🟢 HandleDeleteTransfer called with ID: {transferIdToDelete}");
-
-        Console.WriteLine($"🟡 Calling TransferService.DeleteTransferAsync({transferIdToDelete})");
         var success = await TransferService.DeleteTransferAsync(transferIdToDelete);
-        Console.WriteLine($"🔴 Delete result: {success}");
         await LoadData();
         CloseDeleteConfirmModal();
     }

@@ -41,7 +41,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("obtener secciones", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<Section>();
         }
     }
@@ -70,7 +70,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("crear sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -93,7 +93,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("actualizar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -108,7 +108,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("eliminar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -123,7 +123,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("desactivar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -161,7 +161,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("obtener managers", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<SectionManagerDto>();
         }
     }
@@ -187,7 +187,6 @@ public class OrganizationService
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Department>();
 
-            // Cargar nombres de secciones para mostrar
             var sections = await GetAllSectionsAsync();
             var sectionNames = sections.ToDictionary(s => s.Id, s => s.Name);
 
@@ -195,7 +194,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("obtener departamentos", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<Department>();
         }
     }
@@ -224,7 +223,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("crear departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -247,7 +246,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("actualizar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -262,7 +261,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("eliminar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -277,7 +276,8 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("desactivar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
+
             return false;
         }
     }
@@ -313,11 +313,6 @@ public class OrganizationService
             SectionName = sectionNames.GetValueOrDefault(dto.SectionId, string.Empty),
             Status = OrganizationStatus.Active,
         };
-
-    private static void LogError(string operation, Exception ex)
-    {
-        Console.WriteLine($"Error al {operation}: {ex.Message}");
-    }
 
     #endregion
 }

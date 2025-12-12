@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Transfers.Models;
 
 /// <summary>
-/// Request para crear un nuevo traslado de equipo
+/// Request to create a new device transfer
 /// </summary>
 public class CreateTransferRequest
 {

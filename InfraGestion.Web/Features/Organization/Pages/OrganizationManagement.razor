@@ -169,7 +169,7 @@
         }
         else
         {
-            <!-- Departments Table (subdivisiones de las secciones) -->
+            <!-- Departments Table (subdivision of sections) -->
             <table class="organization-table">
                 <thead>
                     <tr>
@@ -331,7 +331,7 @@
     {
         isLoading = true;
 
-        // Cargar datos en paralelo para mejor rendimiento
+        // Load data in parallel for better performance
         var sectionsTask = OrganizationService.GetAllSectionsAsync();
         var departmentsTask = OrganizationService.GetAllDepartmentsAsync();
         var managersTask = OrganizationService.GetSectionManagersAsync();
@@ -565,11 +565,7 @@
 
     private async Task HandleDeleteSection()
     {
-        Console.WriteLine($"🟢 HandleDeleteSection called with ID: {sectionIdToDelete}");
-
-        Console.WriteLine($"🟡 Calling OrganizationService.DeleteSectionAsync({sectionIdToDelete})");
         var success = await OrganizationService.DeleteSectionAsync(sectionIdToDelete);
-        Console.WriteLine($"🔴 Delete result: {success}");
         await LoadDataAsync();
         CloseDeleteSectionConfirmModal();
     }
@@ -591,11 +587,7 @@
 
     private async Task HandleDeleteDepartment()
     {
-        Console.WriteLine($"🟢 HandleDeleteDepartment called with ID: {departmentIdToDelete}");
-
-        Console.WriteLine($"🟡 Calling OrganizationService.DeleteDepartmentAsync({departmentIdToDelete})");
-        var success = await OrganizationService.DeleteDepartmentAsync(departmentIdToDelete);
-        Console.WriteLine($"🔴 Delete result: {success}");
+        await OrganizationService.DeleteDepartmentAsync(departmentIdToDelete);
         await LoadDataAsync();
         CloseDeleteDepartmentConfirmModal();
     }

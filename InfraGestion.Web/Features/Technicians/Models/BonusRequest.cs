@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
-/// Modelo UI para agregar una bonificación a un técnico
+/// Model for adding a bonus to a technician
 /// </summary>
 public class BonusRequest
 {

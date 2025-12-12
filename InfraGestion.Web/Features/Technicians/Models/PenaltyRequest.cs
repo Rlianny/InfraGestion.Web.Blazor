@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
-/// Modelo UI para agregar una penalización a un técnico
+/// Model for adding a penalty to a technician
 /// </summary>
 public class PenaltyRequest
 {

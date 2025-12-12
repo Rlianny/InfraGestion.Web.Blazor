@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para actualizar técnico - coincide con backend UpdateTechnicianRequest
+/// DTO for updating technician - matches backend UpdateTechnicianRequest
 /// </summary>
 public class UpdateTechnicianRequestDto
 {

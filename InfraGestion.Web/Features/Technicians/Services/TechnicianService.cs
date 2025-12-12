@@ -9,7 +9,7 @@ using InfraGestion.Web.Features.Technicians.Models;
 namespace InfraGestion.Web.Features.Technicians.Services;
 
 /// <summary>
-/// Servicio para gestión de técnicos - consume /personnel/* endpoints del backend
+/// Service for managing technicians - consumes /personnel/* endpoints from the backend
 /// </summary>
 public class TechnicianService
 {
@@ -37,7 +37,7 @@ public class TechnicianService
     #region GET Methods
 
     /// <summary>
-    /// Obtiene todos los técnicos - GET /personnel/technicians
+    /// Get all technicians - GET /personnel/technicians
     /// </summary>
     public async Task<List<Technician>> GetAllTechniciansAsync()
     {
@@ -48,7 +48,7 @@ public class TechnicianService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine(
-                    $"[TechnicianService] Error al obtener técnicos: {response.StatusCode}"
+                    $"[TechnicianService] Error getting technicians: {response.StatusCode}"
                 );
                 return new List<Technician>();
             }
@@ -69,14 +69,14 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en GetAllTechniciansAsync: {ex.Message}"
+                $"[TechnicianService] Exception in GetAllTechniciansAsync: {ex.Message}"
             );
             return new List<Technician>();
         }
     }
 
     /// <summary>
-    /// Obtiene un técnico por ID - GET /personnel/technician/{id}
+    /// Get a technician by ID - GET /personnel/technician/{id}
     /// </summary>
     public async Task<Technician?> GetTechnicianByIdAsync(int technicianId)
     {
@@ -87,7 +87,7 @@ public class TechnicianService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine(
-                    $"[TechnicianService] Error al obtener técnico {technicianId}: {response.StatusCode}"
+                    $"[TechnicianService] Error getting technician {technicianId}: {response.StatusCode}"
                 );
                 return null;
             }
@@ -105,14 +105,14 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en GetTechnicianByIdAsync: {ex.Message}"
+                $"[TechnicianService] Exception in GetTechnicianByIdAsync: {ex.Message}"
             );
             return null;
         }
     }
 
     /// <summary>
-    /// Obtiene detalles completos de un técnico - GET /personnel/technician/{id}/detail
+    /// Get full details of a technician - GET /personnel/technician/{id}/details
     /// </summary>
     public async Task<TechnicianDetails?> GetTechnicianDetailsAsync(int technicianId)
     {
@@ -125,7 +125,7 @@ public class TechnicianService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine(
-                    $"[TechnicianService] Error al obtener detalles del técnico {technicianId}: {response.StatusCode}"
+                    $"[TechnicianService] Error getting details of technician {technicianId}: {response.StatusCode}"
                 );
                 return await BuildBasicTechnicianDetailsAsync(technicianId);
             }
@@ -146,14 +146,14 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en GetTechnicianDetailsAsync: {ex.Message}"
+                $"[TechnicianService] Exception in GetTechnicianDetailsAsync: {ex.Message}"
             );
             return await BuildBasicTechnicianDetailsAsync(technicianId);
         }
     }
 
     /// <summary>
-    /// Obtiene bonificaciones de un técnico - GET /personnel/bonuses/{id}
+    /// Get bonuses of a technician - GET /personnel/bonuses/{id}
     /// </summary>
     public async Task<List<BonusDto>> GetTechnicianBonusesAsync(int technicianId)
     {
@@ -179,14 +179,14 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en GetTechnicianBonusesAsync: {ex.Message}"
+                $"[TechnicianService] Exception in GetTechnicianBonusesAsync: {ex.Message}"
             );
             return new List<BonusDto>();
         }
     }
 
     /// <summary>
-    /// Obtiene penalizaciones de un técnico - GET /personnel/penalties/{id}
+    /// Gets technician penalties - GET /personnel/penalties/{id}
     /// </summary>
     public async Task<List<PenaltyDto>> GetTechnicianPenaltiesAsync(int technicianId)
     {
@@ -219,7 +219,7 @@ public class TechnicianService
     }
 
     /// <summary>
-    /// Obtiene historial de rendimiento de un técnico - GET /personnel/performances/{id}
+    /// Get technician performance history - GET /personnel/performances/{id}
     /// </summary>
     public async Task<List<RateDto>> GetTechnicianPerformancesAsync(int technicianId)
     {
@@ -245,7 +245,7 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en GetTechnicianPerformancesAsync: {ex.Message}"
+                $"[TechnicianService] Exception in GetTechnicianPerformancesAsync: {ex.Message}"
             );
             return new List<RateDto>();
         }
@@ -256,7 +256,7 @@ public class TechnicianService
     #region PUT Methods
 
     /// <summary>
-    /// Actualiza un técnico - PUT /personnel/technician/{id}
+    /// Update a technician - PUT /personnel/technician/{id}
     /// </summary>
     public async Task<Technician?> UpdateTechnicianAsync(UpdateTechnicianRequest request)
     {
@@ -279,7 +279,7 @@ public class TechnicianService
             if (!response.IsSuccessStatusCode)
             {
                 Console.WriteLine(
-                    $"[TechnicianService] Error al actualizar técnico {request.TechnicianId}: {response.StatusCode}"
+                    $"[TechnicianService] Error updating technician {request.TechnicianId}: {response.StatusCode}"
                 );
                 return null;
             }
@@ -297,7 +297,7 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en UpdateTechnicianAsync: {ex.Message}"
+                $"[TechnicianService] Exception in UpdateTechnicianAsync: {ex.Message}"
             );
             return null;
         }
@@ -308,7 +308,7 @@ public class TechnicianService
     #region POST Methods
 
     /// <summary>
-    /// Califica a un técnico - POST /personnel/rate
+    /// Rate a technician - POST /personnel/rate
     /// </summary>
     public async Task<bool> RateTechnicianAsync(RateTechnicianRequest request)
     {
@@ -320,14 +320,14 @@ public class TechnicianService
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"[TechnicianService] Exception en RateTechnicianAsync: {ex.Message}"
+                $"[TechnicianService] Exception in RateTechnicianAsync: {ex.Message}"
             );
             return false;
         }
     }
 
     /// <summary>
-    /// Agrega una bonificación a un técnico - POST /personnel/bonus
+    /// Adds a bonus to a technician - POST /personnel/bonus
     /// </summary>
     public async Task<bool> AddBonusAsync(BonusRequest request)
     {
@@ -338,13 +338,13 @@ public class TechnicianService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[TechnicianService] Exception en AddBonusAsync: {ex.Message}");
+            Console.WriteLine($"[TechnicianService] Exception in AddBonusAsync: {ex.Message}");
             return false;
         }
     }
 
     /// <summary>
-    /// Agrega una penalización a un técnico - POST /personnel/penalty
+    /// Adds a penalty to a technician - POST /personnel/penalty
     /// </summary>
     public async Task<bool> AddPenaltyAsync(PenaltyRequest request)
     {
@@ -355,7 +355,7 @@ public class TechnicianService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[TechnicianService] Exception en AddPenaltyAsync: {ex.Message}");
+            Console.WriteLine($"[TechnicianService] Exception in AddPenaltyAsync: {ex.Message}");
             return false;
         }
     }
@@ -365,7 +365,7 @@ public class TechnicianService
     #region Helper Methods (UI Support)
 
     /// <summary>
-    /// Obtiene lista de especialidades únicas de los técnicos
+    /// Get unique specialties of technicians
     /// </summary>
     public async Task<List<string>> GetSpecialtiesAsync()
     {
@@ -379,7 +379,7 @@ public class TechnicianService
     }
 
     /// <summary>
-    /// Obtiene lista de secciones únicas de los técnicos
+    /// Get unique sections of technicians
     /// </summary>
     public async Task<List<string>> GetSectionsAsync()
     {
@@ -397,7 +397,7 @@ public class TechnicianService
     #region Private Mapping Methods
 
     /// <summary>
-    /// Mapea TechnicianDto a modelo Technician para UI
+    /// Maps TechnicianDto to Technician model for UI
     /// </summary>
     private static Technician MapToTechnician(TechnicianDto dto)
     {
@@ -413,7 +413,7 @@ public class TechnicianService
     }
 
     /// <summary>
-    /// Mapea TechnicianDetailDto a modelo TechnicianDetails para UI
+    /// Maps TechnicianDetailDto to TechnicianDetails model for UI
     /// </summary>
     private static TechnicianDetails MapToTechnicianDetails(TechnicianDetailDto dto)
     {
@@ -474,7 +474,7 @@ public class TechnicianService
     }
 
     /// <summary>
-    /// Construye detalles básicos de técnico cuando el endpoint de detalle falla
+    /// Builds basic technician details when the detail endpoint fails
     /// </summary>
     private async Task<TechnicianDetails?> BuildBasicTechnicianDetailsAsync(int technicianId)
     {

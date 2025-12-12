@@ -1,8 +1,8 @@
 namespace InfraGestion.Web.Features.Organization.Models;
 
 /// <summary>
-/// Departamento: Subdivisión de una Sección.
-/// Pertenece a una Sección específica.
+/// Represents a Department: Subdivision of a Section.
+/// Belongs to a specific Section.
 /// </summary>
 public class Department
 {

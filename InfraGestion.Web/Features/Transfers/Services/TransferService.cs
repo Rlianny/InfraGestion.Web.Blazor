@@ -2,7 +2,7 @@ using InfraGestion.Web.Features.Transfers.Models;
 
 namespace InfraGestion.Web.Features.Transfers.Services;
 
-public class TransferService
+public class TransferService // TODO: Replace with real implementation
 {
     private readonly HttpClient _httpClient;
 
