@@ -5,8 +5,5 @@ namespace InfraGestion.Web.Features.Inventory.Models;
 /// </summary>
 public enum TransferStatus
 {
-    Pending,        // Pendiente
-    InTransit,      // En tránsito
-    Completed,      // Completado
-    Cancelled       // Cancelado
+    Pending, InTransit, Completed, Cancelled
 }

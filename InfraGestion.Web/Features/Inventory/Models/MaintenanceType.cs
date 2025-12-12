@@ -5,7 +5,5 @@ namespace InfraGestion.Web.Features.Inventory.Models;
 /// </summary>
 public enum MaintenanceType
 {
-    Preventive,     // Preventivo
-    Predictive,     // Predictivo
-    Corrective      // Correctivo
+    Preventive, Predictive, Corrective
 }
