@@ -3,11 +3,8 @@
 <div class="form-container">
     <div class="form-group">
         <label for="name" class="form-label">Nombre*</label>
-        <input type="text" 
-               id="name" 
-               class="form-input" 
-               @bind="FormModel.Name" 
-               placeholder="Conmutación y Enrutamiento Avanzado" />
+        <input type="text" id="name" class="form-input" @bind="FormModel.Name"
+            placeholder="Conmutación y Enrutamiento Avanzado" />
         @if (showNameError)
         {
             <div class="validation-message">El nombre del departamento es requerido</div>
@@ -35,7 +32,8 @@
         </button>
         <button type="button" class="btn-save" @onclick="HandleSubmit">
             <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+                <path
+                    d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z" />
             </svg>
             Guardar Cambios
         </button>
@@ -61,11 +59,7 @@
 
     protected override void OnParametersSet()
     {
-        // Inicializar el string con el valor actual del modelo
-        if (FormModel.SectionId > 0)
-        {
-            selectedSectionIdString = FormModel.SectionId.ToString();
-        }
+        selectedSectionIdString = FormModel.SectionId.ToString();
     }
 
     private void OnSelectChanged(ChangeEventArgs e)
@@ -77,12 +71,11 @@
     private async Task HandleSubmit()
     {
         Console.WriteLine($"HandleSubmit - selectedSectionIdString: '{selectedSectionIdString}'");
-        
-        // Validar nombre
+
         showNameError = string.IsNullOrWhiteSpace(FormModel.Name);
-        
-        // Validar y convertir sección (permitir IDs negativos del API)
-        if (!string.IsNullOrEmpty(selectedSectionIdString) && int.TryParse(selectedSectionIdString, out var sectionId) && sectionId != 0)
+
+        if (!string.IsNullOrEmpty(selectedSectionIdString) && int.TryParse(selectedSectionIdString, out var sectionId) &&
+        sectionId != 0)
         {
             FormModel.SectionId = sectionId;
             showSectionError = false;
@@ -93,8 +86,8 @@
             showSectionError = true;
             Console.WriteLine($"Section validation failed");
         }
-
-        // Si todo es válido, enviar
+        
+        // If all is valid, submit
         if (!showNameError && !showSectionError)
         {
             Console.WriteLine($"Submitting form with SectionId: {FormModel.SectionId}");
