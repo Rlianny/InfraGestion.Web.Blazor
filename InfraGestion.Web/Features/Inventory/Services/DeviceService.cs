@@ -25,11 +25,6 @@ public class DeviceService
         _authService = authService;
     }
 
-    private async Task EnsureAuthenticatedAsync()
-    {
-        await _authService.GetCurrentUserAsync();
-    }
-
     // GET ENDPOINTS
 
     /// <summary>
@@ -43,16 +38,8 @@ public class DeviceService
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                Console.WriteLine("[ERROR] GetAllDevicesAsync - No authenticated user found");
                 return new List<Device>();
             }
-
-            Console.WriteLine(
-                $"[DEBUG] GetAllDevicesAsync - Authenticated user: {currentUser.Username} (ID: {currentUser.Id})"
-            );
-            Console.WriteLine(
-                $"[DEBUG] GetAllDevicesAsync - Auth header present: {_httpClient.DefaultRequestHeaders.Authorization != null}"
-            );
 
             var url = ApiRoutes.Devices.GetAllDevices;
 
@@ -75,8 +62,6 @@ public class DeviceService
                 if (queryParams.Any())
                     url += $"?{string.Join("&", queryParams)}";
             }
-
-            Console.WriteLine($"[DEBUG] GetAllDevicesAsync URL: {url}");
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -156,15 +141,13 @@ public class DeviceService
 
                 return devices;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"[DEBUG] Failed to parse devices JSON: {ex.Message}");
                 return new List<Device>();
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] GetAllDevicesAsync: {ex.Message}");
             return new List<Device>();
         }
     }
@@ -238,10 +221,6 @@ public class DeviceService
                 }
                 else
                 {
-                    // Unexpected shape
-                    Console.WriteLine(
-                        "[WARN] GetDeviceDetailsAsync - unexpected JSON shape for device detail"
-                    );
                     return null;
                 }
 
@@ -255,102 +234,22 @@ public class DeviceService
 
                 if (dto != null)
                 {
-                    var deviceDetails = MapDetailDtoToDeviceDetails(dto);
-
-                    // Resolve location info from Organization service (departmentId may be 0 if not present)
-                    await ResolveLocationInfoAsync(deviceDetails, dto.DepartmentId);
-                    return deviceDetails;
+                    return MapDetailDtoToDeviceDetails(dto);
                 }
 
                 return null;
             }
-            catch (System.Text.Json.JsonException jex)
+            catch (System.Text.Json.JsonException)
             {
-                Console.WriteLine(
-                    $"[ERROR] GetDeviceDetailsAsync - JSON parse error: {jex.Message}"
-                );
                 return null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] GetDeviceDetailsAsync: {ex.Message}");
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Resolves Section and SectionManager from DepartmentId
-    /// Chain: Device → Department → Section → SectionManager
-    /// </summary>
-    private async Task ResolveLocationInfoAsync(DeviceDetails deviceDetails, int departmentId)
-    {
-        try
-        {
-            // Get department info (includes SectionId)
-            var department = await _organizationService.GetDepartmentByIdAsync(departmentId);
-
-            if (department != null)
-            {
-                deviceDetails.DepartmentId = department.Id;
-                deviceDetails.Department = department.Name;
-                deviceDetails.SectionId = department.SectionId;
-                deviceDetails.Section = department.SectionName;
-
-                // Get section to resolve SectionManager
-                var section = await _organizationService.GetSectionByIdAsync(department.SectionId);
-                if (section != null)
-                {
-                    deviceDetails.SectionManager = section.SectionManagerFullName;
-                }
             }
         }
         catch (Exception)
         {
-            // Keep default values if resolution fails
+            return null;
         }
     }
 
-    /// <summary>
-    /// Gets all company devices
-    /// GET /api/devices
-    /// </summary>
-    public async Task<List<Device>> GetCompanyDevicesAsync()
-    {
-        try
-        {
-            var currentUser = await _authService.GetCurrentUserAsync();
-            if (currentUser == null)
-            {
-                Console.WriteLine("[ERROR] GetCompanyDevicesAsync - No authenticated user found");
-                return new List<Device>();
-            }
-
-            Console.WriteLine($"[DEBUG] GetCompanyDevicesAsync - User authenticated");
-
-            var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetAllDevices);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new List<Device>();
-            }
-
-            var apiResponse = await response.Content.ReadFromJsonAsync<
-                ApiResponse<IEnumerable<DeviceDto>>
-            >();
-
-            if (apiResponse?.Success == true && apiResponse.Data != null)
-            {
-                return apiResponse.Data.Select(MapDtoToDevice).ToList();
-            }
-
-            return new List<Device>();
-        }
-        catch (Exception ex)
-        {
-            return new List<Device>();
-        }
-    }
 
     /// <summary>
     /// Gets devices from a specific section
@@ -363,11 +262,8 @@ public class DeviceService
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                Console.WriteLine("[ERROR] GetSectionDevicesAsync - No authenticated user found");
                 return new List<Device>();
             }
-
-            Console.WriteLine($"[DEBUG] GetSectionDevicesAsync - sectionId: {sectionId}");
 
             var response = await _httpClient.GetAsync(
                 ApiRoutes.Devices.GetDevicesBySection(sectionId)
@@ -406,13 +302,8 @@ public class DeviceService
             var currentUser = await _authService.GetCurrentUserAsync();
             if (currentUser == null)
             {
-                Console.WriteLine(
-                    "[ERROR] GetOwnSectionDevicesAsync - No authenticated user found"
-                );
                 return new List<Device>();
             }
-
-            Console.WriteLine($"[DEBUG] GetOwnSectionDevicesAsync - Fetching my section devices");
 
             var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetMySectionDevices);
 
@@ -491,8 +382,6 @@ public class DeviceService
                 && response.StatusCode != System.Net.HttpStatusCode.Created
             )
             {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"[ERROR] CreateDeviceAsync - API error: {error}");
                 return null;
             }
 
@@ -632,8 +521,6 @@ public class DeviceService
     {
         try
         {
-            Console.WriteLine($"🔵 Deleting device {id}...");
-
             var response = await _httpClient.DeleteAsync(ApiRoutes.Devices.DeleteDevice(id));
 
             if (response.StatusCode == System.Net.HttpStatusCode.NoContent)
@@ -643,7 +530,6 @@ public class DeviceService
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
                 return false;
             }
 
@@ -666,11 +552,11 @@ public class DeviceService
                 return true;
             }
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
             return false;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return false;
         }
@@ -715,7 +601,7 @@ public class DeviceService
     private DeviceDetails MapDetailDtoToDeviceDetails(DeviceDetailDto dto)
     {
         // Map maintenance history
-        var maintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory);
+        var maintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory.ToList());
 
         // Calculate maintenance statistics from history
         var maintenanceCount = maintenanceHistory.Count;
@@ -732,19 +618,19 @@ public class DeviceService
             Type = (DeviceType)dto.DeviceType,
             State = (OperationalState)dto.OperationalState,
             PurchaseDate = dto.AcquisitionDate,
-            // Location info - set defaults, will be resolved via ResolveLocationInfoAsync
-            DepartmentId = dto.DepartmentId,
+            // Location info - directly from backend DTO
+            DepartmentId = 0,
             Department = NormalizeDepartmentName(dto.DepartmentName),
             SectionId = 0,
-            Section = "Cargando...",
-            SectionManager = "Cargando...",
+            Section = dto.SectionName,
+            SectionManager = dto.SectionManagerName ?? "N/A",
             // Statistics
             MaintenanceCount = maintenanceCount,
             TotalMaintenanceCost = totalMaintenanceCost,
             LastMaintenanceDate = lastMaintenanceDate,
             // Related records
             MaintenanceHistory = maintenanceHistory,
-            TransferHistory = MapTransferHistory(dto.TransferHistory),
+            TransferHistory = MapTransferHistory(dto.TransferHistory.ToList()),
             DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo),
         };
     }

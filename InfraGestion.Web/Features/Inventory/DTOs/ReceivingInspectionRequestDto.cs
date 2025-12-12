@@ -13,6 +13,6 @@ public class ReceivingInspectionRequestDto
     public int DeviceId { get; set; }
     public int UserId { get; set; }
     public int TechnicianId { get; set; }
-    public InspectionRequestStatus Status { get; set; }
+    public RequestStatus Status { get; set; }
     public DecommissioningReason RejectReason { get; set; }
 }

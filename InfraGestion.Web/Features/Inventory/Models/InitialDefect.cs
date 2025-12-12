@@ -1,8 +1,6 @@
 namespace InfraGestion.Web.Features.Inventory.Models;
 
-/// <summary>
-/// Represents the initial defect report for a device
-/// </summary>
+
 public class InitialDefect
 {
     public int Id { get; set; }
@@ -13,7 +11,7 @@ public class InitialDefect
     public string RequesterName { get; set; } = string.Empty;
     public int TechnicianId { get; set; }
     public string TechnicianName { get; set; } = string.Empty;
-    public InitialDefectStatus Status { get; set; } = InitialDefectStatus.Pending;
+    public RequestStatus Status { get; set; } = RequestStatus.Pending;
     public DateTime? ResponseDate { get; set; }
     public string? Description { get; set; }
 }

@@ -13,16 +13,15 @@ public class DeviceDetailDto
     public string Name { get; set; } = string.Empty;
     public int DeviceType { get; set; } // Enum as int from backend
     public int OperationalState { get; set; } // Enum as int from backend
-
-    // Location info from backend
-    public int DepartmentId { get; set; }
     public string DepartmentName { get; set; } = string.Empty;
 
     // DeviceDetailDto specific
     public DateTime AcquisitionDate { get; set; }
-    public List<MaintenanceRecordDto> MaintenanceHistory { get; set; } = new();
-    public List<TransferDto> TransferHistory { get; set; } = new();
+    public IEnumerable<MaintenanceRecordDto> MaintenanceHistory { get; set; } = new List<MaintenanceRecordDto>();
+    public IEnumerable<TransferDto> TransferHistory { get; set; } = new List<TransferDto>();
     public DecommissioningDto? DecommissioningInfo { get; set; }
+    public string SectionName { get; set; } = string.Empty;
+    public string? SectionManagerName { get; set; }
 }
 
 /// <summary>
@@ -58,7 +57,7 @@ public class TransferDto
     public string DestinationSectionName { get; set; } = string.Empty;
     public int DeviceReceiverId { get; set; }
     public string DeviceReceiverName { get; set; } = string.Empty;
-    public int Status { get; set; } // Enum as int from backend
+    public int Status { get; set; } 
 }
 
 /// <summary>
@@ -75,6 +74,6 @@ public class DecommissioningDto
     public int ReceiverDepartmentId { get; set; }
     public string ReceiverDepartmentName { get; set; } = string.Empty;
     public DateTime DecommissioningDate { get; set; }
-    public int Reason { get; set; } // Enum as int from backend
+    public int Reason { get; set; } 
     public string? FinalDestination { get; set; }
 }

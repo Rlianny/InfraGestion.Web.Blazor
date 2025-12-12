@@ -55,7 +55,6 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to get technician inspection requests: {content}");
                 return new List<ReceivingInspectionRequestDto>();
             }
 
@@ -72,9 +71,8 @@ public class InspectionService
 
             return new List<ReceivingInspectionRequestDto>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] GetTechnicianInspectionRequestsAsync: {ex.Message}");
             return new List<ReceivingInspectionRequestDto>();
         }
     }
@@ -96,7 +94,6 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to get pending inspections: {content}");
                 return new List<ReceivingInspectionRequestDto>();
             }
 
@@ -112,9 +109,8 @@ public class InspectionService
 
             return new List<ReceivingInspectionRequestDto>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] GetPendingInspectionsAsync: {ex.Message}");
             return new List<ReceivingInspectionRequestDto>();
         }
     }
@@ -140,7 +136,6 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to get revised devices: {content}");
                 return new List<ReceivingInspectionRequestDto>();
             }
 
@@ -156,9 +151,8 @@ public class InspectionService
 
             return new List<ReceivingInspectionRequestDto>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] GetRevisedDevicesAsync: {ex.Message}");
             return new List<ReceivingInspectionRequestDto>();
         }
     }
@@ -180,7 +174,6 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to get admin inspection requests: {content}");
                 return new List<ReceivingInspectionRequestDto>();
             }
 
@@ -196,9 +189,8 @@ public class InspectionService
 
             return new List<ReceivingInspectionRequestDto>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] GetAdminInspectionRequestsAsync: {ex.Message}");
             return new List<ReceivingInspectionRequestDto>();
         }
     }
@@ -219,19 +211,16 @@ public class InspectionService
 
             var url = ApiRoutes.Inspections.ProcessDecision;
             var response = await _httpClient.PostAsJsonAsync(url, request);
-            var content = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to process inspection decision: {content}");
                 return false;
             }
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] ProcessInspectionDecisionAsync: {ex.Message}");
             return false;
         }
     }
@@ -249,18 +238,16 @@ public class InspectionService
             var url = ApiRoutes.Inspections.AssignInspection;
 
             var response = await _httpClient.PostAsJsonAsync(url, request);
-            var content = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[ERROR] Failed to assign inspection: {content}");
                 return false;
             }
 
             return true;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"[ERROR] AssignInspectionAsync: {ex.Message}");
             return false;
         }
     }

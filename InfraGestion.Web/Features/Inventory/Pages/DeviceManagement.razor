@@ -402,11 +402,9 @@
     // Delete methods
     private void OpenDeleteConfirmModal(int deviceId, string deviceName)
     {
-        Console.WriteLine($"🔵 OpenDeleteConfirmModal called - Device ID: {deviceId}, Name: {deviceName}");
         deviceIdToDelete = deviceId;
         deleteConfirmMessage = $"¿Está seguro que desea eliminar el equipo \"{deviceName}\"? Esta acción no se puede deshacer.";
         showDeleteConfirmModal = true;
-        Console.WriteLine($"🔵 Modal should be visible now. showDeleteConfirmModal = {showDeleteConfirmModal}");
     }
 
     private void CloseDeleteConfirmModal()
@@ -418,11 +416,7 @@
 
     private async Task HandleDeleteDevice()
     {
-        Console.WriteLine($"🟢 HandleDeleteDevice called with ID: {deviceIdToDelete}");
-
-        Console.WriteLine($"🟡 Calling DeviceService.DeleteDeviceAsync({deviceIdToDelete})");
         var success = await DeviceService.DeleteDeviceAsync(deviceIdToDelete);
-        Console.WriteLine($"🔴 Delete result: {success}");
         if (success)
         {
             await LoadDevices();
