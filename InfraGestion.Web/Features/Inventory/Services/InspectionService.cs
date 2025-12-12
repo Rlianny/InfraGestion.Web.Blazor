@@ -1,18 +1,13 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using InfraGestion.Web.Features.Inventory.DTOs;
-using InfraGestion.Web.Features.Inventory.Models;
+using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
-using InfraGestion.Web.Core.Constants;
+using InfraGestion.Web.Features.Inventory.DTOs;
+using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
-/// <summary>
-/// Service for inspection-related operations
-/// New in v2.1 - Extracted from InventoryController to InspectionController
-/// Base route: /api/inspections
-/// </summary>
 public class InspectionService
 {
     private readonly HttpClient _httpClient;
@@ -20,7 +15,7 @@ public class InspectionService
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
     };
 
     public InspectionService(HttpClient httpClient, AuthService authService)
@@ -34,15 +29,9 @@ public class InspectionService
         await _authService.GetCurrentUserAsync();
     }
 
-    // ==========================================
-    // TECHNICIAN ENDPOINTS
-    // ==========================================
-
-    /// <summary>
-    /// Gets inspection requests for a technician
-    /// GET /api/inspections/technician/{technicianId}/requests
-    /// </summary>
-    public async Task<List<ReceivingInspectionRequestDto>> GetTechnicianInspectionRequestsAsync(int technicianId)
+    public async Task<List<ReceivingInspectionRequestDto>> GetTechnicianInspectionRequestsAsync(
+        int technicianId
+    )
     {
         try
         {
@@ -58,14 +47,15 @@ public class InspectionService
                 return new List<ReceivingInspectionRequestDto>();
             }
 
-            // Parse API response
             using var document = JsonDocument.Parse(content);
             var root = document.RootElement;
 
             if (root.TryGetProperty("data", out var dataElement))
             {
                 var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(), JsonOptions);
+                    dataElement.GetRawText(),
+                    JsonOptions
+                );
                 return requests ?? new List<ReceivingInspectionRequestDto>();
             }
 
@@ -77,11 +67,9 @@ public class InspectionService
         }
     }
 
-    /// <summary>
-    /// Gets pending inspections for a technician
-    /// GET /api/inspections/technician/{technicianId}/pending
-    /// </summary>
-    public async Task<List<ReceivingInspectionRequestDto>> GetPendingInspectionsAsync(int technicianId)
+    public async Task<List<ReceivingInspectionRequestDto>> GetPendingInspectionsAsync(
+        int technicianId
+    )
     {
         try
         {
@@ -103,7 +91,9 @@ public class InspectionService
             if (root.TryGetProperty("data", out var dataElement))
             {
                 var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(), JsonOptions);
+                    dataElement.GetRawText(),
+                    JsonOptions
+                );
                 return requests ?? new List<ReceivingInspectionRequestDto>();
             }
 
@@ -115,14 +105,6 @@ public class InspectionService
         }
     }
 
-    // ==========================================
-    // ADMIN ENDPOINTS
-    // ==========================================
-
-    /// <summary>
-    /// Gets revised devices for an administrator
-    /// GET /api/inspections/admin/{adminId}/revised-devices
-    /// </summary>
     public async Task<List<ReceivingInspectionRequestDto>> GetRevisedDevicesAsync(int adminId)
     {
         try
@@ -145,7 +127,9 @@ public class InspectionService
             if (root.TryGetProperty("data", out var dataElement))
             {
                 var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(), JsonOptions);
+                    dataElement.GetRawText(),
+                    JsonOptions
+                );
                 return requests ?? new List<ReceivingInspectionRequestDto>();
             }
 
@@ -157,11 +141,9 @@ public class InspectionService
         }
     }
 
-    /// <summary>
-    /// Gets inspection requests for an administrator
-    /// GET /api/inspections/admin/{adminId}/requests
-    /// </summary>
-    public async Task<List<ReceivingInspectionRequestDto>> GetAdminInspectionRequestsAsync(int adminId)
+    public async Task<List<ReceivingInspectionRequestDto>> GetAdminInspectionRequestsAsync(
+        int adminId
+    )
     {
         try
         {
@@ -183,7 +165,9 @@ public class InspectionService
             if (root.TryGetProperty("data", out var dataElement))
             {
                 var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(), JsonOptions);
+                    dataElement.GetRawText(),
+                    JsonOptions
+                );
                 return requests ?? new List<ReceivingInspectionRequestDto>();
             }
 
@@ -195,14 +179,6 @@ public class InspectionService
         }
     }
 
-    // ==========================================
-    // POST ENDPOINTS
-    // ==========================================
-
-    /// <summary>
-    /// Processes the inspection decision (approve or reject a device)
-    /// POST /api/inspections/decision
-    /// </summary>
     public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionRequestDto request)
     {
         try
@@ -225,10 +201,6 @@ public class InspectionService
         }
     }
 
-    /// <summary>
-    /// Assigns a device for inspection
-    /// POST /api/inspections/assign
-    /// </summary>
     public async Task<bool> AssignInspectionAsync(AssignDeviceForInspectionRequestDto request)
     {
         try
@@ -252,13 +224,6 @@ public class InspectionService
         }
     }
 
-    // ==========================================
-    // CONVENIENCE METHODS
-    // ==========================================
-
-    /// <summary>
-    /// Approves a device inspection
-    /// </summary>
     public async Task<bool> ApproveDeviceInspectionAsync(int deviceId, int technicianId)
     {
         var request = new InspectionDecisionRequestDto
@@ -266,39 +231,26 @@ public class InspectionService
             DeviceId = deviceId,
             TechnicianId = technicianId,
             IsApproved = true,
-            Reason = DecommissioningReason.IrreparableTechnicalFailure // Not used for approval
+            Reason = null,
         };
 
         return await ProcessInspectionDecisionAsync(request);
     }
 
-    /// <summary>
-    /// Rejects a device inspection with a reason
-    /// </summary>
-    public async Task<bool> RejectDeviceInspectionAsync(int deviceId, int technicianId, DecommissioningReason reason)
+    public async Task<bool> RejectDeviceInspectionAsync(
+        int deviceId,
+        int technicianId,
+        DecommissioningReason reason
+    )
     {
         var request = new InspectionDecisionRequestDto
         {
             DeviceId = deviceId,
             TechnicianId = technicianId,
             IsApproved = false,
-            Reason = reason
+            Reason = reason,
         };
 
         return await ProcessInspectionDecisionAsync(request);
-    }
-
-    // ==========================================
-    // LEGACY METHODS (Deprecated - for backward compatibility)
-    // ==========================================
-
-    /// <summary>
-    /// Gets pending receiving inspection requests for a technician
-    /// DEPRECATED: Use GetPendingInspectionsAsync instead
-    /// </summary>
-    [Obsolete("Use GetPendingInspectionsAsync instead")]
-    public async Task<List<ReceivingInspectionRequestDto>> GetPendingReceivingInspectionRequestsAsync(int technicianId)
-    {
-        return await GetPendingInspectionsAsync(technicianId);
     }
 }

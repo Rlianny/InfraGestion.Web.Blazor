@@ -2,9 +2,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
-/// <summary>
-/// Filter criteria for device search
-/// </summary>
+
 public class DeviceFilterDto
 {
     public string? SearchTerm { get; set; }

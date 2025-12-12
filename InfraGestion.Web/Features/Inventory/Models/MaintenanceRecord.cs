@@ -1,8 +1,6 @@
 namespace InfraGestion.Web.Features.Inventory.Models;
 
-/// <summary>
-/// Represents a maintenance record for a device
-/// </summary>
+
 public class MaintenanceRecord
 {
     public int Id { get; set; }

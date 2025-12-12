@@ -25,12 +25,7 @@ public class DeviceService
         _authService = authService;
     }
 
-    // GET ENDPOINTS
-
-    /// <summary>
-    /// Gets all devices with optional filters
-    /// GET /api/devices
-    /// </summary>
+    
     public async Task<List<Device>> GetAllDevicesAsync(DeviceFilterDto? filter = null)
     {
         try
@@ -152,10 +147,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Gets device by ID (for edit modal)
-    /// Uses GetDeviceDetailsAsync internally
-    /// </summary>
     public async Task<Device?> GetDeviceByIdAsync(int id)
     {
         try
@@ -183,10 +174,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Gets detailed device information
-    /// GET /api/devices/{id}
-    /// </summary>
     public async Task<DeviceDetails?> GetDeviceDetailsAsync(int id)
     {
         try
@@ -198,7 +185,6 @@ public class DeviceService
                 return null;
             }
 
-            // Try to handle API responses that may be wrapped in a { success/data/... } envelope
             try
             {
                 using var doc = System.Text.Json.JsonDocument.Parse(content);
@@ -216,7 +202,6 @@ public class DeviceService
                 }
                 else if (root.ValueKind == System.Text.Json.JsonValueKind.Object)
                 {
-                    // Assume the root object is the DTO itself
                     dataElement = root;
                 }
                 else
@@ -251,10 +236,6 @@ public class DeviceService
     }
 
 
-    /// <summary>
-    /// Gets devices from a specific section
-    /// GET /api/devices/sections/{sectionId}
-    /// </summary>
     public async Task<List<Device>> GetSectionDevicesAsync(int sectionId)
     {
         try
@@ -291,10 +272,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Gets devices from authenticated user's section
-    /// GET /api/devices/my-section
-    /// </summary>
     public async Task<List<Device>> GetOwnSectionDevicesAsync()
     {
         try
@@ -329,10 +306,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Searches devices with filters
-    /// Uses GetAllDevicesAsync internally
-    /// </summary>
     public async Task<List<Device>> SearchDevicesAsync(
         string searchTerm = "",
         DeviceType? type = null,
@@ -351,12 +324,7 @@ public class DeviceService
         return await GetAllDevicesAsync(filter);
     }
 
-    // POST ENDPOINTS
 
-    /// <summary>
-    /// Creates a new device
-    /// POST /api/devices
-    /// </summary>
     public async Task<Device?> CreateDeviceAsync(CreateDeviceRequest request)
     {
         try
@@ -385,7 +353,6 @@ public class DeviceService
                 return null;
             }
 
-            // API returns ApiResponse<DeviceDto> with the created device data
             var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<DeviceDto>>();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
@@ -401,10 +368,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Rejects a device
-    /// POST /inventory/rejections
-    /// </summary>
     public async Task<bool> RejectDeviceAsync(int deviceId, int technicianId, string reason)
     {
         try
@@ -431,10 +394,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Approves a device
-    /// POST /inventory/approbals
-    /// </summary>
     public async Task<bool> ApproveDeviceAsync(int deviceId, int technicianId)
     {
         try
@@ -460,12 +419,7 @@ public class DeviceService
         }
     }
 
-    // PUT ENDPOINTS
 
-    /// <summary>
-    /// Updates an existing device
-    /// PUT /api/devices/{id}
-    /// </summary>
     public async Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
     {
         try
@@ -513,10 +467,6 @@ public class DeviceService
         }
     }
 
-    /// <summary>
-    /// Deletes a device
-    /// DELETE /api/devices/{id}
-    /// </summary>
     public async Task<bool> DeleteDeviceAsync(int id)
     {
         try
@@ -533,7 +483,6 @@ public class DeviceService
                 return false;
             }
 
-            // Try to parse API response
             try
             {
                 var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string?>>();
@@ -547,8 +496,6 @@ public class DeviceService
             }
             catch (Exception)
             {
-                // If response doesn't contain JSON (e.g., 204 No Content)
-                // Consider it successful
                 return true;
             }
         }
@@ -562,12 +509,7 @@ public class DeviceService
         }
     }
 
-    // STATISTICS (for UI cards)
 
-    /// <summary>
-    /// Gets device statistics
-    /// Calculates from GetAllDevicesAsync
-    /// </summary>
     public async Task<Dictionary<string, int>> GetStatisticsAsync()
     {
         var devices = await GetAllDevicesAsync();
@@ -584,7 +526,6 @@ public class DeviceService
         };
     }
 
-    // MAPPERS
 
     private Device MapDtoToDevice(DeviceDto dto)
     {
@@ -600,10 +541,8 @@ public class DeviceService
 
     private DeviceDetails MapDetailDtoToDeviceDetails(DeviceDetailDto dto)
     {
-        // Map maintenance history
         var maintenanceHistory = MapMaintenanceHistory(dto.MaintenanceHistory.ToList());
 
-        // Calculate maintenance statistics from history
         var maintenanceCount = maintenanceHistory.Count;
         var totalMaintenanceCost = maintenanceHistory.Sum(m => m.Cost);
         var lastMaintenanceDate = maintenanceHistory.Any()
@@ -618,17 +557,14 @@ public class DeviceService
             Type = (DeviceType)dto.DeviceType,
             State = (OperationalState)dto.OperationalState,
             PurchaseDate = dto.AcquisitionDate,
-            // Location info - directly from backend DTO
             DepartmentId = 0,
             Department = NormalizeDepartmentName(dto.DepartmentName),
             SectionId = 0,
             Section = dto.SectionName,
             SectionManager = dto.SectionManagerName ?? "N/A",
-            // Statistics
             MaintenanceCount = maintenanceCount,
             TotalMaintenanceCost = totalMaintenanceCost,
             LastMaintenanceDate = lastMaintenanceDate,
-            // Related records
             MaintenanceHistory = maintenanceHistory,
             TransferHistory = MapTransferHistory(dto.TransferHistory.ToList()),
             DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo),

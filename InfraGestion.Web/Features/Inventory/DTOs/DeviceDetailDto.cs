@@ -2,20 +2,16 @@ using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
-/// <summary>
-/// Detailed device information from API
-/// Matches backend DeviceDetailDto : DeviceDto
-/// </summary>
+
 public class DeviceDetailDto
 {
-    // From DeviceDto base class
     public int DeviceId { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int DeviceType { get; set; } // Enum as int from backend
-    public int OperationalState { get; set; } // Enum as int from backend
+    public int DeviceType { get; set; } 
+    public int OperationalState { get; set; } 
     public string DepartmentName { get; set; } = string.Empty;
 
-    // DeviceDetailDto specific
+    
     public DateTime AcquisitionDate { get; set; }
     public IEnumerable<MaintenanceRecordDto> MaintenanceHistory { get; set; } = new List<MaintenanceRecordDto>();
     public IEnumerable<TransferDto> TransferHistory { get; set; } = new List<TransferDto>();
@@ -24,10 +20,7 @@ public class DeviceDetailDto
     public string? SectionManagerName { get; set; }
 }
 
-/// <summary>
-/// Maintenance record from API
-/// Matches backend MaintenanceRecordDto
-/// </summary>
+
 public class MaintenanceRecordDto
 {
     public int MaintenanceRecordId { get; set; }
@@ -36,15 +29,12 @@ public class MaintenanceRecordDto
     public int TechnicianId { get; set; }
     public string TechnicianName { get; set; } = string.Empty;
     public DateTime MaintenanceDate { get; set; }
-    public int MaintenanceType { get; set; } // Enum as int from backend
+    public int MaintenanceType { get; set; } 
     public double Cost { get; set; }
     public string Description { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Transfer record from API
-/// Matches backend TransferDto
-/// </summary>
+
 public class TransferDto
 {
     public int TransferId { get; set; }
@@ -60,10 +50,6 @@ public class TransferDto
     public int Status { get; set; } 
 }
 
-/// <summary>
-/// Decommissioning info from API
-/// Matches backend DecommissioningDto
-/// </summary>
 public class DecommissioningDto
 {
     public int DeviceId { get; set; }

@@ -1,10 +1,6 @@
 namespace InfraGestion.Web.Features.Inventory.Models;
 
-/// <summary>
-/// Lightweight device model for list views
-/// Contains only essential information for device listings
-/// For full device details, use DeviceDetails instead
-/// </summary>
+
 public class Device
 {
     public int Id { get; set; }

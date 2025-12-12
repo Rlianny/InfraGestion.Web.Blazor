@@ -2,10 +2,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
-/// <summary>
-/// Request to create a new device
-/// POST /api/devices
-/// </summary>
+
 public class RegisterDeviceDto
 {
     public string Name { get; set; } = string.Empty;

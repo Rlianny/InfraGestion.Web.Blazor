@@ -1,8 +1,6 @@
 namespace InfraGestion.Web.Features.Inventory.Models;
 
-/// <summary>
-/// Represents decommissioning info for a device (matches DecommissioningDto from backend)
-/// </summary>
+
 public class DecommissioningRequest
 {
     public int Id { get; set; }
