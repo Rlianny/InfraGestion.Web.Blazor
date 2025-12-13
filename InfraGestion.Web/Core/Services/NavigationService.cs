@@ -62,10 +62,10 @@ public class NavigationService
             new NavItem
             {
                 Title = "Dashboard",
-                Route = "",
+                Route = "admin/dashboard",
                 IconPath = Icons.Dashboard,
                 AllowedRoles = [Roles.Admin],
-                ExactMatch = true,
+                ExactMatch = false,
                 Order = 0
             },
 

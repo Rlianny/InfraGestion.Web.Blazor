@@ -105,7 +105,15 @@ public class InspectionService
         }
     }
 
-    public async Task<List<ReceivingInspectionRequestDto>> GetRevisedDevicesAsync(int adminId)
+    // ==========================================
+    // ADMIN ENDPOINTS
+    // ==========================================
+
+    /// <summary>
+    /// Gets revised devices for an administrator
+    /// GET /api/inspections/admin/{adminId}/revised-devices
+    /// </summary>
+    public async Task<List<RevisedDeviceDto>> GetRevisedDevicesAsync(int adminId)
     {
         try
         {
@@ -118,7 +126,8 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new List<ReceivingInspectionRequestDto>();
+                Console.WriteLine($"[ERROR] Failed to get revised devices: {content}");
+                return new List<RevisedDeviceDto>();
             }
 
             using var document = JsonDocument.Parse(content);
@@ -126,18 +135,17 @@ public class InspectionService
 
             if (root.TryGetProperty("data", out var dataElement))
             {
-                var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
-                    dataElement.GetRawText(),
-                    JsonOptions
-                );
-                return requests ?? new List<ReceivingInspectionRequestDto>();
+                var devices = JsonSerializer.Deserialize<List<RevisedDeviceDto>>(
+                    dataElement.GetRawText(), JsonOptions);
+                return devices ?? new List<RevisedDeviceDto>();
             }
 
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<RevisedDeviceDto>();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return new List<ReceivingInspectionRequestDto>();
+            Console.WriteLine($"[ERROR] GetRevisedDevicesAsync: {ex.Message}");
+            return new List<RevisedDeviceDto>();
         }
     }
 
