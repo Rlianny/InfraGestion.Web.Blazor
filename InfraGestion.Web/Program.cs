@@ -29,6 +29,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<InspectionService>(); // v2.1: New inspection service
+builder.Services.AddScoped<DecommissioningService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<TechnicianService>();

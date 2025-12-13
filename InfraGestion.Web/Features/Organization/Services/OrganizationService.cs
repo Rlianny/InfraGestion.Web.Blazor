@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Organization.DTOs;
+using System.Text.Json;
 using InfraGestion.Web.Features.Organization.Models;
 
 namespace InfraGestion.Web.Features.Organization.Services;
@@ -180,9 +181,23 @@ public class OrganizationService
             if (!response.IsSuccessStatusCode)
                 return new List<Department>();
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<
-                ApiResponse<List<DepartmentDto>>
-            >();
+            // Read raw JSON and log it for debugging deserialization issues
+            var json = await response.Content.ReadAsStringAsync();
+            Console.WriteLine("[DEBUG] Departments JSON: " + (json?.Length > 0 ? json.Substring(0, Math.Min(1000, json.Length)) : "<empty>"));
+
+            ApiResponse<List<DepartmentDto>>? apiResponse = null;
+            try
+            {
+                apiResponse = JsonSerializer.Deserialize<ApiResponse<List<DepartmentDto>>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[ERROR] Failed to deserialize departments JSON: " + ex.Message);
+                return new List<Department>();
+            }
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Department>();

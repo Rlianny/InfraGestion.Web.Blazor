@@ -174,7 +174,7 @@ else
                         else
                         {
                             <tr>
-                                <td>@device.DecommissioningInfo.DecommissioningDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@(device.DecommissioningInfo.DecommissioningDate?.ToString("dd/MM/yyyy") ?? "No especificado")</td>
                                 <td>@device.DecommissioningInfo.ReceiverName</td>
                                 <td>@device.DecommissioningInfo.ReceiverDepartmentName</td>
                                 <td>@GetDecommissioningReasonLabel(device.DecommissioningInfo.Reason)</td>

@@ -176,4 +176,27 @@ public static class ApiRoutes
 
         public const string Create = Base;
     }
+
+    // ==========================================
+    // DECOMMISSIONING CONTROLLER
+    // ==========================================
+    public static class Decommissioning
+    {
+        private const string Base = "decommissioning";
+
+        /// <summary>GET /decommissioning/requests</summary>
+        public const string GetAllRequests = $"{Base}/requests";
+
+        /// <summary>GET /decommissioning/requests/{id}</summary>
+        public static string GetRequestById(int id) => $"{Base}/requests/{id}";
+
+        /// <summary>POST /decommissioning/requests</summary>
+        public const string CreateRequest = $"{Base}/requests";
+
+        /// <summary>PUT /decommissioning/requests/{id}</summary>
+        public static string UpdateRequest(int id) => $"{Base}/requests/{id}";
+
+        /// <summary>DELETE /decommissioning/requests/{id}</summary>
+        public static string DeleteRequest(int id) => $"{Base}/requests/{id}";
+    }
 }
