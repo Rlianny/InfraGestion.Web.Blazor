@@ -6,7 +6,7 @@ namespace InfraGestion.Web.Features.Transfers.Models;
 public class Transfer
 {
     public int Id { get; set; }
-    public string DeviceId { get; set; } = string.Empty;
+    public int DeviceId { get; set; }
     public string DeviceName { get; set; } = string.Empty;
     public string Origin { get; set; } = string.Empty;
     public string Destination { get; set; } = string.Empty;

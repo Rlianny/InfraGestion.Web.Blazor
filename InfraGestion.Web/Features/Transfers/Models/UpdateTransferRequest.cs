@@ -10,7 +10,7 @@ public class UpdateTransferRequest
     public int Id { get; set; }
 
     [Required(ErrorMessage = "El equipo es requerido")]
-    public string DeviceId { get; set; } = string.Empty;
+    public int DeviceId { get; set; } 
 
     [Required(ErrorMessage = "El origen es requerido")]
     public string Origin { get; set; } = string.Empty;
