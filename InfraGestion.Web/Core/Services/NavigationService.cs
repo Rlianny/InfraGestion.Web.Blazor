@@ -174,7 +174,7 @@ public class NavigationService
             new NavItem
             {
                 Title = "Dashboard",
-                Route = "admin/dashboard",
+                Route = "director/dashboard",
                 IconPath = Icons.Dashboard,
                 AllowedRoles = [Roles.Director],
                 ExactMatch = false,
