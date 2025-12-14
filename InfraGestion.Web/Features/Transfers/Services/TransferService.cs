@@ -28,8 +28,8 @@ public class TransferService
 
     public async Task<Transfer?> GetTransferByIdAsync(int id)
     {
-        var endpoint = $"/transfers{id}";
-        var response = await _httpClient.GetFromJsonAsync<ApiResponse<Transfer>>(endpoint)?? throw new Exception($"Error while trying to make a GET {endPoint}";
+        var endPoint = $"/transfers{id}";
+        var response = await _httpClient.GetFromJsonAsync<ApiResponse<Transfer>>(endPoint)?? throw new Exception($"Error while trying to make a GET {endPoint}");
         if (response.Success)
         {
             return response.Data!;
