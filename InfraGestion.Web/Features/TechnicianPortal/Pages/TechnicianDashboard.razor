@@ -126,7 +126,9 @@
                 TechnicianId = r.TechnicianId,
                 EmissionDate = r.RequestDate,
                 EquipmentId = $"DEV{r.DeviceId:D3}", // Format device ID
-                RequesterName = $"Usuario #{r.UserId}" // TODO: Get actual user name from backend
+                RequesterName = string.IsNullOrWhiteSpace(r.RequesterFullName)
+                    ? $"Usuario #{r.RequesterId}"
+                    : r.RequesterFullName
             }).ToList();
         }
         catch (Exception ex)
