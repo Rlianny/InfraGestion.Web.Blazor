@@ -169,6 +169,14 @@ public class NavigationService
                 AllowedRoles = [Roles.Technician],
                 Order = 40
             },
+            new NavItem
+            {
+                Title = "Reportes",
+                Route = "technician/reports",
+                IconPath = Icons.Reports,
+                AllowedRoles = [Roles.Technician],
+                Order = 50
+            },
 
             // === ITEMS DIRECTOR ===
             new NavItem
@@ -231,7 +239,7 @@ public class NavigationService
             new NavItem
             {
                 Title = "Reportes",
-                Route = "reportes",
+                Route = "director/reports",
                 IconPath = Icons.Reports,
                 AllowedRoles = [Roles.Director],
                 Order = 70
