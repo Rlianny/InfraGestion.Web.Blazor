@@ -170,6 +170,73 @@ public class NavigationService
                 Order = 40
             },
 
+            // === ITEMS DIRECTOR ===
+            new NavItem
+            {
+                Title = "Dashboard",
+                Route = "admin/dashboard",
+                IconPath = Icons.Dashboard,
+                AllowedRoles = [Roles.Director],
+                ExactMatch = false,
+                Order = 0
+            },
+            new NavItem
+            {
+                Title = "Organización",
+                Route = "director/organization",
+                IconPath = Icons.Organization,
+                AllowedRoles = [Roles.Director],
+                Order = 10
+            },
+            new NavItem
+            {
+                Title = "Gestión de Usuarios",
+                Route = "director/users",
+                IconPath = Icons.Users,
+                AllowedRoles = [Roles.Director],
+                Order = 20
+            },
+            new NavItem
+            {
+                Title = "Inventario",
+                Route = "director/inventory",
+                IconPath = Icons.Inventory,
+                AllowedRoles = [Roles.Director],
+                Order = 30
+            },
+            new NavItem
+            {
+                Title = "Bajas Técnicas",
+                Route = "director/decommissioning",
+                IconPath = Icons.Decommissioning,
+                AllowedRoles = [Roles.Director],
+                Order = 40
+            },
+            new NavItem
+            {
+                Title = "Traslados",
+                Route = "director/transfers",
+                IconPath = Icons.Transfers,
+                AllowedRoles = [Roles.Director],
+                Order = 50
+            },
+            new NavItem
+            {
+                Title = "Equipo Técnico",
+                Route = "director/technicians",
+                IconPath = Icons.Technicians,
+                AllowedRoles = [Roles.Director],
+                Order = 60
+            },
+            new NavItem
+            {
+                Title = "Reportes",
+                Route = "reportes",
+                IconPath = Icons.Reports,
+                AllowedRoles = [Roles.Director],
+                Order = 70
+            },
+
             // === SEPARADOR ===
             new NavItem
             {

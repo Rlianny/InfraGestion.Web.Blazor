@@ -243,7 +243,8 @@ public class UserService
                 DepartmentName = request.Department,
                 IsActive = null,
                 YearsOfExperience = request.YearsOfExperience,
-                Specialty = request.Specialty
+                Specialty = request.Specialty,
+                Password = request.Password
             };
 
             // PUT /Users/administrator/{administratorId}/{id}

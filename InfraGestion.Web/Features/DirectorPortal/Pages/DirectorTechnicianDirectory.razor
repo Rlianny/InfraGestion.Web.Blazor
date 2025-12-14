@@ -1,7 +1,8 @@
-@page "/technicians"
+@page "/director/technicians"
 @using InfraGestion.Web.Features.Technicians.Models
 @using InfraGestion.Web.Features.Technicians.Services
 @using InfraGestion.Web.Features.Technicians.Helpers
+@using InfraGestion.Web.Features.DirectorPortal.Components
 @inject TechnicianService TechnicianService
 @inject NavigationManager Navigation
 
@@ -111,6 +112,12 @@
                             </svg>
                             Ver Perfil
                         </button>
+                        
+                        <!-- Director Action Buttons -->
+                        <TechnicianActionButtons 
+                            OnRate="@(() => HandleRate(technician.Id))"
+                            OnBonus="@(() => HandleBonus(technician.Id))"
+                            OnPenalty="@(() => HandlePenalty(technician.Id))" />
                     </div>
                 </div>
             }
@@ -188,7 +195,25 @@
 
     private void ViewProfile(int technicianId)
     {
-        Navigation.NavigateTo($"/technicians/{technicianId}");
+        Navigation.NavigateTo($"/director/technicians/{technicianId}");
+    }
+
+    private void HandleRate(int technicianId)
+    {
+        // TODO: Implement rating functionality
+        Console.WriteLine($"Rating technician {technicianId}");
+    }
+
+    private void HandleBonus(int technicianId)
+    {
+        // TODO: Implement bonus registration
+        Console.WriteLine($"Registering bonus for technician {technicianId}");
+    }
+
+    private void HandlePenalty(int technicianId)
+    {
+        // TODO: Implement penalty registration
+        Console.WriteLine($"Registering penalty for technician {technicianId}");
     }
 
     private string GetStatusClass(TechnicianStatus status) => status switch
@@ -203,7 +228,7 @@
     {
         TechnicianStatus.Active => "Activo",
         TechnicianStatus.Inactive => "Inactivo",
-        TechnicianStatus.OnLeave => "De permiso",
+        TechnicianStatus.OnLeave => "De Permiso",
         _ => "Desconocido"
     };
 }

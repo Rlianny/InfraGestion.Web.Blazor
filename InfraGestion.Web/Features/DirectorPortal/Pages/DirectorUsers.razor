@@ -1,0 +1,173 @@
+@page "/director/users"
+@using InfraGestion.Web.Features.Users.Models
+@using InfraGestion.Web.Features.Users.Services
+@using InfraGestion.Web.Features.Users.Helpers
+@inject UserService UserService
+@inject NavigationManager Navigation
+
+<div class="user-list-page">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Gestión de Cuentas de Usuario</h1>
+                <p class="page-description">Vista de usuarios del sistema</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input type="text" class="search-input" placeholder="Buscar por ID, nombre, ..." @bind="searchTerm"
+                @bind:event="oninput" @bind:after="HandleSearch" />
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" @bind="selectedRole" @bind:after="HandleFilterChange">
+                <option value="">Rol: Todos</option>
+                @foreach (var role in GetAvailableRoles())
+                {
+                    <option value="@role">@UserRoleHelper.GetRoleDisplayName(role)</option>
+                }
+            </select>
+
+            <select class="filter-select" @bind="selectedStatus" @bind:after="HandleFilterChange">
+                <option value="">Estado: Todos</option>
+                @foreach (var status in GetAvailableStatuses())
+                {
+                    <option value="@status">@(status == UserStatus.Active ? "Activo" : "Inactivo")</option>
+                }
+            </select>
+
+            <button class="btn-export">
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M74.34,85.66A8,8,0,0,1,85.66,74.34L120,108.69V24a8,8,0,0,1,16,0v84.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-48,48a8,8,0,0,1-11.32,0ZM240,136v64a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V136a16,16,0,0,1,16-16H84.4a4,4,0,0,1,2.83,1.17L111,145A24,24,0,0,0,145,145l23.8-23.8A4,4,0,0,1,171.6,120H224A16,16,0,0,1,240,136Zm-40,32a12,12,0,1,0-12,12A12,12,0,0,0,200,168Z" />
+                </svg>
+                Exportar
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Departamento</th>
+                    <th>Rol</th>
+                    <th>Estado de cuenta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading)
+                {
+                    <tr>
+                        <td colspan="4" class="loading-cell">
+                            <div class="spinner"></div>
+                            <span>Cargando usuarios...</span>
+                        </td>
+                    </tr>
+                }
+                else if (filteredUsers == null || !filteredUsers.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="empty-cell">
+                            No se encontraron usuarios
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var user in filteredUsers)
+                    {
+                        <tr>
+                            <td class="name-cell">@user.Name</td>
+                            <td class="department-cell">
+                                <span
+                                    class="department-text">@DepartmentHelper.FormatDepartmentForDisplay(user.Department)</span>
+                            </td>
+                            <td>
+                                <span class="role-badge @UserRoleHelper.GetRoleBadgeClass(user.Role)">
+                                    @UserRoleHelper.GetRoleDisplayName(user.Role)
+                                </span>
+                            </td>
+                            <td>
+                                <span
+                                    class="status-badge @(user.Status == UserStatus.Active ? "status-active" : "status-inactive")">
+                                    <span class="status-dot"></span>
+                                    @(user.Status == UserStatus.Active ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private List<User> allUsers = new();
+    private List<User> filteredUsers = new();
+    private bool isLoading = true;
+
+    private string searchTerm = string.Empty;
+    private string selectedRole = string.Empty;
+    private string selectedStatus = string.Empty;
+
+    private List<UserRole> GetAvailableRoles()
+    {
+        return allUsers
+            .Select(u => u.Role)
+            .Distinct()
+            .OrderBy(r => UserRoleHelper.GetRoleDisplayName(r))
+            .ToList();
+    }
+
+    private List<UserStatus> GetAvailableStatuses()
+    {
+        return allUsers
+            .Select(u => u.Status)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        isLoading = true;
+        allUsers = await UserService.GetAllUsersAsync();
+        filteredUsers = allUsers;
+        isLoading = false;
+    }
+
+    private async Task HandleSearch()
+    {
+        await ApplyFilters();
+    }
+
+    private async Task HandleFilterChange()
+    {
+        await ApplyFilters();
+    }
+
+    private async Task ApplyFilters()
+    {
+        UserRole? roleFilter = string.IsNullOrEmpty(selectedRole) ? null : Enum.Parse<UserRole>(selectedRole);
+        UserStatus? statusFilter = string.IsNullOrEmpty(selectedStatus) ? null : Enum.Parse<UserStatus>(selectedStatus);
+
+        filteredUsers = await UserService.SearchUsersAsync(searchTerm, roleFilter, statusFilter);
+    }
+}

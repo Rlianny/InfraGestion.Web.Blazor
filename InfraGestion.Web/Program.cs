@@ -28,7 +28,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<DeviceService>();
-builder.Services.AddScoped<InspectionService>(); // v2.1: New inspection service
+builder.Services.AddScoped<InspectionService>();
 builder.Services.AddScoped<DecommissioningService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<TransferService>();

@@ -9,4 +9,5 @@ public record UpdateUserRequestDto
     public bool? IsActive { get; init; }
     public int? YearsOfExperience { get; init; }
     public string? Specialty { get; init; }
+    public string? Password { get; init; }
 }
