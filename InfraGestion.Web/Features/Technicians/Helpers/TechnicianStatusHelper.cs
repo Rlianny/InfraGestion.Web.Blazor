@@ -3,7 +3,7 @@ using InfraGestion.Web.Features.Technicians.Models;
 namespace InfraGestion.Web.Features.Technicians.Helpers;
 
 /// <summary>
-/// Helper para obtener información de display de los estados del técnico
+/// Helper to get display information for technician statuses
 /// </summary>
 public static class TechnicianStatusHelper
 {

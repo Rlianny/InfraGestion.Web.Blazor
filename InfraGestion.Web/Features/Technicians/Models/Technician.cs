@@ -1,7 +1,7 @@
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
-/// Representa un técnico del equipo de infraestructura
+/// Represents a technician in the infrastructure team
 /// </summary>
 public class Technician
 {
@@ -10,17 +10,14 @@ public class Technician
     public string Specialty { get; set; } = string.Empty;
     public int YearsOfExperience { get; set; }
     public string Section { get; set; } = string.Empty;
-    public string PhotoUrl { get; set; } = string.Empty;
+    public string PhotoUrl { get; set; } = string.Empty; // TODO: Add photo handling
     public TechnicianStatus Status { get; set; } = TechnicianStatus.Active;
     public decimal Rating { get; set; } = 0;
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
     public DateTime HireDate { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
 }
 
 /// <summary>
-/// Estados posibles de un técnico
+/// Possible states of a technician
 /// </summary>
 public enum TechnicianStatus
 {

@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Net.Http.Headers;
 using InfraGestion.Web.Features.Auth.Models;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Core.Constants;
 using Microsoft.JSInterop;
 using System.Text.Json;
 using InfraGestion.Web.Core.Models;
@@ -36,15 +37,23 @@ public class AuthService
         }
         catch (HttpRequestException)
         {
-            // If API fails, try demo login
-            Console.WriteLine("⚠️ API no disponible, usando login demo");
-            return await LoginDemoAsync(request);
+            // If API fails
+            Console.WriteLine("⚠️ API no disponible");
+            return new LoginResponse
+            {
+                Success = false,
+                Message = "API no disponible"
+            };
         }
         catch (Exception)
         {
-            // If occurs any other error, use demo
+            // If occurs any other error
             Console.WriteLine("⚠️ Error inesperado, usando login demo");
-            return await LoginDemoAsync(request);
+            return new LoginResponse
+            {
+                Success = false,
+                Message = "Error inesperado"
+            };
         }
     }
 
@@ -158,13 +167,20 @@ public class AuthService
 
     /// <summary>
     /// Close session
+    /// POST /auth/logout/{userId}
     /// </summary>
     public async Task LogoutAsync()
     {
         try
         {
-            // API call for invalidate token
-            await _httpClient.PostAsync("auth/logout", null);
+            // Get current user ID before clearing session
+            var userId = _currentUser?.Id ?? 0;
+            
+            if (userId > 0)
+            {
+                // API call for invalidate token with userId in path
+                await _httpClient.PostAsync(ApiRoutes.Auth.Logout(userId), null);
+            }
         }
         catch
         {

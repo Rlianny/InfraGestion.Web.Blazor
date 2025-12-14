@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para solicitud de baja - coincide con backend DecommissioningRequestDto
+/// DTO for decommissioning request - matches backend DecommissioningRequestDto
 /// </summary>
 public class DecommissioningRequestDto
 {

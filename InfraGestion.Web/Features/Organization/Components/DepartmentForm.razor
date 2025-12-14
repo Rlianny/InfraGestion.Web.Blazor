@@ -79,10 +79,8 @@
     {
         Console.WriteLine($"HandleSubmit - selectedSectionIdString: '{selectedSectionIdString}'");
         
-        // Validar nombre
         showNameError = string.IsNullOrWhiteSpace(FormModel.Name);
         
-        // Validar y convertir sección (permitir IDs negativos del API)
         if (!string.IsNullOrEmpty(selectedSectionIdString) && int.TryParse(selectedSectionIdString, out var sectionId) && sectionId != 0)
         {
             FormModel.SectionId = sectionId;
@@ -95,7 +93,6 @@
             Console.WriteLine($"Section validation failed - selectedSectionIdString was: '{selectedSectionIdString}'");
         }
 
-        // Si todo es válido, enviar
         if (!showNameError && !showSectionError)
         {
             Console.WriteLine($"Submitting form with SectionId: {FormModel.SectionId}");

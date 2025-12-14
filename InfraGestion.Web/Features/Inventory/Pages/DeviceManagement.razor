@@ -150,8 +150,8 @@
                                 </span>
                             </td>
                             <td>
-                                <StatusBadge DisplayText="@OperationalStateHelper.GetStateDisplayName(device.State)" 
-                                             BadgeClass="@OperationalStateHelper.GetStateBadgeClass(device.State)" />
+                                <StatusBadge DisplayText="@OperationalStateHelper.GetStateDisplayName(device.State)"
+                                    BadgeClass="@OperationalStateHelper.GetStateBadgeClass(device.State)" />
                             </td>
                             <td class="location-cell">@device.Location</td>
                             <td class="actions-cell">
@@ -160,6 +160,14 @@
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
+                                    </svg>
+                                </button>
+                                <button class="btn-action btn-delete"
+                                    @onclick="() => OpenDeleteConfirmModal(device.Id, device.Name)" title="Eliminar">
+                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM112,168a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm0-120H96V40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8Z" />
                                     </svg>
                                 </button>
                                 <button class="btn-action btn-view" @onclick="() => NavigateToDetails(device.Id)"
@@ -189,19 +197,22 @@
     <DeviceFormEdit FormModel="@updateDeviceRequest" OnValidSubmit="@HandleUpdateDevice" OnCancel="@CloseEditModal" />
 </Modal>
 
+<ConfirmDialog IsOpen="@showDeleteConfirmModal" Title="Eliminar Equipo" Message="@deleteConfirmMessage"
+    ConfirmText="Eliminar" CancelText="Cancelar" OnConfirm="@HandleDeleteDevice" OnCancel="@CloseDeleteConfirmModal" />
+
 @code {
     private List<Device> allDevices = new();
     private List<Device> filteredDevices = new();
     private Dictionary<string, int> statistics = new()
-    {
-        { "Total", 0 },
-        { "UnderRevision", 0 },
-        { "Revised", 0 },
-        { "Operational", 0 },
-        { "UnderMaintenance", 0 },
-        { "Decommissioned", 0 },
-        { "BeingTransferred", 0 }
-    };
+{
+{ "Total", 0 },
+{ "UnderRevision", 0 },
+{ "Revised", 0 },
+{ "Operational", 0 },
+{ "UnderMaintenance", 0 },
+{ "Decommissioned", 0 },
+{ "BeingTransferred", 0 }
+};
     private bool isLoading = true;
 
     private string searchTerm = string.Empty;
@@ -218,33 +229,38 @@
     private bool showEditModal = false;
     private UpdateDeviceRequest updateDeviceRequest = new();
 
+    // Delete confirmation modal
+    private bool showDeleteConfirmModal = false;
+    private int deviceIdToDelete = 0;
+    private string deleteConfirmMessage = string.Empty;
+
     // Dynamic filter options based on actual data
     private List<DeviceType> GetAvailableTypes()
     {
         return allDevices
-            .Select(d => d.Type)
-            .Distinct()
-            .OrderBy(t => DeviceTypeHelper.GetTypeDisplayName(t))
-            .ToList();
+        .Select(d => d.Type)
+        .Distinct()
+        .OrderBy(t => DeviceTypeHelper.GetTypeDisplayName(t))
+        .ToList();
     }
 
     private List<OperationalState> GetAvailableStates()
     {
         return allDevices
-            .Select(d => d.State)
-            .Distinct()
-            .OrderBy(s => OperationalStateHelper.GetStateDisplayName(s))
-            .ToList();
+        .Select(d => d.State)
+        .Distinct()
+        .OrderBy(s => OperationalStateHelper.GetStateDisplayName(s))
+        .ToList();
     }
 
     private List<string> GetAvailableLocations()
     {
         return allDevices
-            .Select(d => d.Location)
-            .Where(l => !string.IsNullOrWhiteSpace(l))
-            .Distinct()
-            .OrderBy(l => l)
-            .ToList();
+        .Select(d => d.Location)
+        .Where(l => !string.IsNullOrWhiteSpace(l))
+        .Distinct()
+        .OrderBy(l => l)
+        .ToList();
     }
 
     protected override async Task OnInitializedAsync()
@@ -291,9 +307,9 @@
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             query = query.Where(d =>
-                d.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                d.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            d.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            d.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            d.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         // Filtrar por tipo
@@ -381,5 +397,32 @@
     private void NavigateToDetails(int deviceId)
     {
         Navigation.NavigateTo($"/inventory/{deviceId}");
+    }
+
+    // Delete methods
+    private void OpenDeleteConfirmModal(int deviceId, string deviceName)
+    {
+        deviceIdToDelete = deviceId;
+        deleteConfirmMessage = $"¿Está seguro que desea eliminar el equipo \"{deviceName}\"? Esta acción no se puede deshacer.";
+        showDeleteConfirmModal = true;
+    }
+
+    private void CloseDeleteConfirmModal()
+    {
+        showDeleteConfirmModal = false;
+        deviceIdToDelete = 0;
+        deleteConfirmMessage = string.Empty;
+    }
+
+    private async Task HandleDeleteDevice()
+    {
+        var success = await DeviceService.DeleteDeviceAsync(deviceIdToDelete);
+        if (success)
+        {
+            await LoadDevices();
+            await LoadStatistics();
+            ApplyFilters();
+        }
+        CloseDeleteConfirmModal();
     }
 }

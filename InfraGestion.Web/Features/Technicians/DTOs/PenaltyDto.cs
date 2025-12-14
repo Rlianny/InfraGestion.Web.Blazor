@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para penalización - coincide con backend PenaltyDto
+/// DTO for penalty - matches backend PenaltyDto
 /// </summary>
 public class PenaltyDto
 {

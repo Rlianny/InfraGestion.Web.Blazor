@@ -1,9 +1,5 @@
 namespace InfraGestion.Web.Features.Organization.Models;
 
-/// <summary>
-/// Sección: División principal de la empresa. Tiene un Responsable de Sección.
-/// Contiene múltiples Departamentos.
-/// </summary>
 public class Section
 {
     public int Id { get; set; }

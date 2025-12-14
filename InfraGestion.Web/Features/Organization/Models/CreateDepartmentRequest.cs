@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Organization.Models;
 
 /// <summary>
-/// Request para crear un Departamento (subdivisión de una Sección)
+/// Request to create a department (subdivision of a Section)
 /// </summary>
 public class CreateDepartmentRequest
 {

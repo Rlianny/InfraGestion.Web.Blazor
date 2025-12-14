@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
-/// Modelo UI para calificar un técnico
+/// Model for rating a technician
 /// </summary>
 public class RateTechnicianRequest
 {

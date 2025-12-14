@@ -1,7 +1,7 @@
 namespace InfraGestion.Web.Features.Transfers.Models;
 
 /// <summary>
-/// Representa un traslado de equipo entre secciones de la empresa
+/// Represents a device transfer between company sections
 /// </summary>
 public class Transfer
 {

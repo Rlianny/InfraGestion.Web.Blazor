@@ -55,7 +55,7 @@ else
 
         <!-- Main Content -->
         <div class="profile-content">
-            <!-- Left Column: Detalles Principales -->
+            <!-- Left Column: Main Details -->
             <div class="details-card">
                 <h2 class="card-title">Detalles Principales</h2>
                 <div class="details-grid">
@@ -72,7 +72,7 @@ else
                         <span class="detail-value">@technician.HireDate.ToString("dd/MM/yyyy")</span>
                     </div>
                     <div class="detail-item">
-                        <span class="detail-label">Anos de experiencia</span>
+                        <span class="detail-label">Años de experiencia</span>
                         <span class="detail-value">@technician.YearsOfExperience</span>
                     </div>
                     <div class="detail-item">
@@ -88,7 +88,7 @@ else
                 </div>
             </div>
 
-            <!-- Right Column: Ubicación -->
+            <!-- Right Column: Location -->
             <div class="location-card">
                 <h2 class="card-title">Ubicación</h2>
                 <div class="location-info">
@@ -108,7 +108,7 @@ else
             </div>
         </div>
 
-        <!-- Historial de Mantenimientos Realizados -->
+        <!-- Maintenance History -->
         <div class="history-section">
             <h2 class="section-title">Historial de Mantenimientos Realizados</h2>
             <div class="table-container">
@@ -118,7 +118,6 @@ else
                             <th>FECHA</th>
                             <th>TIPO</th>
                             <th>EQUIPO</th>
-                            <th>TÉCNICO</th>
                             <th>NOTAS</th>
                             <th>COSTO</th>
                         </tr>
@@ -139,8 +138,7 @@ else
                                 <tr>
                                     <td>@maintenance.Date.ToString("dd/MM/yyyy")</td>
                                     <td>@maintenance.Type</td>
-                                    <td>@(string.IsNullOrWhiteSpace(maintenance.DeviceName) ? maintenance.DeviceId : maintenance.DeviceName)</td>
-                                    <td>@maintenance.TechnicianName</td>
+                                    <td>@maintenance.DeviceName</td>
                                     <td>@maintenance.Notes</td>
                                     <td>@maintenance.Cost.ToString("F2")</td>
                                 </tr>
@@ -151,7 +149,7 @@ else
             </div>
         </div>
 
-        <!-- Proposiciones de Baja -->
+        <!-- Decommission Proposals -->
         <div class="history-section">
             <h2 class="section-title">Proposiciones de Baja</h2>
             <div class="table-container">
@@ -159,7 +157,7 @@ else
                     <thead>
                         <tr>
                             <th>FECHA</th>
-                            <th>ID EQUIPO</th>
+                            <th>EQUIPO</th>
                             <th>CAUSA</th>
                             <th>RECEPTOR</th>
                             <th>ESTADO</th>
@@ -180,7 +178,7 @@ else
                             {
                                 <tr>
                                     <td>@proposal.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@(string.IsNullOrWhiteSpace(proposal.DeviceName) ? proposal.DeviceId : proposal.DeviceName)</td>
+                                    <td>@(proposal.DeviceName)</td>
                                     <td>@proposal.Cause</td>
                                     <td>@proposal.Receiver</td>
                                     <td>
@@ -196,7 +194,7 @@ else
             </div>
         </div>
 
-        <!-- Valoraciones -->
+        <!-- Ratings -->
         <div class="history-section">
             <h2 class="section-title">Valoraciones</h2>
             <div class="table-container">

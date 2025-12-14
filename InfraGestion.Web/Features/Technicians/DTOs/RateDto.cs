@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para valoración/calificación - coincide con backend RateDto
+/// DTO for rating/review - matches backend RateDto
 /// </summary>
 public class RateDto
 {

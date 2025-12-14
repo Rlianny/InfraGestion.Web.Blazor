@@ -1,0 +1,195 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Shared.Components
+
+<Modal IsOpen="@IsOpen" Title="@ModalTitle" OnClose="@HandleClose">
+    <form class="decommissioning-form" @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+        @if (isLoading)
+        {
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando información...</p>
+            </div>
+        }
+        else if (EditRequest != null)
+        {
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label">
+                        ID del Equipo <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           @bind="EditRequest.DeviceId"
+                           placeholder="Ingrese el ID del equipo"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        ID del Técnico <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           @bind="EditRequest.TechnicianId"
+                           placeholder="Ingrese el ID del técnico"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Fecha de Solicitud <span class="required">*</span>
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           @bind="EditRequest.RequestDate"
+                           required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Estado <span class="required">*</span>
+                    </label>
+                    <select class="form-control" @bind="EditRequest.Status" required>
+                        <option value="">Seleccione un estado</option>
+                        @foreach (DecommissioningStatus status in Enum.GetValues(typeof(DecommissioningStatus)))
+                        {
+                            <option value="@status">@DecommissioningStatusHelper.GetStatusDisplayName(status)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Motivo de Baja <span class="required">*</span>
+                    </label>
+                    <select class="form-control" @bind="EditRequest.Reason" required>
+                        <option value="">Seleccione un motivo</option>
+                        @foreach (DecommissioningReason reason in Enum.GetValues(typeof(DecommissioningReason)))
+                        {
+                            <option value="@reason">@DecommissioningReasonHelper.GetReasonDisplayName(reason)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        Justificación <span class="required">*</span>
+                    </label>
+                    <textarea class="form-control textarea"
+                              @bind="EditRequest.Justification"
+                              placeholder="Describa la justificación para la baja técnica"
+                              rows="4"
+                              required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Fecha de Baja
+                    </label>
+                    <input type="date"
+                           class="form-control"
+                           @bind="EditRequest.DecommissioningDate" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Destino Final
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           @bind="EditRequest.FinalDestination"
+                           placeholder="Ej: Reciclaje, Almacén, Donación" />
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-cancel" @onclick="HandleClose">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-submit" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-small"></span>
+                        <span>Guardando...</span>
+                    }
+                    else
+                    {
+                        <span>Guardar Cambios</span>
+                    }
+                </button>
+            </div>
+        }
+    </form>
+</Modal>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public int RequestId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<DecommissioningRequest> OnSubmit { get; set; }
+    [Parameter] public EventCallback<int> OnLoadRequest { get; set; }
+
+    private DecommissioningRequest? EditRequest { get; set; }
+    private bool isLoading = false;
+    private bool isSubmitting = false;
+
+    private string ModalTitle => $"Editar Baja Técnica #{RequestId}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsOpen && RequestId > 0)
+        {
+            await LoadRequest();
+        }
+    }
+
+    private async Task LoadRequest()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        await OnLoadRequest.InvokeAsync(RequestId);
+        
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    public void SetRequest(DecommissioningRequest request)
+    {
+        EditRequest = new DecommissioningRequest
+        {
+            Id = request.Id,
+            DeviceId = request.DeviceId,
+            DeviceName = request.DeviceName,
+            TechnicianId = request.TechnicianId,
+            TechnicianName = request.TechnicianName,
+            RequestDate = request.RequestDate,
+            Status = request.Status,
+            Reason = request.Reason,
+            Justification = request.Justification,
+            DecommissioningDate = request.DecommissioningDate,
+            FinalDestination = request.FinalDestination,
+            ReceiverName = request.ReceiverName
+        };
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (isSubmitting || EditRequest == null) return;
+
+        isSubmitting = true;
+        await OnSubmit.InvokeAsync(EditRequest);
+        isSubmitting = false;
+    }
+
+    private async Task HandleClose()
+    {
+        if (!isSubmitting)
+        {
+            EditRequest = null;
+            await OnClose.InvokeAsync();
+        }
+    }
+}

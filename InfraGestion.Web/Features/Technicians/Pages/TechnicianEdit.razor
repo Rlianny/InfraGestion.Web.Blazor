@@ -1,8 +1,10 @@
 @page "/technicians/edit/{TechnicianId:int}"
 @using InfraGestion.Web.Features.Users.Models
 @using InfraGestion.Web.Features.Users.Services
-@using InfraGestion.Web.Features.Users.Components
+@using InfraGestion.Web.Features.Departments.Services
+@using System.ComponentModel.DataAnnotations
 @inject UserService UserService
+@inject DepartmentService DepartmentService
 @inject NavigationManager Navigation
 
 <div class="user-list-page">
@@ -38,9 +40,106 @@
     else
     {
         <div class="form-container">
-            <UserFormEdit FormModel="@updateUserRequest" 
-                          OnValidSubmit="@HandleUpdateUser" 
-                          OnCancel="@NavigateBack" />
+            <EditForm Model="@updateUserRequest" OnValidSubmit="@HandleUpdateUser">
+                <DataAnnotationsValidator />
+                
+                <div class="form-group">
+                    <label for="name" class="form-label">Nombre*</label>
+                    <input type="text" 
+                           id="name" 
+                           class="form-input" 
+                           @bind="updateUserRequest.Name" 
+                           placeholder="Ingrese el nombre completo" />
+                    <ValidationMessage For="@(() => updateUserRequest.Name)" class="validation-message" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="role" class="form-label">Rol*</label>
+                        <select id="role" class="form-input" @bind="updateUserRequest.Role">
+                            <option value="Director">Director</option>
+                            <option value="Administrator">Administrador</option>
+                            <option value="SectionManager">Responsable</option>
+                            <option value="Technician">Técnico</option>
+                            <option value="Logistician">Logística</option>
+                        </select>
+                        <ValidationMessage For="@(() => updateUserRequest.Role)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="department" class="form-label">Departamento*</label>
+                        @if (isLoadingDepartments)
+                        {
+                            <div class="loading-select" style="padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                                <span>Cargando departamentos...</span>
+                            </div>
+                        }
+                        else if (availableDepartments.Any())
+                        {
+                            <select id="department" class="form-input" @bind="updateUserRequest.Department">
+                                @foreach (var dept in availableDepartments)
+                                {
+                                    <option value="@dept">@dept</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <input type="text" 
+                                   id="department" 
+                                   class="form-input" 
+                                   @bind="updateUserRequest.Department" 
+                                   placeholder="Escriba el nombre del departamento" />
+                        }
+                        <ValidationMessage For="@(() => updateUserRequest.Department)" class="validation-message" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+                    <input type="password" 
+                           id="password" 
+                           class="form-input" 
+                           @bind="updateUserRequest.Password" 
+                           placeholder="Mínimo 6 caracteres (opcional)" />
+                    <ValidationMessage For="@(() => updateUserRequest.Password)" class="validation-message" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="yearsOfExperience" class="form-label">Años de experiencia</label>
+                        <input type="number" 
+                               id="yearsOfExperience" 
+                               class="form-input" 
+                               @bind="updateUserRequest.YearsOfExperience" 
+                               placeholder="Ej: 5"
+                               min="0"
+                               max="50" />
+                        <ValidationMessage For="@(() => updateUserRequest.YearsOfExperience)" class="validation-message" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialty" class="form-label">Especialidad</label>
+                        <input type="text" 
+                               id="specialty" 
+                               class="form-input" 
+                               @bind="updateUserRequest.Specialty" 
+                               placeholder="Ej: Redes, Servidores, etc." />
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" @onclick="NavigateBack">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-save">
+                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a8,8,0,0,1-16,0V64H96V88a8,8,0,0,1-16,0V56a8,8,0,0,1,8-8h80a8,8,0,0,1,8,8Zm24,112H56V152a8,8,0,0,1,8-8H192a8,8,0,0,1,8,8Z"/>
+                        </svg>
+                        Guardar
+                    </button>
+                </div>
+            </EditForm>
         </div>
     }
 </div>
@@ -52,10 +151,13 @@
     private User? user;
     private UpdateUserRequest updateUserRequest = new();
     private bool isLoading = true;
+    private List<string> availableDepartments = new();
+    private bool isLoadingDepartments = true;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadUser();
+        await LoadDepartments();
     }
 
     private async Task LoadUser()
@@ -69,9 +171,9 @@
             {
                 Id = user.Id,
                 Name = user.Name,
-                Role = user.Role,
+                Role = user.Role.ToString(),
                 Department = user.Department,
-                Password = null, // Optional
+                Password = null,
                 YearsOfExperience = user.YearsOfExperience,
                 Specialty = user.Specialty
             };
@@ -80,9 +182,24 @@
         isLoading = false;
     }
 
-    private async Task HandleUpdateUser(UpdateUserRequest request)
+    private async Task LoadDepartments()
     {
-        var result = await UserService.UpdateUserAsync(request);
+        isLoadingDepartments = true;
+        availableDepartments = await DepartmentService.GetAllDepartmentNamesAsync();
+        
+        // Ensure current department appears first
+        if (!string.IsNullOrWhiteSpace(updateUserRequest.Department))
+        {
+            availableDepartments.Remove(updateUserRequest.Department);
+            availableDepartments.Insert(0, updateUserRequest.Department);
+        }
+        
+        isLoadingDepartments = false;
+    }
+
+    private async Task HandleUpdateUser()
+    {
+        var result = await UserService.UpdateUserAsync(updateUserRequest);
         if (result != null)
         {
             NavigateBack();

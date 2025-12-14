@@ -122,6 +122,14 @@
                                             d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
                                     </svg>
                                 </button>
+                                <button class="btn-action btn-delete"
+                                    @onclick="() => OpenDeleteConfirmModal(user.Id, user.Name)" title="Eliminar">
+                                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM112,168a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm0-120H96V40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8Z" />
+                                    </svg>
+                                </button>
                                 <label class="toggle-switch"
                                     title="@(user.Status == UserStatus.Active ? "Desactivar" : "Activar")">
                                     <input type="checkbox" checked="@(user.Status == UserStatus.Active)"
@@ -139,12 +147,11 @@
 
 <!-- Create User Modal -->
 <Modal IsOpen="@showCreateModal" Title="Agregar Usuario" OnClose="@CloseCreateModal">
-    <UserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateModal" />
+    <CreateUserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateModal" />
 </Modal>
 
-<Modal IsOpen="@showEditModal" Title="Editar Usuario" OnClose="@CloseEditModal">
-    <UserFormEdit FormModel="@updateUserRequest" OnValidSubmit="@HandleUpdateUser" OnCancel="@CloseEditModal" />
-</Modal>
+<ConfirmDialog IsOpen="@showDeleteConfirmModal" Title="Eliminar Usuario" Message="@deleteConfirmMessage"
+    ConfirmText="Eliminar" CancelText="Cancelar" OnConfirm="@HandleDeleteUser" OnCancel="@CloseDeleteConfirmModal" />
 
 @code {
     private List<User> allUsers = new();
@@ -158,26 +165,28 @@
     private bool showCreateModal = false;
     private CreateUserRequest createUserRequest = new();
 
-    private bool showEditModal = false;
-    private UpdateUserRequest updateUserRequest = new();
+    // Delete confirmation modal
+    private bool showDeleteConfirmModal = false;
+    private int userIdToDelete = 0;
+    private string deleteConfirmMessage = string.Empty;
 
     // Dynamic filter options based on actual data
     private List<UserRole> GetAvailableRoles()
     {
         return allUsers
-            .Select(u => u.Role)
-            .Distinct()
-            .OrderBy(r => UserRoleHelper.GetRoleDisplayName(r))
-            .ToList();
+        .Select(u => u.Role)
+        .Distinct()
+        .OrderBy(r => UserRoleHelper.GetRoleDisplayName(r))
+        .ToList();
     }
 
     private List<UserStatus> GetAvailableStatuses()
     {
         return allUsers
-            .Select(u => u.Status)
-            .Distinct()
-            .OrderBy(s => s)
-            .ToList();
+        .Select(u => u.Status)
+        .Distinct()
+        .OrderBy(s => s)
+        .ToList();
     }
 
     private void NavigateToCreate()
@@ -243,34 +252,33 @@
         Navigation.NavigateTo($"/users/edit/{userId}");
     }
 
-    /*private async Task NavigateToEdit(int userId)
+    // Delete methods
+    private void OpenDeleteConfirmModal(int userId, string userName)
     {
-        var user = await UserService.GetUserByIdAsync(userId);
-        if (user != null)
-        {
-            updateUserRequest = new UpdateUserRequest
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Role = user.Role,
-                Department = user.Department,
-                Password = null
-            };
-            showEditModal = true;
-        }
-    }*/
-
-    private void CloseEditModal()
-    {
-        showEditModal = false;
-        updateUserRequest = new UpdateUserRequest();
+        userIdToDelete = userId;
+        deleteConfirmMessage = $"¿Está seguro que desea eliminar el usuario \"{userName}\"? Esta acción no se puede deshacer.";
+        showDeleteConfirmModal = true;
     }
 
-    private async Task HandleUpdateUser(UpdateUserRequest request)
+    private void CloseDeleteConfirmModal()
     {
-        await UserService.UpdateUserAsync(request);
-        await LoadUsers();
-        await ApplyFilters();
-        CloseEditModal();
+        showDeleteConfirmModal = false;
+        userIdToDelete = 0;
+        deleteConfirmMessage = string.Empty;
+    }
+
+    private async Task HandleDeleteUser()
+    {
+        Console.WriteLine($"🟢 HandleDeleteUser called with ID: {userIdToDelete}");
+
+        Console.WriteLine($"🟡 Calling UserService.DeleteUserAsync({userIdToDelete})");
+        var success = await UserService.DeleteUserAsync(userIdToDelete);
+        Console.WriteLine($"🔴 Delete result: {success}");
+        if (success)
+        {
+            await LoadUsers();
+            await ApplyFilters();
+        }
+        CloseDeleteConfirmModal();
     }
 }

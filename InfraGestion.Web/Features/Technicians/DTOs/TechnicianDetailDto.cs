@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para detalle de técnico - coincide con backend TechnicianDetailDto
+/// DTO for technician detail - matches backend TechnicianDetailDto
 /// </summary>
 public class TechnicianDetailDto
 {

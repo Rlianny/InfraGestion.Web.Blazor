@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Organization.DTOs;
@@ -32,7 +33,7 @@ public class OrganizationService
 
             var apiResponse = await response.Content.ReadFromJsonAsync<
                 ApiResponse<List<SectionDto>>
-            >();
+            >(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Section>();
@@ -41,7 +42,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("obtener secciones", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<Section>();
         }
     }
@@ -70,7 +71,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("crear sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -93,7 +94,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("actualizar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -108,7 +109,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("eliminar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -123,7 +124,22 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("desactivar sección", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
+            return false;
+        }
+    }
+
+    public async Task<bool> EnableSectionAsync(int id)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.PostAsync($"{BaseUrl}/sections/enable/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -161,7 +177,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("obtener managers", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<SectionManagerDto>();
         }
     }
@@ -182,20 +198,16 @@ public class OrganizationService
 
             var apiResponse = await response.Content.ReadFromJsonAsync<
                 ApiResponse<List<DepartmentDto>>
-            >();
+            >(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Department>();
 
-            // Cargar nombres de secciones para mostrar
-            var sections = await GetAllSectionsAsync();
-            var sectionNames = sections.ToDictionary(s => s.Id, s => s.Name);
-
-            return apiResponse.Data.Select(dto => MapToDepartment(dto, sectionNames)).ToList();
+            return apiResponse.Data.Select(MapToDepartment).ToList();
         }
         catch (Exception ex)
         {
-            LogError("obtener departamentos", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return new List<Department>();
         }
     }
@@ -224,7 +236,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("crear departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -247,7 +259,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("actualizar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -262,7 +274,7 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("eliminar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -277,7 +289,23 @@ public class OrganizationService
         }
         catch (Exception ex)
         {
-            LogError("desactivar departamento", ex);
+            Console.WriteLine("[ERROR] " + ex.Message);
+
+            return false;
+        }
+    }
+
+    public async Task<bool> EnableDepartmentAsync(int id)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.PostAsync($"{BaseUrl}/departments/enable/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[ERROR] " + ex.Message);
             return false;
         }
     }
@@ -298,26 +326,18 @@ public class OrganizationService
             Name = dto.Name,
             SectionManagerId = dto.SectionManagerId,
             SectionManagerFullName = dto.SectionManagerFullName ?? string.Empty,
-            Status = OrganizationStatus.Active,
+            Status = dto.IsActive ? OrganizationStatus.Active : OrganizationStatus.Inactive,
         };
 
-    private static Department MapToDepartment(
-        DepartmentDto dto,
-        Dictionary<int, string> sectionNames
-    ) =>
+    private static Department MapToDepartment(DepartmentDto dto) =>
         new()
         {
             Id = dto.DepartmentId,
             Name = dto.Name,
             SectionId = dto.SectionId,
-            SectionName = sectionNames.GetValueOrDefault(dto.SectionId, string.Empty),
-            Status = OrganizationStatus.Active,
+            SectionName = dto.SectionName,
+            Status = dto.IsActive ? OrganizationStatus.Active : OrganizationStatus.Inactive,
         };
-
-    private static void LogError(string operation, Exception ex)
-    {
-        Console.WriteLine($"Error al {operation}: {ex.Message}");
-    }
 
     #endregion
 }

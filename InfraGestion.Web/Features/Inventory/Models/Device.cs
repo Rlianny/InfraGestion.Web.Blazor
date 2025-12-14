@@ -1,5 +1,6 @@
 namespace InfraGestion.Web.Features.Inventory.Models;
 
+
 public class Device
 {
     public int Id { get; set; }

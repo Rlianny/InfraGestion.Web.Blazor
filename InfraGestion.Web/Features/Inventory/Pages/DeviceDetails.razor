@@ -153,8 +153,8 @@ else
                             <th>FECHA</th>
                             <th>ORIGEN</th>
                             <th>DESTINO</th>
-                            <th>RESPONSABLE</th>
                             <th>RECEPTOR</th>
+                            <th>ESTADO</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -193,7 +193,6 @@ else
                         <tr>
                             <th>FECHA BAJA</th>
                             <th>RECEPTOR</th>
-                            <th>DEPARTAMENTO RECEPTOR</th>
                             <th>RAZÓN</th>
                             <th>DESTINO FINAL</th>
                         </tr>
@@ -202,7 +201,7 @@ else
                         @if (device.DecommissioningInfo == null)
                         {
                             <tr>
-                                <td colspan="5" class="empty-cell">
+                                <td colspan="4" class="empty-cell">
                                     No se encontró solicitud de baja para este equipo
                                 </td>
                             </tr>
@@ -210,9 +209,8 @@ else
                         else
                         {
                             <tr>
-                                <td>@device.DecommissioningInfo.DecommissioningDate.ToString("dd/MM/yyyy")</td>
+                                <td>@(device.DecommissioningInfo.DecommissioningDate?.ToString("dd/MM/yyyy") ?? "No especificado")</td>
                                 <td>@device.DecommissioningInfo.ReceiverName</td>
-                                <td>@device.DecommissioningInfo.ReceiverDepartmentName</td>
                                 <td>@GetDecommissioningReasonLabel(device.DecommissioningInfo.Reason)</td>
                                 <td>@(device.DecommissioningInfo.FinalDestination ?? "No especificado")</td>
                             </tr>

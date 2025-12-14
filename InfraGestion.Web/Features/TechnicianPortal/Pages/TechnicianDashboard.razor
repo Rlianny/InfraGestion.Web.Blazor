@@ -5,7 +5,8 @@
 @using InfraGestion.Web.Features.TechnicianPortal.Components
 @using static InfraGestion.Web.Features.TechnicianPortal.Components.InitialDefectReviewForm
 @inject AuthService AuthService
-@inject DeviceService DeviceService
+@inject InspectionService InspectionService
+@inject InspectionService InspectionService
 
 <PageTitle>Dashboard Técnico - InfraCom</PageTitle>
 
@@ -18,14 +19,12 @@
             <div class="action-buttons">
                 <button class="btn-action btn-primary" @onclick="RegisterMaintenance">
                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <!-- ICON: Put your "+" or maintenance icon path here -->
                         <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
                     </svg>
                     Registrar Mantenimiento
                 </button>
                 <button class="btn-action btn-danger" @onclick="CreateDecommissionRequest">
                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <!-- ICON: Put your "+" or request icon path here -->
                         <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
                     </svg>
                     Crear solicitud de baja
@@ -67,7 +66,6 @@
                                     <td>
                                         <button class="btn-icon-action" @onclick="() => OpenReviewModal(request)" title="Revisar solicitud">
                                             <svg class="action-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <!-- ICON: Put your edit/pencil icon path here -->
                                                 <path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z"/>
                                             </svg>
                                         </button>
@@ -103,7 +101,6 @@
         if (currentUser != null)
         {
             currentTechnicianId = currentUser.Id;
-            Console.WriteLine($"[DEBUG] TechnicianDashboard - Current technician ID: {currentTechnicianId}");
         }
         
         await LoadPendingRequests();
@@ -116,18 +113,10 @@
         
         try
         {
-            if (currentTechnicianId <= 0)
-            {
-                Console.WriteLine("[WARNING] TechnicianDashboard - No technician ID available");
-                pendingRequests = new List<PendingDefectRequest>();
-                isLoading = false;
-                return;
-            }
 
             // Get pending inspection requests from backend
-            List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await DeviceService.GetPendingReceivingInspectionRequestsAsync(currentTechnicianId);
-            
-            Console.WriteLine($"[DEBUG] TechnicianDashboard - Received {requests.Count} pending requests");
+            List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await InspectionService.GetPendingInspectionsAsync(currentTechnicianId);
+        
 
             // Map backend DTOs to UI model
             pendingRequests = requests.Select(r => new PendingDefectRequest
@@ -137,7 +126,9 @@
                 TechnicianId = r.TechnicianId,
                 EmissionDate = r.RequestDate,
                 EquipmentId = $"DEV{r.DeviceId:D3}", // Format device ID
-                RequesterName = $"Usuario #{r.UserId}" // TODO: Get actual user name from backend
+                RequesterName = string.IsNullOrWhiteSpace(r.RequesterFullName)
+                    ? $"Usuario #{r.RequesterId}"
+                    : r.RequesterFullName
             }).ToList();
         }
         catch (Exception ex)
@@ -182,8 +173,8 @@
             
             if (result.IsApproved)
             {
-                Console.WriteLine($"[DEBUG] Processing approval for device {result.DeviceId} by technician {result.TechnicianId}");
-                success = await DeviceService.ApproveDeviceInspectionAsync(result.DeviceId, result.TechnicianId);
+
+                success = await InspectionService.ApproveDeviceInspectionAsync(result.DeviceId, result.TechnicianId);
                 
                 if (success)
                 {
@@ -201,9 +192,7 @@
                     Console.WriteLine("[ERROR] Rejection reason is required");
                     return;
                 }
-
-                Console.WriteLine($"[DEBUG] Processing rejection for device {result.DeviceId} by technician {result.TechnicianId} with reason {result.RejectionReason}");
-                success = await DeviceService.RejectDeviceInspectionAsync(result.DeviceId, result.TechnicianId, result.RejectionReason.Value);
+                success = await InspectionService.RejectDeviceInspectionAsync(result.DeviceId, result.TechnicianId, result.RejectionReason.Value);
                 
                 if (success)
                 {

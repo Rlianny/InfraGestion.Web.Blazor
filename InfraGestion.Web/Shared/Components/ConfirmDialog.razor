@@ -1,0 +1,56 @@
+@namespace InfraGestion.Web.Shared.Components
+
+@if (IsOpen)
+{
+    <div class="confirm-dialog-overlay" @onclick="HandleCancel">
+        <div class="confirm-dialog" @onclick:stopPropagation="true">
+            <div class="confirm-dialog-header">
+                <h3 class="confirm-dialog-title">@Title</h3>
+            </div>
+            <div class="confirm-dialog-body">
+                <p class="confirm-dialog-message">@Message</p>
+            </div>
+            <div class="confirm-dialog-footer">
+                <button type="button" class="btn-cancel" @onclick="HandleCancel">
+                    @CancelText
+                </button>
+                <button type="button" class="btn-confirm" @onclick="HandleConfirm">
+                    @ConfirmText
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Confirmar";
+
+    [Parameter]
+    public string Message { get; set; } = "¿Está seguro que desea continuar?";
+
+    [Parameter]
+    public string ConfirmText { get; set; } = "Confirmar";
+
+    [Parameter]
+    public string CancelText { get; set; } = "Cancelar";
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleConfirm()
+    {
+        await OnConfirm.InvokeAsync();
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

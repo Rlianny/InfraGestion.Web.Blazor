@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace InfraGestion.Web.Features.Transfers.Models;
 
 /// <summary>
-/// Request para actualizar un traslado de equipo existente
+/// Request to update an existing device transfer
 /// </summary>
 public class UpdateTransferRequest
 {

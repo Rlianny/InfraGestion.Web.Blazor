@@ -2,10 +2,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
-/// <summary>
-/// Request to update an existing device
-/// PUT /inventory
-/// </summary>
+
 public class UpdateDeviceRequestDto
 {
     public int DeviceId { get; set; }

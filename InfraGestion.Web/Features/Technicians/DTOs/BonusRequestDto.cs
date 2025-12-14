@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para registrar bonificación - coincide con backend BonusRequest
+/// DTO for registering bonus - matches backend BonusRequest
 /// </summary>
 public class BonusRequestDto
 {

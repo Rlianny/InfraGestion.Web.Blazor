@@ -1,7 +1,7 @@
 namespace InfraGestion.Web.Features.Technicians.Models;
 
 /// <summary>
-/// Detalles extendidos del técnico para la vista de perfil
+/// Detailed technician information for profile view
 /// </summary>
 public class TechnicianDetails
 {
@@ -12,24 +12,22 @@ public class TechnicianDetails
     public string Section { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
     public string SectionManager { get; set; } = string.Empty;
-    public string PhotoUrl { get; set; } = string.Empty;
+    public string PhotoUrl { get; set; } = string.Empty; // TODO: Add photo handling
     public TechnicianStatus Status { get; set; } = TechnicianStatus.Active;
     public decimal Rating { get; set; } = 0;
-    public string? Email { get; set; }
-    public string? Phone { get; set; }
     public DateTime HireDate { get; set; }
     public int YearsOfExperience { get; set; }
     public DateTime? LastInterventionDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-    // Historiales relacionados
+    // Related histories
     public List<MaintenanceRecord> MaintenanceHistory { get; set; } = new();
     public List<DecommissionProposal> DecommissionProposals { get; set; } = new();
     public List<TechnicianRating> Ratings { get; set; } = new();
 }
 
 /// <summary>
-/// Registro de mantenimiento realizado por el técnico
+/// Maintenance record performed by the technician
 /// </summary>
 public class MaintenanceRecord
 {
@@ -44,7 +42,7 @@ public class MaintenanceRecord
 }
 
 /// <summary>
-/// Proposición de baja de equipo
+/// Decommission proposal for equipment
 /// </summary>
 public class DecommissionProposal
 {
@@ -54,11 +52,11 @@ public class DecommissionProposal
     public string DeviceName { get; set; } = string.Empty;
     public string Cause { get; set; } = string.Empty;
     public string Receiver { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty; // Aprobado, Pendiente, Rechazado
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>
-/// Valoración del técnico
+/// Technician rating
 /// </summary>
 public class TechnicianRating
 {

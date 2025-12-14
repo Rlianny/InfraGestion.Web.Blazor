@@ -6,7 +6,7 @@ using System.Net.Http.Json;
 
 namespace InfraGestion.Web.Features.Transfers.Services;
 
-public class TransferService
+public class TransferService // TODO: Replace with real implementation
 {
     private readonly HttpClient _httpClient;
     public TransferService(HttpClient httpClient)

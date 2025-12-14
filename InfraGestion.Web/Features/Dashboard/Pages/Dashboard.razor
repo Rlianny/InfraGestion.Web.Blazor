@@ -1,5 +1,6 @@
 @page "/"
 @using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Core.Constants
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
@@ -11,9 +12,22 @@
 @code {
     protected override async Task OnInitializedAsync()
     {
-        if (!await AuthService.IsAuthenticatedAsync())
+        var user = await AuthService.GetCurrentUserAsync();
+
+        if (user is null)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/login", replace: true);
+            return;
         }
+
+        var target = user.Role switch
+        {
+            Roles.Admin => "/admin/dashboard",
+            Roles.Technician => "/technician/dashboard",
+            Roles.Director => "/director/dashboard",
+            _ => "/login"
+        };
+
+        Navigation.NavigateTo(target, replace: true);
     }
 }

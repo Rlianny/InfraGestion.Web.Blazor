@@ -1,0 +1,160 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Shared.Components
+
+<Modal IsOpen="@IsOpen" Title="@ModalTitle" OnClose="@HandleClose">
+    <form class="decommissioning-form" @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
+        <div class="form-section">
+            <div class="form-group">
+                <label class="form-label">
+                    ID del Equipo <span class="required">*</span>
+                </label>
+                <input type="text"
+                       class="form-control"
+                       @bind="Request.DeviceId"
+                       placeholder="Ingrese el ID del equipo"
+                       required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    ID del Técnico <span class="required">*</span>
+                </label>
+                <input type="text"
+                       class="form-control"
+                       @bind="Request.TechnicianId"
+                       placeholder="Ingrese el ID del técnico"
+                       required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Fecha de Solicitud <span class="required">*</span>
+                </label>
+                <input type="date"
+                       class="form-control"
+                       @bind="Request.RequestDate"
+                       required />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Estado <span class="required">*</span>
+                </label>
+                <select class="form-control" @bind="Request.Status" required>
+                    <option value="">Seleccione un estado</option>
+                    @foreach (DecommissioningStatus status in Enum.GetValues(typeof(DecommissioningStatus)))
+                    {
+                        <option value="@status">@DecommissioningStatusHelper.GetStatusDisplayName(status)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Motivo de Baja <span class="required">*</span>
+                </label>
+                <select class="form-control" @bind="Request.Reason" required>
+                    <option value="">Seleccione un motivo</option>
+                    @foreach (DecommissioningReason reason in Enum.GetValues(typeof(DecommissioningReason)))
+                    {
+                        <option value="@reason">@DecommissioningReasonHelper.GetReasonDisplayName(reason)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group full-width">
+                <label class="form-label">
+                    Justificación <span class="required">*</span>
+                </label>
+                <textarea class="form-control textarea"
+                          @bind="Request.Justification"
+                          placeholder="Describa la justificación para la baja técnica"
+                          rows="4"
+                          required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Fecha de Baja
+                </label>
+                <input type="date"
+                       class="form-control"
+                       @bind="Request.DecommissioningDate" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Destino Final
+                </label>
+                <input type="text"
+                       class="form-control"
+                       @bind="Request.FinalDestination"
+                       placeholder="Ej: Reciclaje, Almacén, Donación" />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-cancel" @onclick="HandleClose">
+                Cancelar
+            </button>
+            <button type="submit" class="btn btn-submit" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-small"></span>
+                    <span>Guardando...</span>
+                }
+                else
+                {
+                    <span>Crear Baja Técnica</span>
+                }
+            </button>
+        </div>
+    </form>
+</Modal>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<DecommissioningRequest> OnSubmit { get; set; }
+
+    private DecommissioningRequest Request { get; set; } = new();
+    private bool isSubmitting = false;
+
+    private string ModalTitle => "Nueva Baja Técnica";
+
+    private async Task HandleSubmit()
+    {
+        if (isSubmitting) return;
+
+        isSubmitting = true;
+        await OnSubmit.InvokeAsync(Request);
+        isSubmitting = false;
+    }
+
+    private async Task HandleClose()
+    {
+        if (!isSubmitting)
+        {
+            ResetForm();
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    private void ResetForm()
+    {
+        Request = new DecommissioningRequest
+        {
+            RequestDate = DateTime.Today,
+            Status = DecommissioningStatus.Pending
+        };
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen && Request.Id == 0)
+        {
+            ResetForm();
+        }
+    }
+}

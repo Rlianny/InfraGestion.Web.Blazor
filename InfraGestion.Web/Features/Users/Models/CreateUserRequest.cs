@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace InfraGestion.Web.Features.Users.Models;
 
-public class CreateUserRequest
+public class CreateUserRequest : IValidatableObject
 {
     [Required(ErrorMessage = "El nombre es requerido")]
     public string Name { get; set; } = string.Empty;
@@ -21,4 +22,26 @@ public class CreateUserRequest
     public int? YearsOfExperience { get; set; }
 
     public string? Specialty { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Role == UserRole.Technician)
+        {
+            if (!YearsOfExperience.HasValue)
+            {
+                yield return new ValidationResult(
+                    "Los años de experiencia son requeridos para técnicos",
+                    new[] { nameof(YearsOfExperience) }
+                );
+            }
+
+            if (string.IsNullOrWhiteSpace(Specialty))
+            {
+                yield return new ValidationResult(
+                    "La especialidad es requerida para técnicos",
+                    new[] { nameof(Specialty) }
+                );
+            }
+        }
+    }
 }

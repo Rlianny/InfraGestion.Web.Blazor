@@ -1,6 +1,7 @@
 @page "/technicians"
 @using InfraGestion.Web.Features.Technicians.Models
 @using InfraGestion.Web.Features.Technicians.Services
+@using InfraGestion.Web.Features.Technicians.Helpers
 @inject TechnicianService TechnicianService
 @inject NavigationManager Navigation
 
@@ -78,8 +79,8 @@
                 <div class="technician-card">
                     <div class="card-header">
                         <div class="avatar-container">
-                            <img src="@technician.PhotoUrl" alt="@technician.Name" class="avatar" 
-                                 onerror="this.src='/images/techs/tech_01.png'" />
+                       <img src="@InfraGestion.Web.Features.Technicians.Helpers.TechnicianPhotoHelper.GetPhotoUrl(technician.PhotoUrl, technician.Id, technician.Name)" alt="@technician.Name" class="avatar" 
+                           onerror="this.src='/images/techs/tech01.png'" />
                         </div>
                         <div class="technician-info">
                             <h3 class="technician-name">@technician.Name</h3>

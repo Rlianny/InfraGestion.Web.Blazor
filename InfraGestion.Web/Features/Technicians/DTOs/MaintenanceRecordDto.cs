@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
 /// <summary>
-/// DTO para registro de mantenimiento - coincide con backend MaintenanceRecordDto
+/// DTO for maintenance record - matches backend MaintenanceRecordDto
 /// </summary>
 public class MaintenanceRecordDto
 {
