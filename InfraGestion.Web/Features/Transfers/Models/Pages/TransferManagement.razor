@@ -100,7 +100,7 @@
                     @foreach (var transfer in filteredTransfers)
                     {
                         <tr>
-                            <td class="device-id-cell">>@($"DEV{transfer.DeviceId}")</td>
+                            <td class="device-id-cell">DEV@(transfer.DeviceId.ToString("D3"))</td>
                             <td class="device-name-cell">@transfer.DeviceName</td>
                             <td class="origin-cell">@transfer.SourceSectionName</td>
                             <td class="destination-cell">@transfer.DestinationSectionName</td>

@@ -1,6 +1,13 @@
 @page "/reportes"
 @page "/director/reports"
 @page "/technician/reports"
+@using InfraGestion.Web.Features.Reports.Components
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Departments.Services
+@using static InfraGestion.Web.Features.Reports.Components.SearchModal
+@inject DeviceService DeviceService
+@inject DepartmentService DepartmentService
 
 <PageTitle>Sistema de Reportes - InfraCom</PageTitle>
 
@@ -36,7 +43,7 @@
                 </div>
                 <p class="report-description">@report.Description</p>
                 <div class="report-actions">
-                    <button class="btn-generate" @onclick="() => GenerateReport(report.Id)">
+                    <button class="btn-generate" @onclick="() => HandleGenerateReport(report)">
                         <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" />
                         </svg>
@@ -54,18 +61,69 @@
     </div>
 </div>
 
+<!-- Search Modal for Equipment -->
+<SearchModal 
+    IsVisible="@showEquipmentModal"
+    Title="Buscar Equipo"
+    Placeholder="Buscar por nombre o código del equipo..."
+    Items="@equipmentItems"
+    OnCancel="CloseEquipmentModal"
+    OnAccept="OnEquipmentSelected" />
+
+<!-- Search Modal for Department -->
+<SearchModal 
+    IsVisible="@showDepartmentModal"
+    Title="Buscar Departamento"
+    Placeholder="Buscar por nombre del departamento..."
+    Items="@departmentItems"
+    OnCancel="CloseDepartmentModal"
+    OnAccept="OnDepartmentSelected" />
+
 @code {
     private List<ReportItem> reports = new();
+    
+    // Modal states
+    private bool showEquipmentModal = false;
+    private bool showDepartmentModal = false;
+    private bool isLoadingData = false;
+    
+    // Data for search from API
+    private List<SearchItem> equipmentItems = new();
+    private List<SearchItem> departmentItems = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         LoadReports();
+        await LoadDataFromApiAsync();
     }
 
     private void LoadReports()
     {
         reports = new List<ReportItem>
         {
+            new ReportItem
+            {
+                Id = "performance-bonuses",
+                Title = "Evaluación de Rendimiento para Bonificaciones",
+                Description = "Análisis del rendimiento de los técnicos, basándose en las valoraciones recibidas y la cantidad de intervenciones realizadas, para determinar bonificaciones o penalizaciones en su salario.",
+                RequiresSearch = false
+            },
+            new ReportItem
+            {
+                Id = "equipment-maintenance-history",
+                Title = "Historial de mantenimientos de un equipo específico",
+                Description = "Mantenimientos de un equipo específico, clasificando los mantenimientos por tipo y fecha, junto con los técnicos que realizaron las intervenciones.",
+                RequiresSearch = true,
+                SearchType = SearchType.Equipment
+            },
+            new ReportItem
+            {
+                Id = "department-equipment",
+                Title = "Equipos recibidos en un departamento específico",
+                Description = "Reporte de los equipos que han sido enviados a un departamento específico, indicando los nombres de la persona quien envía y quien recibe..",
+                RequiresSearch = true,
+                SearchType = SearchType.Department
+            },
             new ReportItem
             {
                 Id = "annual-decommissions",
@@ -89,20 +147,78 @@
                 Id = "critical-equipment",
                 Title = "Equipos Críticos para Reemplazo",
                 Description = "Informe de los equipos que han recibido más de tres mantenimientos en el último año y que, por normativa, deben ser reemplazados."
-            },
-            new ReportItem
-            {
-                Id = "performance-bonuses",
-                Title = "Evaluación de Rendimiento para Bonificaciones",
-                Description = "Análisis del rendimiento de los técnicos, basándose en las valoraciones recibidas y la cantidad de intervenciones realizadas, para determinar bonificaciones o penalizaciones en su salario."
             }
         };
     }
 
-    private void GenerateReport(string reportId)
+    private async Task LoadDataFromApiAsync()
     {
-        // TODO: Implement report generation
-        Console.WriteLine($"Generating report: {reportId}");
+        try
+        {
+            isLoadingData = true;
+            
+            // Load devices from API (uses the same service as inventory page)
+            var devices = await DeviceService.GetAllDevicesAsync();
+            equipmentItems = devices.Select(d => new SearchItem
+            {
+                Id = d.Id.ToString(),
+                Name = d.Name,
+                SubText = $"{DeviceTypeHelper.GetTypeDisplayName(d.Type)} - {d.Location}"
+            }).ToList();
+            
+            Console.WriteLine($"[Reports] Loaded {equipmentItems.Count} devices from API");
+
+            // Load departments from API
+            var departments = await DepartmentService.GetAllDepartmentNamesAsync();
+            departmentItems = departments.Select((name, index) => new SearchItem
+            {
+                Id = name, // Use department name as ID since that's what the API expects
+                Name = name,
+                SubText = null
+            }).ToList();
+            
+            Console.WriteLine($"[Reports] Loaded {departmentItems.Count} departments from API");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Reports] Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingData = false;
+        }
+    }
+
+    private void HandleGenerateReport(ReportItem report)
+    {
+        if (report.RequiresSearch)
+        {
+            if (report.SearchType == SearchType.Equipment)
+            {
+                showEquipmentModal = true;
+            }
+            else if (report.SearchType == SearchType.Department)
+            {
+                showDepartmentModal = true;
+            }
+        }
+        else
+        {
+            GenerateReport(report.Id);
+        }
+    }
+
+    private void GenerateReport(string reportId, string? selectedItemId = null)
+    {
+        // TODO: Implement report generation - call API endpoint
+        if (selectedItemId != null)
+        {
+            Console.WriteLine($"Generating report: {reportId} for item: {selectedItemId}");
+        }
+        else
+        {
+            Console.WriteLine($"Generating report: {reportId}");
+        }
     }
 
     private void ExportReport(string reportId)
@@ -117,10 +233,45 @@
         Console.WriteLine("Exporting all reports...");
     }
 
+    // Equipment Modal handlers
+    private void CloseEquipmentModal()
+    {
+        showEquipmentModal = false;
+    }
+
+    private void OnEquipmentSelected(SearchItem item)
+    {
+        showEquipmentModal = false;
+        GenerateReport("equipment-maintenance-history", item.Id);
+        Console.WriteLine($"Selected equipment: {item.Name} (ID: {item.Id})");
+    }
+
+    // Department Modal handlers
+    private void CloseDepartmentModal()
+    {
+        showDepartmentModal = false;
+    }
+
+    private void OnDepartmentSelected(SearchItem item)
+    {
+        showDepartmentModal = false;
+        GenerateReport("department-equipment", item.Id);
+        Console.WriteLine($"Selected department: {item.Name}");
+    }
+
     private class ReportItem
     {
         public string Id { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public bool RequiresSearch { get; set; } = false;
+        public SearchType SearchType { get; set; } = SearchType.None;
+    }
+
+    private enum SearchType
+    {
+        None,
+        Equipment,
+        Department
     }
 }
