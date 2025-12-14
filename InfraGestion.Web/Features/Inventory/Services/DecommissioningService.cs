@@ -165,7 +165,15 @@ public class DecommissioningService
             ReasonDescription = dto.ReasonDescription,
             ReviewedDate = dto.ReviewedDate,
             ReviewedByUserId = dto.ReviewedByUserId,
-            ReviewedByUserName = dto.ReviewedByUserName
+            ReviewedByUserName = dto.ReviewedByUserName,
+            ReceiverName = string.IsNullOrEmpty(dto.ReceiverUserName) || dto.ReceiverUserName == "Unrevised" 
+                ? string.Empty 
+                : dto.ReceiverUserName,
+            // DecommissioningDate = ReviewedDate si ReceiverUserId existe, sino null
+            DecommissioningDate = dto.ReceiverUserId.HasValue ? dto.ReviewedDate : null,
+            FinalDestination = string.IsNullOrEmpty(dto.FinalDestinationName) || dto.FinalDestinationName == "Unrevised" 
+                ? string.Empty 
+                : dto.FinalDestinationName
         };
     }
 }

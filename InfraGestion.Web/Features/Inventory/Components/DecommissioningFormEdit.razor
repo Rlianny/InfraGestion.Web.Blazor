@@ -101,16 +101,6 @@
                            @bind="EditRequest.FinalDestination"
                            placeholder="Ej: Reciclaje, Almacén, Donación" />
                 </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        ID del Receptor
-                    </label>
-                    <input type="text"
-                           class="form-control"
-                           @bind="EditRequest.ReceiverId"
-                           placeholder="Ingrese el ID del receptor (opcional)" />
-                </div>
             </div>
 
             <div class="form-actions">
@@ -180,7 +170,6 @@
             Justification = request.Justification,
             DecommissioningDate = request.DecommissioningDate,
             FinalDestination = request.FinalDestination,
-            ReceiverId = request.ReceiverId,
             ReceiverName = request.ReceiverName
         };
         StateHasChanged();

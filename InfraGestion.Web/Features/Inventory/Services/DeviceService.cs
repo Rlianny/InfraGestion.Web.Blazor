@@ -635,13 +635,13 @@ public class DeviceService
             Id = dto.DecommissioningRequestId,
             DeviceId = dto.DeviceId,
             DeviceName = dto.DeviceName,
-            ReceiverId = dto.DeviceReceiverId,
             ReceiverName = dto.DeviceReceiverName,
-            ReceiverDepartmentId = dto.ReceiverDepartmentId,
-            ReceiverDepartmentName = dto.ReceiverDepartmentName,
             DecommissioningDate = dto.DecommissioningDate,
             Reason = (DecommissioningReason)dto.Reason,
             FinalDestination = dto.FinalDestination,
+            ReviewedDate = null,
+            ReviewedByUserId = null,
+            ReviewedByUserName = null,
         };
     }
 

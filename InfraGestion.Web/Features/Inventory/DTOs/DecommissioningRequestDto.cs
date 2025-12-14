@@ -19,4 +19,8 @@ public class DecommissioningRequestDto
     public DateTime? ReviewedDate { get; set; }
     public int? ReviewedByUserId { get; set; }
     public string? ReviewedByUserName { get; set; }
+    public int? ReceiverUserId { get; set; }
+    public string? ReceiverUserName { get; set; }
+    public int? FinalDestinationId { get; set; }
+    public string? FinalDestinationName { get; set; }
 }

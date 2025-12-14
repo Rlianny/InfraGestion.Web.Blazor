@@ -21,10 +21,7 @@ public class DecommissioningRequest
     public string? ReviewedByUserName { get; set; }
     
     // Additional properties for display/forms
-    public int ReceiverId { get; set; }
     public string ReceiverName { get; set; } = string.Empty;
-    public int ReceiverDepartmentId { get; set; }
-    public string ReceiverDepartmentName { get; set; } = string.Empty;
     public DateTime? DecommissioningDate { get; set; }
     public string? FinalDestination { get; set; }
 }
