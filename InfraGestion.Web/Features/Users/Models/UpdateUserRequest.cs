@@ -10,7 +10,7 @@ public class UpdateUserRequest
     public string Name { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El rol es requerido")]
-    public UserRole Role { get; set; }
+    public string Role { get; set; }
 
     [Required(ErrorMessage = "El departamento es requerido")]
     public string Department { get; set; } = string.Empty;

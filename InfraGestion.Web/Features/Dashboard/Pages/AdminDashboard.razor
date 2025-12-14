@@ -97,7 +97,7 @@
 
 <!-- Create User Modal -->
 <Modal IsOpen="@showCreateUserModal" Title="Agregar Usuario" OnClose="@CloseCreateUserModal">
-    <UserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateUserModal" />
+    <CreateUserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateUserModal" />
 </Modal>
 
 @code {

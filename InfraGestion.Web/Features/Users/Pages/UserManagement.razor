@@ -147,11 +147,7 @@
 
 <!-- Create User Modal -->
 <Modal IsOpen="@showCreateModal" Title="Agregar Usuario" OnClose="@CloseCreateModal">
-    <UserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateModal" />
-</Modal>
-
-<Modal IsOpen="@showEditModal" Title="Editar Usuario" OnClose="@CloseEditModal">
-    <UserFormEdit FormModel="@updateUserRequest" OnValidSubmit="@HandleUpdateUser" OnCancel="@CloseEditModal" />
+    <CreateUserForm FormModel="@createUserRequest" OnValidSubmit="@HandleCreateUser" OnCancel="@CloseCreateModal" />
 </Modal>
 
 <ConfirmDialog IsOpen="@showDeleteConfirmModal" Title="Eliminar Usuario" Message="@deleteConfirmMessage"
@@ -168,9 +164,6 @@
 
     private bool showCreateModal = false;
     private CreateUserRequest createUserRequest = new();
-
-    private bool showEditModal = false;
-    private UpdateUserRequest updateUserRequest = new();
 
     // Delete confirmation modal
     private bool showDeleteConfirmModal = false;
@@ -257,37 +250,6 @@
     private void NavigateToEdit(int userId)
     {
         Navigation.NavigateTo($"/users/edit/{userId}");
-    }
-
-    /*private async Task NavigateToEdit(int userId)
-    {
-    var user = await UserService.GetUserByIdAsync(userId);
-    if (user != null)
-    {
-    updateUserRequest = new UpdateUserRequest
-    {
-    Id = user.Id,
-    Name = user.Name,
-    Role = user.Role,
-    Department = user.Department,
-    Password = null
-    };
-    showEditModal = true;
-    }
-    }*/
-
-    private void CloseEditModal()
-    {
-        showEditModal = false;
-        updateUserRequest = new UpdateUserRequest();
-    }
-
-    private async Task HandleUpdateUser(UpdateUserRequest request)
-    {
-        await UserService.UpdateUserAsync(request);
-        await LoadUsers();
-        await ApplyFilters();
-        CloseEditModal();
     }
 
     // Delete methods

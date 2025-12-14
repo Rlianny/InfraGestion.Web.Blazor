@@ -1,9 +1,9 @@
 using System.Net.Http.Json;
-using InfraGestion.Web.Features.Users.Models;
-using InfraGestion.Web.Features.Users.DTOs;
+using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
-using InfraGestion.Web.Core.Constants;
+using InfraGestion.Web.Features.Users.DTOs;
+using InfraGestion.Web.Features.Users.Models;
 
 namespace InfraGestion.Web.Features.Users.Services;
 
@@ -52,7 +52,9 @@ public class UserService
             }
 
             // Deserialize ApiResponse<IEnumerable<UserDto>>
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<UserDto>>
+            >();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
@@ -112,7 +114,9 @@ public class UserService
         {
             // Get all users and filter by name
             var allUsers = await GetAllUsersAsync();
-            return allUsers.FirstOrDefault(u => u.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            return allUsers.FirstOrDefault(u =>
+                u.Name.Equals(name, StringComparison.OrdinalIgnoreCase)
+            );
         }
         catch (Exception ex)
         {
@@ -125,7 +129,11 @@ public class UserService
     /// Search user with filters
     /// NOTE: the actual API has not search endpoint
     /// </summary>
-    public async Task<List<User>> SearchUsersAsync(string searchTerm, UserRole? roleFilter, UserStatus? statusFilter)
+    public async Task<List<User>> SearchUsersAsync(
+        string searchTerm,
+        UserRole? roleFilter,
+        UserStatus? statusFilter
+    )
     {
         try
         {
@@ -138,9 +146,10 @@ public class UserService
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 query = query.Where(u =>
-                    u.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    u.Department.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                    u.Id.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                    || u.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                    || u.Department.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+                );
             }
 
             if (roleFilter.HasValue)
@@ -183,19 +192,18 @@ public class UserService
                 Username = GenerateUsername(request.Name), // Generate username from name
                 FullName = request.Name,
                 Password = request.Password,
-                Role = MapRoleToString(request.Role),
+                Role = request.Role.ToString(),
                 DepartmentName = request.Department,
-                // Only send technician fields when applicable to satisfy backend validation
-                YearsOfExperience = request.Role == UserRole.Technician
-                    ? request.YearsOfExperience
-                    : null,
-                Specialty = request.Role == UserRole.Technician
-                    ? request.Specialty
-                    : null
+                YearsOfExperience =
+                    request.Role == UserRole.Technician ? request.YearsOfExperience : null,
+                Specialty = request.Role == UserRole.Technician ? request.Specialty : null,
             };
 
             // POST /Users/administrator/{administratorId}
-            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.CreateUser(administratorId), dto);
+            var response = await _httpClient.PostAsJsonAsync(
+                ApiRoutes.Users.CreateUser(administratorId),
+                dto
+            );
 
             if (!response.IsSuccessStatusCode)
             {
@@ -239,16 +247,19 @@ public class UserService
             {
                 UserId = request.Id,
                 FullName = request.Name,
-                Role = MapRoleToString(request.Role),
+                Role = request.Role,
                 DepartmentName = request.Department,
                 IsActive = null,
                 YearsOfExperience = request.YearsOfExperience,
                 Specialty = request.Specialty,
-                Password = request.Password
+                Password = request.Password,
             };
 
             // PUT /Users/administrator/{administratorId}/{id}
-            var response = await _httpClient.PutAsJsonAsync(ApiRoutes.Users.UpdateUser(administratorId, request.Id), dto);
+            var response = await _httpClient.PutAsJsonAsync(
+                ApiRoutes.Users.UpdateUser(administratorId, request.Id),
+                dto
+            );
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -285,14 +296,13 @@ public class UserService
             }
 
             // Disable
-            var dto = new
-            {
-                UserId = id,
-                Reason = "Eliminado desde la interfaz de usuario"
-            };
+            var dto = new { UserId = id, Reason = "Eliminado desde la interfaz de usuario" };
 
             // POST /Users/administrator/{administratorId}/{id}/deactivate
-            var response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.DeactivateUser(administratorId, id), dto);
+            var response = await _httpClient.PostAsJsonAsync(
+                ApiRoutes.Users.DeactivateUser(administratorId, id),
+                dto
+            );
 
             return response.IsSuccessStatusCode;
         }
@@ -319,22 +329,25 @@ public class UserService
             }
 
             var user = await GetUserByIdAsync(id);
-            if (user == null) return false;
+            if (user == null)
+                return false;
 
             HttpResponseMessage response;
 
             if (user.Status == UserStatus.Active)
             {
-                var dto = new
-                {
-                    UserId = id,
-                    Reason = "Desactivado manualmente"
-                };
-                response = await _httpClient.PostAsJsonAsync(ApiRoutes.Users.DeactivateUser(administratorId, id), dto);
+                var dto = new { UserId = id, Reason = "Desactivado manualmente" };
+                response = await _httpClient.PostAsJsonAsync(
+                    ApiRoutes.Users.DeactivateUser(administratorId, id),
+                    dto
+                );
             }
             else
             {
-                response = await _httpClient.PostAsync(ApiRoutes.Users.ActivateUser(administratorId, id), null);
+                response = await _httpClient.PostAsync(
+                    ApiRoutes.Users.ActivateUser(administratorId, id),
+                    null
+                );
             }
 
             return response.IsSuccessStatusCode;
@@ -362,12 +375,16 @@ public class UserService
             }
 
             // GET /Users/user/{currentUserId}/department/{departmentId}
-            var response = await _httpClient.GetAsync(ApiRoutes.Users.GetUsersByDepartment(currentUserId, departmentId));
+            var response = await _httpClient.GetAsync(
+                ApiRoutes.Users.GetUsersByDepartment(currentUserId, departmentId)
+            );
 
             if (!response.IsSuccessStatusCode)
                 return new List<User>();
 
-            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<UserDto>>
+            >();
 
             if (apiResponse?.Success == true && apiResponse.Data != null)
             {
@@ -399,23 +416,7 @@ public class UserService
             Status = dto.IsActive ? UserStatus.Active : UserStatus.Inactive,
             CreatedAt = dto.CreatedAt,
             YearsOfExperience = dto.YearsOfExperience,
-            Specialty = dto.Specialty
-        };
-    }
-
-    /// <summary>
-    /// Convert UserRole (enum) to string for API
-    /// </summary>
-    private string MapRoleToString(UserRole role)
-    {
-        return role switch
-        {
-            UserRole.Administrator => "Administrator",
-            UserRole.Director => "Director",
-            UserRole.SectionManager => "SectionManager",
-            UserRole.Technician => "Technician",
-            UserRole.Logistician => "Logistician",
-            _ => "Technician"
+            Specialty = dto.Specialty,
         };
     }
 
@@ -431,7 +432,7 @@ public class UserService
             "SectionManager" => UserRole.SectionManager,
             "Technician" => UserRole.Technician,
             "Logistician" => UserRole.Logistician,
-            _ => UserRole.Technician
+            _ => UserRole.Technician,
         };
     }
 
@@ -441,7 +442,8 @@ public class UserService
     /// </summary>
     private string GenerateUsername(string fullName)
     {
-        return fullName.ToLower()
+        return fullName
+            .ToLower()
             .Replace(" ", "_")
             .Replace("á", "a")
             .Replace("é", "e")
