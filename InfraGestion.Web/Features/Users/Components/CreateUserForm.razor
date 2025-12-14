@@ -90,6 +90,7 @@
                    class="form-input" 
                    @bind="FormModel.Specialty" 
                    placeholder="Ej: Redes, Servidores, etc." />
+            <ValidationMessage For="@(() => FormModel.Specialty)" class="validation-message" />
         </div>
     </div>
 
