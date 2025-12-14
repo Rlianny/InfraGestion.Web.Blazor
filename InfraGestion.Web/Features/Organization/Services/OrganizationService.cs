@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Organization.DTOs;
-using System.Text.Json;
 using InfraGestion.Web.Features.Organization.Models;
 
 namespace InfraGestion.Web.Features.Organization.Services;
@@ -33,7 +33,7 @@ public class OrganizationService
 
             var apiResponse = await response.Content.ReadFromJsonAsync<
                 ApiResponse<List<SectionDto>>
-            >();
+            >(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Section>();
@@ -129,6 +129,21 @@ public class OrganizationService
         }
     }
 
+    public async Task<bool> EnableSectionAsync(int id)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.PostAsync($"{BaseUrl}/sections/enable/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[ERROR] " + ex.Message);
+            return false;
+        }
+    }
+
     public async Task<List<(int Id, string Name)>> GetSectionOptionsAsync()
     {
         var sections = await GetAllSectionsAsync();
@@ -181,31 +196,14 @@ public class OrganizationService
             if (!response.IsSuccessStatusCode)
                 return new List<Department>();
 
-            // Read raw JSON and log it for debugging deserialization issues
-            var json = await response.Content.ReadAsStringAsync();
-            Console.WriteLine("[DEBUG] Departments JSON: " + (json?.Length > 0 ? json.Substring(0, Math.Min(1000, json.Length)) : "<empty>"));
-
-            ApiResponse<List<DepartmentDto>>? apiResponse = null;
-            try
-            {
-                apiResponse = JsonSerializer.Deserialize<ApiResponse<List<DepartmentDto>>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[ERROR] Failed to deserialize departments JSON: " + ex.Message);
-                return new List<Department>();
-            }
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<List<DepartmentDto>>
+            >(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
                 return new List<Department>();
 
-            var sections = await GetAllSectionsAsync();
-            var sectionNames = sections.ToDictionary(s => s.Id, s => s.Name);
-
-            return apiResponse.Data.Select(dto => MapToDepartment(dto, sectionNames)).ToList();
+            return apiResponse.Data.Select(MapToDepartment).ToList();
         }
         catch (Exception ex)
         {
@@ -297,6 +295,21 @@ public class OrganizationService
         }
     }
 
+    public async Task<bool> EnableDepartmentAsync(int id)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.PostAsync($"{BaseUrl}/departments/enable/{id}", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[ERROR] " + ex.Message);
+            return false;
+        }
+    }
+
     #endregion
 
     #region Private Helpers
@@ -313,20 +326,17 @@ public class OrganizationService
             Name = dto.Name,
             SectionManagerId = dto.SectionManagerId,
             SectionManagerFullName = dto.SectionManagerFullName ?? string.Empty,
-            Status = OrganizationStatus.Active,
+            Status = dto.IsActive ? OrganizationStatus.Active : OrganizationStatus.Inactive,
         };
 
-    private static Department MapToDepartment(
-        DepartmentDto dto,
-        Dictionary<int, string> sectionNames
-    ) =>
+    private static Department MapToDepartment(DepartmentDto dto) =>
         new()
         {
             Id = dto.DepartmentId,
             Name = dto.Name,
             SectionId = dto.SectionId,
-            SectionName = sectionNames.GetValueOrDefault(dto.SectionId, string.Empty),
-            Status = OrganizationStatus.Active,
+            SectionName = dto.SectionName,
+            Status = dto.IsActive ? OrganizationStatus.Active : OrganizationStatus.Inactive,
         };
 
     #endregion
