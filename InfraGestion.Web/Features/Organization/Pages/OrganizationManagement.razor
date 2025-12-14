@@ -157,7 +157,7 @@
                                     <label class="toggle-switch"
                                         title="@(sec.Status == OrganizationStatus.Active ? "Desactivar" : "Activar")">
                                         <input type="checkbox" checked="@(sec.Status == OrganizationStatus.Active)"
-                                            @onchange="() => ToggleSectionStatus(sec.Id)" />
+                                            @onchange="() => ToggleSectionStatus(sec)" />
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </td>
@@ -235,7 +235,7 @@
                                     <label class="toggle-switch"
                                         title="@(dept.Status == OrganizationStatus.Active ? "Desactivar" : "Activar")">
                                         <input type="checkbox" checked="@(dept.Status == OrganizationStatus.Active)"
-                                            @onchange="() => ToggleDepartmentStatus(dept.Id)" />
+                                            @onchange="() => ToggleDepartmentStatus(dept)" />
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </td>
@@ -487,10 +487,16 @@
         CloseEditSectionModal();
     }
 
-    private async Task ToggleSectionStatus(int sectionId)
+    private async Task ToggleSectionStatus(Section section)
     {
-        await OrganizationService.DisableSectionAsync(sectionId);
+        var success = section.Status == OrganizationStatus.Active
+        ? await OrganizationService.DisableSectionAsync(section.Id)
+        : await OrganizationService.EnableSectionAsync(section.Id);
+        
         await LoadDataAsync();
+        ApplyFilters();
+        StateHasChanged();
+        
     }
 
     // Department modal handlers
@@ -542,10 +548,15 @@
         CloseEditDepartmentModal();
     }
 
-    private async Task ToggleDepartmentStatus(int departmentId)
+    private async Task ToggleDepartmentStatus(Department department)
     {
-        await OrganizationService.DisableDepartmentAsync(departmentId);
+        var success = department.Status == OrganizationStatus.Active
+            ? await OrganizationService.DisableDepartmentAsync(department.Id)
+            : await OrganizationService.EnableDepartmentAsync(department.Id);
+
         await LoadDataAsync();
+        ApplyFilters();
+        StateHasChanged();
     }
 
     // Section delete handlers
