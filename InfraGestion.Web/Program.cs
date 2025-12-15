@@ -9,6 +9,7 @@ using InfraGestion.Web.Features.Organization.Services;
 using InfraGestion.Web.Features.Transfers.Services;
 using InfraGestion.Web.Features.Technicians.Services;
 using InfraGestion.Web.Features.DirectorPortal.Services;
+using InfraGestion.Web.Features.Reports.Services;
 using InfraGestion.Web.Core.Services;
 using Blazored.LocalStorage;
 
@@ -35,6 +36,7 @@ builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<TechnicianService>();
 builder.Services.AddScoped<DirectorDashboardService>();
+builder.Services.AddScoped<FrontendReport>();
 builder.Services.AddScoped<NavigationService>();
 
 await builder.Build().RunAsync();

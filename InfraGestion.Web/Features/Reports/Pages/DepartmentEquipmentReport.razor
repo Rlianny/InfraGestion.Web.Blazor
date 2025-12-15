@@ -1,0 +1,248 @@
+@page "/reports/department-equipment"
+@page "/reports/department-equipment/{DepartmentId:int}"
+@page "/reportes/equipos-departamento"
+@page "/reportes/equipos-departamento/{DepartmentId:int}"
+@using InfraGestion.Web.Features.Reports.DTOs
+@using InfraGestion.Web.Features.Reports.Services
+@inject FrontendReport ReportService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Equipos por Departamento - InfraCom</PageTitle>
+
+<div class="report-page">
+    <!-- Header -->
+    <PageHeader Title="@GetPageTitle()" 
+                Description="Listado de equipos asignados al departamento seleccionado">
+        <Actions>
+            <button class="btn-back" @onclick="GoBack">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver
+            </button>
+            <ExportButton OnClick="ExportToPdf" IsLoading="isExporting" />
+        </Actions>
+    </PageHeader>
+
+    <!-- Department Selector (if no department specified) -->
+    @if (DepartmentId == 0)
+    {
+        <div class="department-selector">
+            <label>Seleccione un departamento:</label>
+            <select @onchange="OnDepartmentChanged" class="department-select">
+                <option value="0">-- Seleccionar --</option>
+                @foreach (var dept in availableDepartments)
+                {
+                    <option value="@dept.Id">@dept.Name</option>
+                }
+            </select>
+        </div>
+    }
+
+    <!-- Stats Summary -->
+    @if (!isLoading && reportData.Any())
+    {
+        <div class="stats-container">
+            <StatCard Label="Total Equipos" 
+                      Value="@reportData.Count.ToString()" 
+                      Color="#2196F3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Activos" 
+                      Value="@reportData.Count(d => d.Status == "Activo").ToString()" 
+                      Color="#4CAF50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="En Mantenimiento" 
+                      Value="@reportData.Count(d => d.Status == "En Mantenimiento").ToString()" 
+                      Color="#FF9800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 0 0 1l2.2 3.081a1 1 0 0 0 .815.419h.07a1 1 0 0 1 .708.293l2.675 2.675-2.617 2.654A3.003 3.003 0 0 0 0 13a3 3 0 1 0 5.878-.851l2.654-2.617.968.968-.305.914a1 1 0 0 0 .242 1.023l3.27 3.27a.997.997 0 0 0 1.414 0l1.586-1.586a.997.997 0 0 0 0-1.414l-3.27-3.27a1 1 0 0 0-1.023-.242L10.5 9.5l-.96-.96 2.68-2.643A3.005 3.005 0 0 0 16 3c0-.269-.035-.53-.102-.777l-2.14 2.141L12 4l-.364-1.757L13.777.102a3 3 0 0 0-3.675 3.68L7.462 6.46 4.793 3.793a1 1 0 0 1-.293-.707v-.071a1 1 0 0 0-.419-.814L1 0Zm9.646 10.646a.5.5 0 0 1 .708 0l2.914 2.915a.5.5 0 0 1-.707.707l-2.915-2.914a.5.5 0 0 1 0-.708ZM3 11l.471.242.529.026.287.445.445.287.026.529L5 13l-.242.471-.026.529-.445.287-.287.445-.529.026L3 15l-.471-.242L2 14.732l-.287-.445L1.268 14l-.026-.529L1 13l.242-.471.026-.529.445-.287.287-.445.529-.026L3 11Z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Categorías" 
+                      Value="@reportData.Select(d => d.Category).Distinct().Count().ToString()" 
+                      Color="#9C27B0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.922 5.922 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z"/>
+                </svg>
+            </StatCard>
+        </div>
+    }
+
+    <!-- Data Table -->
+    <DataTable TItem="DepartmentEquipmentItemDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="@GetEmptyMessage()">
+        <HeaderTemplate>
+            <th>ID</th>
+            <th>Equipo</th>
+            <th>Categoría</th>
+            <th>Estado</th>
+            <th>Fecha Asignación</th>
+            <th>Responsable</th>
+        </HeaderTemplate>
+        <RowTemplate Context="device">
+            <td>
+                <span class="device-id">#@device.DeviceId</span>
+            </td>
+            <td>
+                <div class="device-info">
+                    <span class="device-name">@device.DeviceName</span>
+                    <span class="device-model">@device.Model</span>
+                </div>
+            </td>
+            <td>
+                <span class="category-badge">@device.Category</span>
+            </td>
+            <td>
+                <span class="status-badge @GetStatusClass(device.Status)">@device.Status</span>
+            </td>
+            <td>@device.AssignmentDate.ToString("dd/MM/yyyy")</td>
+            <td>@device.ResponsiblePerson</td>
+        </RowTemplate>
+    </DataTable>
+</div>
+
+@code {
+    [Parameter]
+    public int DepartmentId { get; set; }
+
+    private List<DepartmentEquipmentItemDto> reportData = new();
+    private List<DepartmentInfo> availableDepartments = new();
+    private string selectedDepartmentName = "";
+    private bool isLoading = true;
+    private bool isExporting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadAvailableDepartments();
+        
+        if (DepartmentId > 0)
+        {
+            selectedDepartmentName = availableDepartments.FirstOrDefault(d => d.Id == DepartmentId)?.Name ?? "";
+            await LoadReport();
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    private void LoadAvailableDepartments()
+    {
+        // Mock departments - in real implementation this would come from a service
+        availableDepartments = new List<DepartmentInfo>
+        {
+            new(1, "Desarrollo"),
+            new(2, "Marketing"),
+            new(3, "Contabilidad"),
+            new(4, "Recursos Humanos"),
+            new(5, "Ventas"),
+            new(6, "TI"),
+            new(7, "Operaciones")
+        };
+    }
+
+    private async Task OnDepartmentChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int deptId) && deptId > 0)
+        {
+            DepartmentId = deptId;
+            selectedDepartmentName = availableDepartments.FirstOrDefault(d => d.Id == deptId)?.Name ?? "";
+            await LoadReport();
+        }
+    }
+
+    private async Task LoadReport()
+    {
+        if (DepartmentId == 0) return;
+
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            reportData = await ReportService.GetDepartmentEquipmentAsync(DepartmentId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar el reporte: {ex.Message}";
+            Console.WriteLine($"Error loading department equipment report: {ex}");
+            LoadMockData();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void LoadMockData()
+    {
+        reportData = new List<DepartmentEquipmentItemDto>
+        {
+            new() { DeviceId = 101, DeviceName = "Laptop Dell XPS 15", Model = "XPS 15 9520", Category = "Computadoras", Status = "Activo", AssignmentDate = DateTime.Now.AddMonths(-6), ResponsiblePerson = "Carlos Rodríguez" },
+            new() { DeviceId = 102, DeviceName = "Monitor LG UltraWide", Model = "34WN80C-B", Category = "Monitores", Status = "Activo", AssignmentDate = DateTime.Now.AddMonths(-8), ResponsiblePerson = "María González" },
+            new() { DeviceId = 103, DeviceName = "Impresora HP LaserJet", Model = "Pro M404dn", Category = "Impresoras", Status = "En Mantenimiento", AssignmentDate = DateTime.Now.AddYears(-1), ResponsiblePerson = "Pedro Sánchez" },
+            new() { DeviceId = 104, DeviceName = "Proyector Epson", Model = "PowerLite E20", Category = "Proyectores", Status = "Activo", AssignmentDate = DateTime.Now.AddMonths(-3), ResponsiblePerson = "Ana Martínez" },
+            new() { DeviceId = 105, DeviceName = "Router Cisco", Model = "RV340", Category = "Redes", Status = "Activo", AssignmentDate = DateTime.Now.AddYears(-2), ResponsiblePerson = "Luis García" }
+        };
+    }
+
+    private string GetPageTitle() => 
+        string.IsNullOrEmpty(selectedDepartmentName) 
+            ? "Equipos por Departamento" 
+            : $"Equipos - {selectedDepartmentName}";
+
+    private string GetEmptyMessage() =>
+        DepartmentId == 0 
+            ? "Seleccione un departamento para ver sus equipos" 
+            : "No hay equipos asignados a este departamento";
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Activo" => "active",
+        "En Mantenimiento" => "maintenance",
+        "Inactivo" => "inactive",
+        _ => "default"
+    };
+
+    private async Task ExportToPdf()
+    {
+        if (DepartmentId == 0) return;
+
+        try
+        {
+            isExporting = true;
+            StateHasChanged();
+
+            var pdfBytes = await ReportService.ExportToPdfAsync($"department-equipment-{DepartmentId}");
+            if (pdfBytes != null && pdfBytes.Length > 0)
+            {
+                await JS.InvokeVoidAsync("downloadFile", pdfBytes, $"reporte-equipos-{selectedDepartmentName}.pdf", "application/pdf");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting PDF: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/reportes");
+    }
+
+    private record DepartmentInfo(int Id, string Name);
+}

@@ -3,12 +3,16 @@
 @page "/technician/reports"
 @page "/logistician/reports"
 @using InfraGestion.Web.Features.Reports.Components
+@using InfraGestion.Web.Features.Reports.Services
 @using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Features.Inventory.Helpers
 @using InfraGestion.Web.Features.Departments.Services
 @using static InfraGestion.Web.Features.Reports.Components.SearchModal
 @inject DeviceService DeviceService
 @inject DepartmentService DepartmentService
+@inject FrontendReport ReportService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Sistema de Reportes - InfraCom</PageTitle>
 
@@ -211,27 +215,73 @@
 
     private void GenerateReport(string reportId, string? selectedItemId = null)
     {
-        // TODO: Implement report generation - call API endpoint
-        if (selectedItemId != null)
+        // Navigate to report viewer page with parameters
+        var url = reportId switch
         {
-            Console.WriteLine($"Generating report: {reportId} for item: {selectedItemId}");
+            "performance-bonuses" => "/reports/bonus-determination",
+            "equipment-maintenance-history" => string.IsNullOrEmpty(selectedItemId) 
+                ? "/reports/equipment-maintenance" 
+                : $"/reports/equipment-maintenance/{selectedItemId}",
+            "department-equipment" => string.IsNullOrEmpty(selectedItemId) 
+                ? "/reports/department-equipment" 
+                : $"/reports/department-equipment/{Uri.EscapeDataString(selectedItemId)}",
+            "annual-decommissions" => "/reports/decommissioning",
+            "equipment-transfers" => "/reports/department-transfers",
+            "technical-efficiency" => "/reports/correlation-analysis",
+            "critical-equipment" => "/reports/equipment-replacement",
+            _ => "/reportes"
+        };
+        
+        Navigation.NavigateTo(url);
+    }
+
+    private async Task ExportReport(string reportId)
+    {
+        try
+        {
+            var reportName = reportId switch
+            {
+                "performance-bonuses" => "bonus-determination",
+                "annual-decommissions" => "decommissionings",
+                "equipment-transfers" => "transfers",
+                "technical-efficiency" => "correlation-analysis",
+                "critical-equipment" => "equipment-replacement",
+                _ => reportId
+            };
+            
+            var pdfBytes = await ReportService.GetPdfReportAsync(reportName);
+            await DownloadPdfAsync(pdfBytes, $"reporte-{reportName}.pdf");
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"Generating report: {reportId}");
+            Console.WriteLine($"Error exporting report: {ex.Message}");
         }
     }
 
-    private void ExportReport(string reportId)
+    private async Task ExportAll()
     {
-        // TODO: Implement individual report export
-        Console.WriteLine($"Exporting report: {reportId}");
+        // Export each report type
+        var reportTypes = new[] { "bonus-determination", "decommissionings", "transfers", "correlation-analysis", "equipment-replacement" };
+        
+        foreach (var reportType in reportTypes)
+        {
+            try
+            {
+                var pdfBytes = await ReportService.GetPdfReportAsync(reportType);
+                await DownloadPdfAsync(pdfBytes, $"reporte-{reportType}.pdf");
+                await Task.Delay(500); // Small delay between downloads
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting {reportType}: {ex.Message}");
+            }
+        }
     }
 
-    private void ExportAll()
+    private async Task DownloadPdfAsync(byte[] pdfBytes, string fileName)
     {
-        // TODO: Implement export all reports
-        Console.WriteLine("Exporting all reports...");
+        var base64 = Convert.ToBase64String(pdfBytes);
+        await JSRuntime.InvokeVoidAsync("downloadFile", fileName, "application/pdf", base64);
     }
 
     // Equipment Modal handlers

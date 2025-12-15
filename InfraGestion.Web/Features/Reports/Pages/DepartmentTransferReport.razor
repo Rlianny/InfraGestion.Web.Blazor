@@ -1,0 +1,170 @@
+@page "/reports/department-transfers"
+@page "/reports/transfers"
+@page "/reportes/transferencias"
+@using InfraGestion.Web.Features.Reports.DTOs
+@using InfraGestion.Web.Features.Reports.Services
+@inject FrontendReport ReportService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Reporte de Transferencias entre Departamentos - InfraCom</PageTitle>
+
+<div class="report-page">
+    <!-- Header -->
+    <PageHeader Title="Transferencias entre Departamentos" 
+                Description="Historial de movimientos de equipos entre departamentos">
+        <Actions>
+            <button class="btn-back" @onclick="GoBack">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver
+            </button>
+            <ExportButton OnClick="ExportToPdf" IsLoading="isExporting" />
+        </Actions>
+    </PageHeader>
+
+    <!-- Stats Summary -->
+    @if (!isLoading && reportData.Any())
+    {
+        <div class="stats-container">
+            <StatCard Label="Total Transferencias" 
+                      Value="@reportData.Count.ToString()" 
+                      Color="#2196F3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Departamentos Origen" 
+                      Value="@reportData.Select(r => r.SourceDepartmentName).Distinct().Count().ToString()" 
+                      Color="#9C27B0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Departamentos Destino" 
+                      Value="@reportData.Select(r => r.DestinationDepartmentName).Distinct().Count().ToString()" 
+                      Color="#FF9800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Equipos Transferidos" 
+                      Value="@reportData.Select(r => r.DeviceId).Distinct().Count().ToString()" 
+                      Color="#4CAF50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+                </svg>
+            </StatCard>
+        </div>
+    }
+
+    <!-- Data Table -->
+    <DataTable TItem="DepartmentTransferReportItemDto" Items="reportData" IsLoading="isLoading" ColumnCount="7" EmptyText="No hay transferencias registradas">
+        <HeaderTemplate>
+            <th>ID Transferencia</th>
+            <th>Equipo</th>
+            <th>Fecha</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Enviado por</th>
+            <th>Recibido por</th>
+        </HeaderTemplate>
+        <RowTemplate Context="transfer">
+            <td>
+                <span class="transfer-id">#@transfer.TransferId</span>
+            </td>
+            <td>
+                <div class="device-info">
+                    <span class="device-name">@transfer.DeviceName</span>
+                    <span class="device-id">ID: @transfer.DeviceId</span>
+                </div>
+            </td>
+            <td>@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
+            <td>
+                <span class="department-badge origin">@transfer.SourceDepartmentName</span>
+            </td>
+            <td>
+                <span class="department-badge destination">@transfer.DestinationDepartmentName</span>
+            </td>
+            <td>@transfer.SenderName</td>
+            <td>@transfer.ReceiverName</td>
+        </RowTemplate>
+    </DataTable>
+</div>
+
+@code {
+    private List<DepartmentTransferReportItemDto> reportData = new();
+    private bool isLoading = true;
+    private bool isExporting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            reportData = await ReportService.GetDepartmentTransfersAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar el reporte: {ex.Message}";
+            Console.WriteLine($"Error loading department transfer report: {ex}");
+            LoadMockData();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void LoadMockData()
+    {
+        reportData = new List<DepartmentTransferReportItemDto>
+        {
+            new() { TransferId = 1, DeviceId = 101, DeviceName = "Laptop Dell XPS 15", TransferDate = DateTime.Now.AddDays(-5), SourceDepartmentName = "Desarrollo", DestinationDepartmentName = "Marketing", SenderName = "Carlos Rodríguez", ReceiverName = "María González" },
+            new() { TransferId = 2, DeviceId = 102, DeviceName = "Impresora HP LaserJet", TransferDate = DateTime.Now.AddDays(-12), SourceDepartmentName = "Contabilidad", DestinationDepartmentName = "Recursos Humanos", SenderName = "Ana Martínez", ReceiverName = "Pedro Sánchez" },
+            new() { TransferId = 3, DeviceId = 103, DeviceName = "Monitor LG 27\"", TransferDate = DateTime.Now.AddDays(-20), SourceDepartmentName = "Ventas", DestinationDepartmentName = "Desarrollo", SenderName = "Luis García", ReceiverName = "Carmen López" },
+            new() { TransferId = 4, DeviceId = 104, DeviceName = "Servidor Dell PowerEdge", TransferDate = DateTime.Now.AddDays(-30), SourceDepartmentName = "TI", DestinationDepartmentName = "Operaciones", SenderName = "Roberto Díaz", ReceiverName = "Elena Ruiz" },
+            new() { TransferId = 5, DeviceId = 105, DeviceName = "Proyector Epson", TransferDate = DateTime.Now.AddDays(-45), SourceDepartmentName = "Capacitación", DestinationDepartmentName = "Ventas", SenderName = "Fernando Torres", ReceiverName = "Laura Méndez" }
+        };
+    }
+
+    private async Task ExportToPdf()
+    {
+        try
+        {
+            isExporting = true;
+            StateHasChanged();
+
+            var pdfBytes = await ReportService.ExportToPdfAsync("department-transfer");
+            if (pdfBytes != null && pdfBytes.Length > 0)
+            {
+                await JS.InvokeVoidAsync("downloadFile", pdfBytes, "reporte-transferencias.pdf", "application/pdf");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting PDF: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/reportes");
+    }
+}

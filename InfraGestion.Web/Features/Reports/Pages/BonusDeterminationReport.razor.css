@@ -1,0 +1,120 @@
+/* Report Page Base Styles */
+.report-page {
+    padding: 0;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Table Cell Styles */
+.name-cell {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.number-cell {
+    text-align: center;
+    font-weight: 500;
+}
+
+.currency-cell {
+    text-align: right;
+    font-weight: 600;
+    font-family: 'Roboto Mono', monospace;
+}
+
+.currency-cell.positive {
+    color: rgb(34, 197, 94);
+}
+
+.currency-cell.negative {
+    color: rgb(239, 68, 68);
+}
+
+/* Rating Display */
+.rating-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+}
+
+.rating-value {
+    font-weight: 700;
+    color: rgb(234, 179, 8);
+}
+
+.rating-max {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* Adjustment Badge */
+.adjustment-badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.adjustment-badge.adjustment-bonus {
+    background: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+}
+
+.adjustment-badge.adjustment-penalty {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+/* Back Button */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-border);
+    background: white;
+    color: var(--color-text-primary);
+}
+
+.btn-back:hover {
+    background: var(--color-bg-main);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Error Message */
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: rgb(239, 68, 68);
+    margin-top: 1rem;
+}
+
+.error-message svg {
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

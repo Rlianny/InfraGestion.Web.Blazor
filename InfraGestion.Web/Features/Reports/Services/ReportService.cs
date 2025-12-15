@@ -38,6 +38,25 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
+	// Simplified method for decommissioning report without filter
+	public async Task<List<DecommissioningReportItemDto>> GetDecommissioningsAsync()
+	{
+		try
+		{
+			string endPoint = "reports/decommissionings";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DecommissioningReportItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<DecommissioningReportItemDto>();
+			}
+			return new List<DecommissioningReportItemDto>();
+		}
+		catch
+		{
+			return new List<DecommissioningReportItemDto>();
+		}
+	}
+
 	public async Task<PersonnelEffectivenessReportDto> GeneratePersonnelEffectivenessReportAsync(PersonnelReportFilterDto criteria)
 	{
 		string endPoint = "reports/personnel-effectiveness";
@@ -63,6 +82,25 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
+	// Simplified method for device replacement report
+	public async Task<List<DeviceReplacementReportItemDto>> GetDeviceReplacementAsync()
+	{
+		try
+		{
+			string endPoint = "reports/equipment-replacement";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DeviceReplacementReportItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<DeviceReplacementReportItemDto>();
+			}
+			return new List<DeviceReplacementReportItemDto>();
+		}
+		catch
+		{
+			return new List<DeviceReplacementReportItemDto>();
+		}
+	}
+
 	public async Task<DepartmentTransferReportDto> GenerateDepartmentTransferReportAsync(string departmentId)
 	{
 		string endPoint = $"reports/department-transfer?departmentId={departmentId}";
@@ -73,6 +111,44 @@ public class FrontendReport
 			return response.Data!;
 		}
 		throw new Exception(string.Join("\n", response.Errors));
+	}
+
+	// Simplified method for department transfers report (all transfers)
+	public async Task<List<DepartmentTransferReportItemDto>> GetDepartmentTransfersAsync()
+	{
+		try
+		{
+			string endPoint = "reports/department-transfer";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DepartmentTransferReportItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<DepartmentTransferReportItemDto>();
+			}
+			return new List<DepartmentTransferReportItemDto>();
+		}
+		catch
+		{
+			return new List<DepartmentTransferReportItemDto>();
+		}
+	}
+
+	// Method for department equipment report
+	public async Task<List<DepartmentEquipmentItemDto>> GetDepartmentEquipmentAsync(int departmentId)
+	{
+		try
+		{
+			string endPoint = $"reports/department-equipment?departmentId={departmentId}";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DepartmentEquipmentItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<DepartmentEquipmentItemDto>();
+			}
+			return new List<DepartmentEquipmentItemDto>();
+		}
+		catch
+		{
+			return new List<DepartmentEquipmentItemDto>();
+		}
 	}
 
 	public async Task<CorrelationAnalysisReportDto> GenerateCorrelationAnalysisReportAsync()
@@ -87,6 +163,25 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
+	// Simplified method for correlation analysis report
+	public async Task<List<CorrelationAnalysisReportItemDto>> GetCorrelationAnalysisAsync()
+	{
+		try
+		{
+			string endPoint = "reports/correlation-analysis";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<CorrelationAnalysisReportItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<CorrelationAnalysisReportItemDto>();
+			}
+			return new List<CorrelationAnalysisReportItemDto>();
+		}
+		catch
+		{
+			return new List<CorrelationAnalysisReportItemDto>();
+		}
+	}
+
 	public async Task<BonusDeterminationReportDto> GenerateBonusDeterminationReportAsync(BonusReportCriteria criteria)
 	{
 		string endPoint = "reports/bonus-determination";
@@ -99,6 +194,44 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
+	// Simplified method for bonus determination report
+	public async Task<List<BonusDeterminationReportItemDto>> GetBonusDeterminationAsync()
+	{
+		try
+		{
+			string endPoint = "reports/bonus-determination";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<BonusDeterminationReportItemDto>>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data ?? new List<BonusDeterminationReportItemDto>();
+			}
+			return new List<BonusDeterminationReportItemDto>();
+		}
+		catch
+		{
+			return new List<BonusDeterminationReportItemDto>();
+		}
+	}
+
+	// Method for equipment maintenance history
+	public async Task<List<MaintenanceHistoryItemDto>> GetEquipmentMaintenanceHistoryAsync(int equipmentId)
+	{
+		try
+		{
+			string endPoint = $"reports/equipment-maintenance?equipmentId={equipmentId}";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<MaintenanceHistoryReportDto>>(endPoint);
+			if (response?.Success == true)
+			{
+				return response.Data?.Items ?? new List<MaintenanceHistoryItemDto>();
+			}
+			return new List<MaintenanceHistoryItemDto>();
+		}
+		catch
+		{
+			return new List<MaintenanceHistoryItemDto>();
+		}
+	}
+
 	public async Task<byte[]> GetPdfReportAsync(string reportName)
 	{
 		string endPoint = $"reports/export/{reportName}/pdf";
@@ -108,6 +241,12 @@ public class FrontendReport
 			return await response.Content.ReadAsByteArrayAsync();
 		}
 		throw new Exception($"Error while trying to make a GET {endPoint}");
+	}
+
+	// Alias for GetPdfReportAsync to match usage in pages
+	public async Task<byte[]> ExportToPdfAsync(string reportName)
+	{
+		return await GetPdfReportAsync(reportName);
 	}
 
 	private string QueryString<T>(T obj)
