@@ -401,13 +401,23 @@ public class TechnicianService
     /// </summary>
     private static Technician MapToTechnician(TechnicianDto dto)
     {
+        // Map fields provided by the summary DTO. Use boolean `IsActive` when available.
+        var status = TechnicianStatus.Active;
+        if (dto.IsActive.HasValue)
+        {
+            status = dto.IsActive.Value ? TechnicianStatus.Active : TechnicianStatus.Inactive;
+        }
+
+        var rating = dto.AverageRating.HasValue ? (decimal)dto.AverageRating.Value : 0m;
+        
         return new Technician
         {
             Id = dto.TechnicianId,
             Name = dto.Name,
             Specialty = dto.Specialty,
             YearsOfExperience = dto.YearsOfExperience,
-            Status = TechnicianStatus.Active,
+            Status = status,
+            Rating = rating,
             HireDate = DateTime.Now.AddYears(-dto.YearsOfExperience),
         };
     }

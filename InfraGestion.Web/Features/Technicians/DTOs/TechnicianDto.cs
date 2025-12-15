@@ -18,4 +18,10 @@ public class TechnicianDto
 
     [JsonPropertyName("specialty")]
     public string Specialty { get; set; } = string.Empty;
+
+    [JsonPropertyName("averageRating")]
+    public double? AverageRating { get; set; }
+
+    [JsonPropertyName("isActive")]
+    public bool? IsActive { get; set; }
 }
