@@ -1,7 +1,6 @@
 /* Director Dashboard Styles */
 .director-dashboard {
-    max-width: 1400px;
-    margin: 0 auto;
+    display: block;
 }
 
 /* Header */

@@ -1,6 +1,7 @@
 @page "/director/transfers"
 @using InfraGestion.Web.Features.Transfers.Models
 @using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Shared.Components
 @inject TransferService TransferService
 @inject NavigationManager Navigation
 
@@ -16,21 +17,18 @@
             <SearchBox @bind-Value="searchTerm" Placeholder="Buscar por nombre ..." OnSearch="HandleSearch" />
         </SearchBox>
         <Filters>
-            <FilterSelect @bind-Value="selectedDateFilter" OnChange="HandleFilterChange">
-                <option value="">Fecha: Todos</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="2022">2022</option>
-                <option value="2021">2021</option>
-            </FilterSelect>
+            <FilterSelect @bind-Value="selectedDateFilter" 
+                          DefaultOptionText="Fecha: Todos"
+                          Options="@dateFilterOptions"
+                          OnChange="HandleFilterChange" />
 
             <ExportButton Text="Exportar" />
         </Filters>
     </FilterBar>
 
     <!-- Table -->
-    <DataTable TItem="Transfer" Items="filteredTransfers ?? new List<Transfer>()" IsLoading="isLoading" ColSpan="5"
-               EmptyMessage="No se encontraron registros que coincidan con los filtros aplicados">
+    <DataTable TItem="Transfer" Items="filteredTransfers ?? new List<Transfer>()" IsLoading="isLoading" ColumnCount="5"
+               EmptyText="No se encontraron registros que coincidan con los filtros aplicados">
         <HeaderTemplate>
             <th>ID de equipo</th>
             <th>Nombre del equipo</th>
@@ -57,6 +55,14 @@
     // Filters
     private string searchTerm = string.Empty;
     private string selectedDateFilter = string.Empty;
+    
+    private List<FilterSelect.SelectOption> dateFilterOptions = new()
+    {
+        new("2024", "2024"),
+        new("2023", "2023"),
+        new("2022", "2022"),
+        new("2021", "2021")
+    };
 
     protected override async Task OnInitializedAsync()
     {

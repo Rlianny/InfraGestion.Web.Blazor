@@ -1,0 +1,96 @@
+/* Decommissioning Report Styles */
+.report-page {
+    padding: 0;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.id-cell {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.name-cell {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.date-cell {
+    font-family: 'Roboto Mono', monospace;
+    color: var(--color-text-secondary);
+}
+
+/* Cause Badge */
+.cause-badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cause-badge.cause-failure {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.cause-badge.cause-obsolete {
+    background: rgba(249, 115, 22, 0.1);
+    color: rgb(249, 115, 22);
+}
+
+.cause-badge.cause-maintenance {
+    background: rgba(234, 179, 8, 0.1);
+    color: rgb(202, 138, 4);
+}
+
+.cause-badge.cause-other {
+    background: rgba(100, 116, 139, 0.1);
+    color: rgb(100, 116, 139);
+}
+
+/* Back Button */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-border);
+    background: white;
+    color: var(--color-text-primary);
+}
+
+.btn-back:hover {
+    background: var(--color-bg-main);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+/* Error Message */
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: rgb(239, 68, 68);
+    margin-top: 1rem;
+}
+
+.error-message svg {
+    flex-shrink: 0;
+}

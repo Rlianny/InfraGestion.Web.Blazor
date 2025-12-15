@@ -193,8 +193,8 @@ public static class ApiRoutes
         /// <summary>POST /decommissioning/requests</summary>
         public const string CreateRequest = $"{Base}/requests";
 
-        /// <summary>PUT /decommissioning/requests/{id}</summary>
-        public static string UpdateRequest(int id) => $"{Base}/requests/{id}";
+        /// <summary>PUT /decommissioning/requests</summary>
+        public const string UpdateRequest = $"{Base}/requests";
 
         /// <summary>DELETE /decommissioning/requests/{id}</summary>
         public static string DeleteRequest(int id) => $"{Base}/requests/{id}";

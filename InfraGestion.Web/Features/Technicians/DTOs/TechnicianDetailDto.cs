@@ -22,6 +22,9 @@ public class TechnicianDetailDto
     [JsonPropertyName("averageRating")]
     public double AverageRating { get; set; }
 
+    [JsonPropertyName("isActive")]
+    public bool? IsActive { get; set; }
+
     [JsonPropertyName("lastInterventionDate")]
     public DateTime? LastInterventionDate { get; set; }
 

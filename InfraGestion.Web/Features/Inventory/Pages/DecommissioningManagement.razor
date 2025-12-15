@@ -131,8 +131,8 @@
                                         @DecommissioningReasonHelper.GetReasonDisplayName(request.Reason)
                                     </span>
                                 </td>
-                                <td class="justification-cell" title="@request.Justification">
-                                    @TruncateText(request.Justification, 50)
+                                <td class="justification-cell">
+                                    @request.Justification
                                 </td>
                                 <td class="date-cell">
                                     @(request.DecommissioningDate?.ToString("dd/MM/yyyy") ?? "-")
@@ -325,17 +325,18 @@
 
     private async Task HandleEdit(DecommissioningRequest updatedRequest)
     {
-        // TODO: Call service to update decommissioning request
-        // var success = await DecommissioningService.UpdateDecommissioningRequestAsync(updatedRequest);
-        // if (success)
-        // {
-        //     await LoadData();
-        //     CloseEditModal();
-        // }
-        
-        // For now, just close the modal
-        Console.WriteLine($"Update decommissioning request #{updatedRequest.Id}");
-        CloseEditModal();
+        var success = await DecommissioningService.UpdateDecommissioningRequestAsync(updatedRequest);
+        if (success)
+        {
+            await LoadData();
+            CloseEditModal();
+        }
+        else
+        {
+            // TODO: Show error message to user
+            Console.WriteLine($"[ERROR] Failed to update decommissioning request #{updatedRequest.Id}");
+            CloseEditModal();
+        }
     }
 
     private async Task HandleDelete()

@@ -1,0 +1,208 @@
+@page "/reports/equipment-replacement"
+@page "/reports/critical-equipment"
+@page "/reportes/equipos-criticos"
+@using InfraGestion.Web.Features.Reports.DTOs
+@using InfraGestion.Web.Features.Reports.Services
+@inject FrontendReport ReportService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Equipos Críticos para Reemplazo - InfraCom</PageTitle>
+
+<div class="report-page">
+    <!-- Header -->
+    <PageHeader Title="Equipos Críticos para Reemplazo" 
+                Description="Equipos con alto costo de mantenimiento que requieren evaluación de reemplazo">
+        <Actions>
+            <button class="btn-back" @onclick="GoBack">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Volver
+            </button>
+            <ExportButton OnClick="ExportToPdf" IsLoading="isExporting" />
+        </Actions>
+    </PageHeader>
+
+    <!-- Stats Summary -->
+    @if (!isLoading && reportData.Any())
+    {
+        <div class="stats-container">
+            <StatCard Label="Equipos Críticos" 
+                      Value="@reportData.Count.ToString()" 
+                      Color="#F44336">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Costo Total Mantenimiento" 
+                      Value="@($"${reportData.Sum(r => r.TotalMaintenanceCost):N0}")" 
+                      Color="#FF9800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Mantenimientos Promedio" 
+                      Value="@($"{reportData.Average(r => r.MaintenanceCountLastYear):N1}")" 
+                      Color="#9C27B0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h13zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13z"/>
+                    <path d="M5 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 5 8zm0-2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm-1-5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zM4 8a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0zm0 2.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+                </svg>
+            </StatCard>
+            <StatCard Label="Costo Promedio" 
+                      Value="@($"${reportData.Average(r => r.TotalMaintenanceCost):N0}")" 
+                      Color="#2196F3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
+                </svg>
+            </StatCard>
+        </div>
+    }
+
+    <!-- Priority Alert -->
+    @if (!isLoading && reportData.Any(r => r.MaintenanceCountLastYear >= 10))
+    {
+        <div class="priority-alert">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+            </svg>
+            <span><strong>@reportData.Count(r => r.MaintenanceCountLastYear >= 10)</strong> equipos tienen 10+ mantenimientos en el último año y requieren atención inmediata.</span>
+        </div>
+    }
+
+    <!-- Data Table -->
+    <DataTable TItem="DeviceReplacementReportItemDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay equipos críticos para reemplazo">
+        <HeaderTemplate>
+            <th>ID</th>
+            <th>Equipo</th>
+            <th>Mantenimientos (Último Año)</th>
+            <th>Costo Total</th>
+            <th>Razón de Reemplazo</th>
+            <th>Prioridad</th>
+        </HeaderTemplate>
+        <RowTemplate Context="device">
+            <td>
+                <span class="device-id">#@device.DeviceId</span>
+            </td>
+            <td>
+                <span class="device-name">@device.DeviceName</span>
+            </td>
+            <td>
+                <div class="maintenance-count">
+                    <span class="count-value @GetMaintenanceCountClass(device.MaintenanceCountLastYear)">
+                        @device.MaintenanceCountLastYear
+                    </span>
+                    <div class="count-bar">
+                        <div class="bar-fill" style="width: @(Math.Min(device.MaintenanceCountLastYear * 10, 100))%"></div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="cost-value">$@device.TotalMaintenanceCost.ToString("N0")</span>
+            </td>
+            <td>
+                <span class="reason-badge">@device.ReplacementReason</span>
+            </td>
+            <td>
+                <span class="priority-badge @GetPriorityClass(device.MaintenanceCountLastYear, device.TotalMaintenanceCost)">
+                    @GetPriorityLabel(device.MaintenanceCountLastYear, device.TotalMaintenanceCost)
+                </span>
+            </td>
+        </RowTemplate>
+    </DataTable>
+</div>
+
+@code {
+    private List<DeviceReplacementReportItemDto> reportData = new();
+    private bool isLoading = true;
+    private bool isExporting = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
+    }
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            reportData = await ReportService.GetDeviceReplacementAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar el reporte: {ex.Message}";
+            Console.WriteLine($"Error loading device replacement report: {ex}");
+            LoadMockData();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void LoadMockData()
+    {
+        reportData = new List<DeviceReplacementReportItemDto>
+        {
+            new() { DeviceId = 101, DeviceName = "Servidor Dell PowerEdge R720", MaintenanceCountLastYear = 15, TotalMaintenanceCost = 125000, ReplacementReason = "Obsolescencia técnica" },
+            new() { DeviceId = 102, DeviceName = "Impresora HP LaserJet Enterprise", MaintenanceCountLastYear = 12, TotalMaintenanceCost = 45000, ReplacementReason = "Alto costo de mantenimiento" },
+            new() { DeviceId = 103, DeviceName = "Switch Cisco Catalyst 2960", MaintenanceCountLastYear = 10, TotalMaintenanceCost = 38000, ReplacementReason = "Fin de vida útil" },
+            new() { DeviceId = 104, DeviceName = "UPS APC Smart-UPS 3000", MaintenanceCountLastYear = 8, TotalMaintenanceCost = 52000, ReplacementReason = "Baterías degradadas" },
+            new() { DeviceId = 105, DeviceName = "Aire Acondicionado Data Center", MaintenanceCountLastYear = 7, TotalMaintenanceCost = 89000, ReplacementReason = "Eficiencia reducida" },
+            new() { DeviceId = 106, DeviceName = "Router Juniper MX80", MaintenanceCountLastYear = 6, TotalMaintenanceCost = 67000, ReplacementReason = "Capacidad insuficiente" }
+        };
+    }
+
+    private string GetMaintenanceCountClass(int count) => count switch
+    {
+        >= 10 => "critical",
+        >= 5 => "warning",
+        _ => "normal"
+    };
+
+    private string GetPriorityClass(int maintenanceCount, decimal cost) => 
+        maintenanceCount >= 10 || cost >= 100000 ? "critical" :
+        maintenanceCount >= 5 || cost >= 50000 ? "high" :
+        "medium";
+
+    private string GetPriorityLabel(int maintenanceCount, decimal cost) =>
+        maintenanceCount >= 10 || cost >= 100000 ? "Crítica" :
+        maintenanceCount >= 5 || cost >= 50000 ? "Alta" :
+        "Media";
+
+    private async Task ExportToPdf()
+    {
+        try
+        {
+            isExporting = true;
+            StateHasChanged();
+
+            var pdfBytes = await ReportService.ExportToPdfAsync("equipment-replacement");
+            if (pdfBytes != null && pdfBytes.Length > 0)
+            {
+                await JS.InvokeVoidAsync("downloadFile", pdfBytes, "reporte-equipos-criticos.pdf", "application/pdf");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting PDF: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/reportes");
+    }
+}
