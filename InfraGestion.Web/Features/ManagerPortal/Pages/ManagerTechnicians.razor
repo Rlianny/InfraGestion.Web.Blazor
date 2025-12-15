@@ -2,7 +2,11 @@
 @using InfraGestion.Web.Features.Technicians.Models
 @using InfraGestion.Web.Features.Technicians.Services
 @using InfraGestion.Web.Features.Technicians.Helpers
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Auth.Services
 @inject TechnicianService TechnicianService
+@inject OrganizationService OrganizationService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Equipo Técnico - InfraCom</PageTitle>
@@ -115,6 +119,8 @@
     private List<Technician> filteredTechnicians = new();
     private List<string> specialties = new();
     private bool isLoading = true;
+    private int currentSectionId = 0;
+    private string currentSectionName = string.Empty;
 
     // Filters
     private string searchTerm = string.Empty;
@@ -123,7 +129,29 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSectionInfo();
         await LoadData();
+    }
+
+    private async Task LoadSectionInfo()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                currentSectionId = await OrganizationService.GetSectionIdByDepartmentAsync(currentUser.DepartmentId);
+                if (currentSectionId != 0)
+                {
+                    var section = await OrganizationService.GetSectionByIdAsync(currentSectionId);
+                    currentSectionName = section?.Name ?? string.Empty;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading section info: {ex.Message}");
+        }
     }
 
     private async Task LoadData()
@@ -131,9 +159,37 @@
         isLoading = true;
         try
         {
-            allTechnicians = await TechnicianService.GetAllTechniciansAsync();
-            specialties = await TechnicianService.GetSpecialtiesAsync();
+            var allTechs = await TechnicianService.GetAllTechniciansAsync();
+            
+            // Filter technicians by current section
+            if (!string.IsNullOrEmpty(currentSectionName))
+            {
+                allTechnicians = allTechs
+                    .Where(t => t.Section.Equals(currentSectionName, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                Console.WriteLine($"[DEBUG] ManagerTechnicians - filtered {allTechnicians.Count} technicians for section '{currentSectionName}'");
+            }
+            else
+            {
+                // Fallback: show all technicians if section not determined
+                allTechnicians = allTechs;
+                Console.WriteLine($"[DEBUG] ManagerTechnicians - section unknown, showing all {allTechnicians.Count} technicians");
+            }
+            
+            specialties = allTechnicians
+                .Select(t => t.Specialty)
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+                
             ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading technicians: {ex.Message}");
+            allTechnicians = new List<Technician>();
+            filteredTechnicians = new List<Technician>();
         }
         finally
         {

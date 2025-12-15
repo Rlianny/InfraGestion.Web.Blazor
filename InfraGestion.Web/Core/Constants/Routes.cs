@@ -172,7 +172,15 @@ public static class ApiRoutes
 
         public const string GetAll = Base;
 
+        public const string GetPending = $"{Base}/pending";
+
         public static string GetById(int id) => $"{Base}/{id}";
+
+        public static string GetPendingByLogistician(int logisticId) => 
+            $"{Base}/pending/logistician/{logisticId}";
+
+        public static string ConfirmReception(int transferId) => 
+            $"{Base}/confirmations/{transferId}";
 
         public const string Create = Base;
     }

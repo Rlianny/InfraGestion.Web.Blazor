@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Organization.DTOs;
@@ -216,6 +217,51 @@ public class OrganizationService
     {
         var departments = await GetAllDepartmentsAsync();
         return departments.FirstOrDefault(d => d.Id == id);
+    }
+
+    /// <summary>
+    /// Get departments by section ID
+    /// Filters client-side from all departments since the specific endpoint may not be available
+    /// </summary>
+    public async Task<List<Department>> GetDepartmentsBySectionAsync(int sectionId)
+    {
+        try
+        {
+            // Try the specific endpoint first
+            await EnsureAuthenticatedAsync();
+            var response = await _httpClient.GetAsync(ApiRoutes.Organization.GetDepartmentsBySection(sectionId));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<
+                    ApiResponse<List<DepartmentDto>>
+                >(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (apiResponse?.Success == true && apiResponse.Data != null && apiResponse.Data.Count > 0)
+                {
+                    return apiResponse.Data.Select(MapToDepartment).ToList();
+                }
+            }
+
+            // Fallback: get all departments and filter client-side
+            Console.WriteLine($"[INFO] Fallback: filtering departments client-side for sectionId={sectionId}");
+            var allDepartments = await GetAllDepartmentsAsync();
+            return allDepartments.Where(d => d.SectionId == sectionId).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[ERROR] GetDepartmentsBySectionAsync: " + ex.Message);
+            return new List<Department>();
+        }
+    }
+
+    /// <summary>
+    /// Get the section ID for a department
+    /// </summary>
+    public async Task<int> GetSectionIdByDepartmentAsync(int departmentId)
+    {
+        var department = await GetDepartmentByIdAsync(departmentId);
+        return department?.SectionId ?? 0;
     }
 
     public async Task<bool> CreateDepartmentAsync(CreateDepartmentRequest request)

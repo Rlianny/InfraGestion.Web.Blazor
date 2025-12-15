@@ -8,11 +8,14 @@
 @using InfraGestion.Web.Features.Organization.Models
 @using InfraGestion.Web.Features.Users.Services
 @using InfraGestion.Web.Features.Users.Models
+@using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Features.Transfers.Models
 @using InfraGestion.Web.Shared.Components
 @inject AuthService AuthService
 @inject DecommissioningService DecommissioningService
 @inject OrganizationService OrganizationService
 @inject UserService UserService
+@inject TransferService TransferService
 @inject NavigationManager Navigation
 
 <div class="logistician-dashboard">
@@ -83,14 +86,14 @@
                         <tr>
                             <th>ID</th>
                             <th>NOMBRE</th>
-                            <th>Solicitante</th>
+                            <th>Receptor</th>
                             <th>Origen</th>
                             <th>Fecha Solicitud</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if (pendingEquipment == null || !pendingEquipment.Any())
+                        @if (pendingTransfers == null || !pendingTransfers.Any())
                         {
                             <tr>
                                 <td colspan="6" class="empty-cell">
@@ -100,18 +103,18 @@
                         }
                         else
                         {
-                            @foreach (var item in pendingEquipment)
+                            @foreach (var transfer in pendingTransfers)
                             {
                                 <tr>
-                                    <td class="id-cell">@item.DeviceId</td>
-                                    <td>@item.DeviceName</td>
-                                    <td>@item.RequestedBy</td>
-                                    <td>@item.OriginDepartment</td>
-                                    <td>@item.RequestDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="id-cell">DEV@(transfer.DeviceId.ToString("D3"))</td>
+                                    <td>@transfer.DeviceName</td>
+                                    <td>@transfer.DeviceReceiverName</td>
+                                    <td>@transfer.SourceSectionName</td>
+                                    <td>@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
                                     <td class="action-cell">
-                                        <button class="btn-view" @onclick="() => ViewTransferDetails(item.Id)">
+                                        <button class="btn-confirm" @onclick="() => OpenConfirmReceptionModal(transfer)" title="Confirmar recepción">
                                             <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/>
+                                                <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
                                             </svg>
                                         </button>
                                     </td>
@@ -246,15 +249,78 @@
     </div>
 </Modal>
 
+<!-- Modal de Confirmación de Recepción -->
+<Modal IsOpen="@showConfirmReceptionModal" Title="Confirmar Recepción de Equipo" OnClose="@CloseConfirmReceptionModal">
+    <div class="confirm-reception-modal-content">
+        @if (selectedTransfer != null)
+        {
+            <div class="confirmation-icon">
+                <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                </svg>
+            </div>
+            
+            <div class="transfer-details">
+                <div class="detail-row">
+                    <span class="detail-label">Equipo:</span>
+                    <span class="detail-value">DEV@(selectedTransfer.DeviceId.ToString("D3")) - @selectedTransfer.DeviceName</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Origen:</span>
+                    <span class="detail-value">@selectedTransfer.SourceSectionName</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Destino:</span>
+                    <span class="detail-value">@selectedTransfer.DestinationSectionName</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fecha de traslado:</span>
+                    <span class="detail-value">@selectedTransfer.TransferDate.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+
+            <p class="confirmation-message">
+                <strong>Al aceptar usted confirma el recibimiento del equipo.</strong>
+            </p>
+            <p class="confirmation-warning">
+                Esta acción no se puede deshacer.
+            </p>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" @onclick="CloseConfirmReceptionModal" disabled="@isConfirmingReception">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-save btn-confirm-reception" 
+                        @onclick="HandleConfirmReception" 
+                        disabled="@isConfirmingReception">
+                    @if (isConfirmingReception)
+                    {
+                        <span class="btn-spinner"></span>
+                        <span>Confirmando...</span>
+                    }
+                    else
+                    {
+                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                        </svg>
+                        <span>Confirmar Recepción</span>
+                    }
+                </button>
+            </div>
+        }
+    </div>
+</Modal>
+
 @code {
     // Loading state
     private bool isLoading = true;
     private bool isSubmitting = false;
     private bool isApproving = false;
+    private bool isConfirmingReception = false;
 
     // Data
     private List<DecommissioningRequest>? pendingDecommissions;
-    private List<PendingEquipmentItem>? pendingEquipment;
+    private List<Transfer>? pendingTransfers;
     private List<Department> departments = new();
     private List<User> logisticUsers = new();
     private int currentUserId = 0;
@@ -268,6 +334,10 @@
     private bool showApprovalModal = false;
     private int selectedDepartmentId = 0;
     private int selectedReceiverId = 0;
+
+    // Confirm Reception Modal State
+    private bool showConfirmReceptionModal = false;
+    private Transfer? selectedTransfer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -293,8 +363,20 @@
                 .Take(10)
                 .ToList();
 
-            // Load pending equipment to receive
-            pendingEquipment = await GetPendingEquipmentAsync();
+            // Load pending transfers for this logistician from API
+            if (currentUserId > 0)
+            {
+                pendingTransfers = await TransferService.GetPendingTransfersByLogisticianAsync(currentUserId);
+                pendingTransfers = pendingTransfers
+                    .OrderByDescending(t => t.TransferDate)
+                    .Take(10)
+                    .ToList();
+                Console.WriteLine($"[DEBUG] Loaded {pendingTransfers.Count} pending transfers for logistician {currentUserId}");
+            }
+            else
+            {
+                pendingTransfers = new List<Transfer>();
+            }
 
             // Load departments and logistic users for approval modal
             await LoadDepartmentsAndUsers();
@@ -333,24 +415,6 @@
         }
     }
 
-    private async Task<List<PendingEquipmentItem>> GetPendingEquipmentAsync()
-    {
-        // Mock data for pending equipment - in real implementation this would come from TransferService
-        await Task.Delay(100);
-        return new List<PendingEquipmentItem>
-        {
-            new PendingEquipmentItem
-            {
-                Id = 1,
-                DeviceId = "DEV004",
-                DeviceName = "Router de Agregación",
-                RequestedBy = "Claudia Álavrez",
-                OriginDepartment = "Redes y Servidores",
-                RequestDate = new DateTime(2022, 5, 23)
-            }
-        };
-    }
-
     // Review Modal Methods
     private void OpenReviewModal(DecommissioningRequest request)
     {
@@ -379,6 +443,52 @@
         showApprovalModal = false;
         selectedDepartmentId = 0;
         selectedReceiverId = 0;
+    }
+
+    // Confirm Reception Modal Methods
+    private void OpenConfirmReceptionModal(Transfer transfer)
+    {
+        selectedTransfer = transfer;
+        showConfirmReceptionModal = true;
+    }
+
+    private void CloseConfirmReceptionModal()
+    {
+        showConfirmReceptionModal = false;
+        selectedTransfer = null;
+    }
+
+    // Handle Confirm Reception
+    private async Task HandleConfirmReception()
+    {
+        if (selectedTransfer == null)
+            return;
+
+        try
+        {
+            isConfirmingReception = true;
+
+            var success = await TransferService.ConfirmReceptionAsync(selectedTransfer.TransferId);
+
+            if (success)
+            {
+                Console.WriteLine($"[DEBUG] Reception confirmed for transfer {selectedTransfer.TransferId}");
+                CloseConfirmReceptionModal();
+                await LoadData();
+            }
+            else
+            {
+                Console.WriteLine($"[ERROR] Failed to confirm reception for transfer {selectedTransfer.TransferId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error confirming reception: {ex.Message}");
+        }
+        finally
+        {
+            isConfirmingReception = false;
+        }
     }
 
     // Handle Reject
@@ -462,26 +572,10 @@
         }
     }
 
-    private void ViewTransferDetails(int id)
-    {
-        Navigation.NavigateTo($"/logistician/equipment/{id}");
-    }
-
     private string TruncateText(string? text, int maxLength)
     {
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text ?? string.Empty;
         return text.Substring(0, maxLength) + "...";
-    }
-
-    // Helper class for pending equipment
-    private class PendingEquipmentItem
-    {
-        public int Id { get; set; }
-        public string DeviceId { get; set; } = string.Empty;
-        public string DeviceName { get; set; } = string.Empty;
-        public string RequestedBy { get; set; } = string.Empty;
-        public string OriginDepartment { get; set; } = string.Empty;
-        public DateTime RequestDate { get; set; }
     }
 }

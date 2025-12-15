@@ -1,29 +1,92 @@
+using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Transfers.Models;
-using Microsoft.VisualBasic;
-using System.Net;
 using System.Net.Http.Json;
 
 namespace InfraGestion.Web.Features.Transfers.Services;
 
-public class TransferService // TODO: Replace with real implementation
+public class TransferService
 {
     private readonly HttpClient _httpClient;
-    public TransferService(HttpClient httpClient)
+    private readonly AuthService _authService;
+
+    public TransferService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
     }
 
     public async Task<List<Transfer>> GetAllTransfersAsync()
     {       
-        string endPoint = "transfers/pending";
-        var response =  await _httpClient.GetFromJsonAsync<ApiResponse<List<Transfer>>>(endPoint)??throw new Exception($"Error while trying to make a GET {endPoint}"); ;
+        string endPoint = ApiRoutes.Transfers.GetPending;
+        var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<Transfer>>>(endPoint) 
+            ?? throw new Exception($"Error while trying to make a GET {endPoint}");
+        
         if (response.Success)
         {
-            return response.Data!;
+            return response.Data ?? new List<Transfer>();
         }
         throw new Exception(string.Join("\n", response.Errors));
+    }
 
+    /// <summary>
+    /// Get pending transfers for a specific logistician
+    /// GET /transfers/pending/logistician/{logisticId}
+    /// </summary>
+    public async Task<List<Transfer>> GetPendingTransfersByLogisticianAsync(int logisticId)
+    {
+        try
+        {
+            string endPoint = ApiRoutes.Transfers.GetPendingByLogistician(logisticId);
+            Console.WriteLine($"[DEBUG] TransferService - Calling endpoint: {endPoint}");
+            
+            var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<Transfer>>>(endPoint);
+            
+            if (response?.Success == true && response.Data != null)
+            {
+                Console.WriteLine($"[DEBUG] TransferService - Got {response.Data.Count} pending transfers");
+                return response.Data;
+            }
+            
+            Console.WriteLine($"[DEBUG] TransferService - No pending transfers or error");
+            return new List<Transfer>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] TransferService.GetPendingTransfersByLogisticianAsync: {ex.Message}");
+            return new List<Transfer>();
+        }
+    }
+
+    /// <summary>
+    /// Confirm reception of a transfer
+    /// POST /transfers/confirmations/{transferId}
+    /// </summary>
+    public async Task<bool> ConfirmReceptionAsync(int transferId)
+    {
+        try
+        {
+            string endPoint = ApiRoutes.Transfers.ConfirmReception(transferId);
+            Console.WriteLine($"[DEBUG] TransferService - Confirming reception at: {endPoint}");
+            
+            var response = await _httpClient.PostAsync(endPoint, null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[DEBUG] TransferService - Reception confirmed successfully");
+                return true;
+            }
+            
+            var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[ERROR] TransferService - ConfirmReception failed: {response.StatusCode} - {content}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] TransferService.ConfirmReceptionAsync: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task<Transfer?> GetTransferByIdAsync(int id)

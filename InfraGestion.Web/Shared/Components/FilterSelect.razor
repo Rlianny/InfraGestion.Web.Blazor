@@ -4,13 +4,20 @@
 *@
 
 <select class="filter-select" value="@Value" @onchange="HandleChange">
-    @if (!string.IsNullOrEmpty(DefaultOptionText))
+    @if (ChildContent != null)
     {
-        <option value="">@DefaultOptionText</option>
+        @ChildContent
     }
-    @foreach (var option in Options)
+    else
     {
-        <option value="@option.Value">@option.Text</option>
+        @if (!string.IsNullOrEmpty(DefaultOptionText))
+        {
+            <option value="">@DefaultOptionText</option>
+        }
+        @foreach (var option in Options)
+        {
+            <option value="@option.Value">@option.Text</option>
+        }
     }
 </select>
 
@@ -26,6 +33,12 @@
     /// </summary>
     [Parameter]
     public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Contenido hijo (opciones HTML directas)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     /// <summary>
     /// Texto de la opción por defecto (ej: "Estado: Todos")

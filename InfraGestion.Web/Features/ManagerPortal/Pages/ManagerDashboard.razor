@@ -4,9 +4,12 @@
 @using InfraGestion.Web.Features.Transfers.Services
 @using InfraGestion.Web.Features.Transfers.Models
 @using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Auth.Services
 @inject DeviceService DeviceService
 @inject TransferService TransferService
 @inject OrganizationService OrganizationService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Dashboard - Responsable de Sección</PageTitle>
@@ -137,12 +140,14 @@
 
 @code {
     private bool isLoading = true;
+    private int currentSectionId = 0;
+    private string sectionName = string.Empty;
     private int totalDevices = 0;
     private int totalDepartments = 0;
     private int operationalCount = 0;
     private int maintenanceCount = 0;
     private int decommissionedCount = 0;
-    private int maintenanceCost = 800;
+    private int maintenanceCost = 0;
     private int operationalPercentage = 0;
     private List<Transfer>? recentTransfers;
 
@@ -157,14 +162,32 @@
         {
             isLoading = true;
 
-            // Load devices
-            var allDevices = await DeviceService.GetAllDevicesAsync();
-            totalDevices = allDevices.Count;
+            // Get current user's section
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                Console.WriteLine("[ERROR] No se pudo obtener el usuario actual");
+                return;
+            }
+
+            // Get section ID from user's department
+            currentSectionId = await OrganizationService.GetSectionIdByDepartmentAsync(currentUser.DepartmentId);
+            
+            Console.WriteLine($"[DEBUG] ManagerDashboard - currentSectionId: {currentSectionId}, departmentId: {currentUser.DepartmentId}");
+
+            // Get section name
+            var section = await OrganizationService.GetSectionByIdAsync(currentSectionId);
+            sectionName = section?.Name ?? "Mi Sección";
+
+            // Load devices for this section
+            var sectionDevices = await DeviceService.GetSectionDevicesAsync(currentSectionId);
+            Console.WriteLine($"[DEBUG] ManagerDashboard - sectionDevices count: {sectionDevices.Count}");
+            totalDevices = sectionDevices.Count;
             
             // Count by state
-            operationalCount = allDevices.Count(d => d.State == OperationalState.Operational);
-            maintenanceCount = allDevices.Count(d => d.State == OperationalState.UnderMaintenance);
-            decommissionedCount = allDevices.Count(d => d.State == OperationalState.Decommissioned);
+            operationalCount = sectionDevices.Count(d => d.State == OperationalState.Operational);
+            maintenanceCount = sectionDevices.Count(d => d.State == OperationalState.UnderMaintenance);
+            decommissionedCount = sectionDevices.Count(d => d.State == OperationalState.Decommissioned);
             
             // Calculate percentage
             if (totalDevices > 0)
@@ -172,13 +195,24 @@
                 operationalPercentage = (int)Math.Round((double)operationalCount / totalDevices * 100);
             }
 
-            // Load departments
-            var allDepartments = await OrganizationService.GetAllDepartmentsAsync();
-            totalDepartments = allDepartments.Count;
+            // Calculate approximate maintenance cost (based on devices under maintenance)
+            maintenanceCost = maintenanceCount * 150; // Estimated cost per device
 
-            // Load transfers
+            // Load departments for this section
+            var sectionDepartments = await OrganizationService.GetDepartmentsBySectionAsync(currentSectionId);
+            totalDepartments = sectionDepartments.Count;
+
+            // Load transfers related to this section (by ID or by name)
             var allTransfers = await TransferService.GetAllTransfersAsync();
-            recentTransfers = allTransfers.Take(3).ToList();
+            recentTransfers = allTransfers
+                .Where(t => 
+                    t.SourceSectionId == currentSectionId || 
+                    t.DestinationSectionId == currentSectionId ||
+                    t.SourceSectionName.Equals(sectionName, StringComparison.OrdinalIgnoreCase) ||
+                    t.DestinationSectionName.Equals(sectionName, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(t => t.TransferDate)
+                .Take(5)
+                .ToList();
         }
         catch (Exception ex)
         {

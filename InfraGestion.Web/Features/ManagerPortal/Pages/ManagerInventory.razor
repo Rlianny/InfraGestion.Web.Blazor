@@ -3,8 +3,12 @@
 @using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Features.Inventory.Helpers
 @using InfraGestion.Web.Features.Departments.Services
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Auth.Services
 @inject DeviceService DeviceService
 @inject DepartmentService DepartmentService
+@inject OrganizationService OrganizationService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <div class="device-list-page">
@@ -132,6 +136,7 @@
 @code {
     private List<Device> allDevices = new();
     private List<Device> filteredDevices = new();
+    private int currentSectionId = 0;
     private Dictionary<string, int> statistics = new()
     {
         { "Total", 0 },
@@ -179,21 +184,67 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSectionId();
         await LoadDevices();
-        await LoadStatistics();
+        CalculateStatistics();
+    }
+
+    private async Task LoadSectionId()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                currentSectionId = await OrganizationService.GetSectionIdByDepartmentAsync(currentUser.DepartmentId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading section ID: {ex.Message}");
+        }
     }
 
     private async Task LoadDevices()
     {
         isLoading = true;
-        allDevices = await DeviceService.GetAllDevicesAsync();
-        filteredDevices = allDevices;
-        isLoading = false;
+        try
+        {
+            if (currentSectionId != 0)
+            {
+                // Load only devices from the manager's section
+                allDevices = await DeviceService.GetSectionDevicesAsync(currentSectionId);
+                Console.WriteLine($"[DEBUG] ManagerInventory - loaded {allDevices.Count} devices for section {currentSectionId}");
+            }
+            else
+            {
+                // Fallback: load all devices
+                allDevices = await DeviceService.GetAllDevicesAsync();
+                Console.WriteLine($"[DEBUG] ManagerInventory - sectionId=0, loaded {allDevices.Count} devices (all)");
+            }
+            filteredDevices = allDevices;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading devices: {ex.Message}");
+            allDevices = new List<Device>();
+            filteredDevices = new List<Device>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
-    private async Task LoadStatistics()
+    private void CalculateStatistics()
     {
-        statistics = await DeviceService.GetStatisticsAsync();
+        statistics["Total"] = allDevices.Count;
+        statistics["UnderRevision"] = allDevices.Count(d => d.State == OperationalState.UnderRevision);
+        statistics["Revised"] = allDevices.Count(d => d.State == OperationalState.Revised);
+        statistics["Operational"] = allDevices.Count(d => d.State == OperationalState.Operational);
+        statistics["UnderMaintenance"] = allDevices.Count(d => d.State == OperationalState.UnderMaintenance);
+        statistics["Decommissioned"] = allDevices.Count(d => d.State == OperationalState.Decommissioned);
+        statistics["BeingTransferred"] = allDevices.Count(d => d.State == OperationalState.BeingTransferred);
     }
 
     private void HandleSearch()

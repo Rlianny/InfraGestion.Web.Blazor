@@ -1,7 +1,11 @@
 @page "/manager/transfers"
 @using InfraGestion.Web.Features.Transfers.Models
 @using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Auth.Services
 @inject TransferService TransferService
+@inject OrganizationService OrganizationService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Traslados - InfraCom</PageTitle>
@@ -55,6 +59,8 @@
     private List<Transfer> allTransfers = new();
     private List<Transfer> filteredTransfers = new();
     private bool isLoading = true;
+    private int currentSectionId = 0;
+    private string currentSectionName = string.Empty;
 
     // Filters
     private string searchTerm = string.Empty;
@@ -62,15 +68,71 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadSectionInfo();
         await LoadTransfers();
+    }
+
+    private async Task LoadSectionInfo()
+    {
+        try
+        {
+            var currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser != null)
+            {
+                currentSectionId = await OrganizationService.GetSectionIdByDepartmentAsync(currentUser.DepartmentId);
+                if (currentSectionId != 0)
+                {
+                    var section = await OrganizationService.GetSectionByIdAsync(currentSectionId);
+                    currentSectionName = section?.Name ?? string.Empty;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading section info: {ex.Message}");
+        }
     }
 
     private async Task LoadTransfers()
     {
         isLoading = true;
-        allTransfers = await TransferService.GetAllTransfersAsync();
-        filteredTransfers = allTransfers;
-        isLoading = false;
+        try
+        {
+            var allData = await TransferService.GetAllTransfersAsync();
+            Console.WriteLine($"[DEBUG] ManagerTransfers - loaded {allData.Count} total transfers");
+            
+            // Filter transfers by current section (source or destination)
+            if (currentSectionId != 0 || !string.IsNullOrEmpty(currentSectionName))
+            {
+                allTransfers = allData
+                    .Where(t => 
+                        t.SourceSectionId == currentSectionId || 
+                        t.DestinationSectionId == currentSectionId ||
+                        (!string.IsNullOrEmpty(currentSectionName) && (
+                            t.SourceSectionName.Equals(currentSectionName, StringComparison.OrdinalIgnoreCase) ||
+                            t.DestinationSectionName.Equals(currentSectionName, StringComparison.OrdinalIgnoreCase))))
+                    .OrderByDescending(t => t.TransferDate)
+                    .ToList();
+            }
+            else
+            {
+                // Fallback: show all transfers
+                allTransfers = allData.OrderByDescending(t => t.TransferDate).ToList();
+            }
+            
+            Console.WriteLine($"[DEBUG] ManagerTransfers - filtered to {allTransfers.Count} transfers for section '{currentSectionName}' (id={currentSectionId})");
+            filteredTransfers = allTransfers;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading transfers: {ex.Message}");
+            allTransfers = new List<Transfer>();
+            filteredTransfers = new List<Transfer>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void HandleSearch()
