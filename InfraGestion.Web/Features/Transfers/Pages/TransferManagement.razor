@@ -98,7 +98,7 @@
                     @foreach (var transfer in filteredTransfers)
                     {
                         <tr>
-                            <td class="device-id-cell">@transfer.DeviceId</td>
+                            <td class="device-id-cell">>@($"DEV{transfer.DeviceId}")</td>
                             <td class="device-name-cell">@transfer.DeviceName</td>
                             <td class="origin-cell">@transfer.Origin</td>
                             <td class="destination-cell">@transfer.Destination</td>
@@ -203,10 +203,9 @@
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             query = query.Where(t =>
-            t.DeviceId.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            t.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            t.Origin.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-            t.Destination.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                t.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.Origin.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.Destination.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrEmpty(selectedDateFilter) && int.TryParse(selectedDateFilter, out int year))
