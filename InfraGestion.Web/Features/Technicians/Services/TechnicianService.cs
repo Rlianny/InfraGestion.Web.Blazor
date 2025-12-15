@@ -434,7 +434,7 @@ public class TechnicianService
             IdentificationNumber = $"TECH{dto.TechnicianId:D3}",
             Specialty = dto.Specialty,
             YearsOfExperience = dto.YearsOfExperience,
-            Status = TechnicianStatus.Active,
+            Status = dto.IsActive.HasValue ? (dto.IsActive.Value ? TechnicianStatus.Active : TechnicianStatus.Inactive) : TechnicianStatus.Active,
             Rating = (decimal)dto.AverageRating,
             HireDate = dto.CreatedAt,
             CreatedAt = dto.CreatedAt,
