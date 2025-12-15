@@ -1,0 +1,195 @@
+@page "/logistician/dashboard"
+@using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Helpers
+@inject AuthService AuthService
+@inject DecommissioningService DecommissioningService
+@inject NavigationManager Navigation
+
+<div class="logistician-dashboard">
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando información...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Decommissioning Proposals Section -->
+        <section class="dashboard-section">
+            <h2 class="section-title">Propuestas de baja, debe completar la revisión:</h2>
+            <div class="table-container">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>NOMBRE</th>
+                            <th>Fecha Solicitud</th>
+                            <th>Motivo</th>
+                            <th>Descripción</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pendingDecommissions == null || !pendingDecommissions.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="empty-cell">
+                                    No hay propuestas de baja pendientes de revisión
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in pendingDecommissions)
+                            {
+                                <tr>
+                                    <td class="id-cell">DEV@item.DeviceId.ToString("D3")</td>
+                                    <td>@item.DeviceName</td>
+                                    <td>@item.RequestDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@DecommissioningReasonHelper.GetReasonDisplayName(item.Reason)</td>
+                                    <td class="description-cell">@item.Justification</td>
+                                    <td class="action-cell">
+                                        <button class="btn-view" @onclick="() => ViewDecommissionDetails(item.Id)">
+                                            <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Pending Equipment Section -->
+        <section class="dashboard-section">
+            <h2 class="section-title">Equipos que debe recibir próximamente, confirme los que ya ha recepcionado:</h2>
+            <div class="table-container">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>NOMBRE</th>
+                            <th>Solicitante</th>
+                            <th>Origen</th>
+                            <th>Fecha Solicitud</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (pendingEquipment == null || !pendingEquipment.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="empty-cell">
+                                    No hay equipos pendientes de recepción
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in pendingEquipment)
+                            {
+                                <tr>
+                                    <td class="id-cell">@item.DeviceId</td>
+                                    <td>@item.DeviceName</td>
+                                    <td>@item.RequestedBy</td>
+                                    <td>@item.OriginDepartment</td>
+                                    <td>@item.RequestDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="action-cell">
+                                        <button class="btn-view" @onclick="() => ViewTransferDetails(item.Id)">
+                                            <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<DecommissioningRequest>? pendingDecommissions;
+    private List<PendingEquipmentItem>? pendingEquipment;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Load pending decommissioning requests (status = Pending)
+            var allDecommissions = await DecommissioningService.GetAllDecommissioningRequestsAsync();
+            pendingDecommissions = allDecommissions
+                .Where(d => d.Status == DecommissioningStatus.Pending)
+                .OrderByDescending(d => d.RequestDate)
+                .Take(10)
+                .ToList();
+
+            // Load pending equipment to receive
+            pendingEquipment = await GetPendingEquipmentAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task<List<PendingEquipmentItem>> GetPendingEquipmentAsync()
+    {
+        // Mock data for pending equipment - in real implementation this would come from TransferService
+        await Task.Delay(100);
+        return new List<PendingEquipmentItem>
+        {
+            new PendingEquipmentItem
+            {
+                Id = 1,
+                DeviceId = "DEV004",
+                DeviceName = "Router de Agregación",
+                RequestedBy = "Claudia Álavrez",
+                OriginDepartment = "Redes y Servidores",
+                RequestDate = new DateTime(2022, 5, 23)
+            }
+        };
+    }
+
+    private void ViewDecommissionDetails(int id)
+    {
+        Navigation.NavigateTo($"/logistician/decommissioning/{id}");
+    }
+
+    private void ViewTransferDetails(int id)
+    {
+        Navigation.NavigateTo($"/logistician/equipment/{id}");
+    }
+
+    // Helper class for pending equipment
+    private class PendingEquipmentItem
+    {
+        public int Id { get; set; }
+        public string DeviceId { get; set; } = string.Empty;
+        public string DeviceName { get; set; } = string.Empty;
+        public string RequestedBy { get; set; } = string.Empty;
+        public string OriginDepartment { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
+    }
+}

@@ -137,7 +137,12 @@ else
                             {
                                 <tr>
                                     <td>@maintenance.Date.ToString("dd/MM/yyyy")</td>
-                                    <td>@maintenance.Type</td>
+                                    <td>
+                                        <span class="maintenance-type-badge @GetMaintenanceTypeClass(maintenance.Type)">
+                                            <span class="type-dot"></span>
+                                            @maintenance.Type
+                                        </span>
+                                    </td>
                                     <td>@maintenance.DeviceName</td>
                                     <td>@maintenance.Notes</td>
                                     <td>@maintenance.Cost.ToString("F2")</td>
@@ -263,5 +268,16 @@ else
     private void NavigateToEdit()
     {
         Navigation.NavigateTo($"/technicians/edit/{TechnicianId}");
+    }
+
+    private string GetMaintenanceTypeClass(string type)
+    {
+        return type?.ToLower() switch
+        {
+            "preventivo" => "type-preventivo",
+            "correctivo" => "type-correctivo",
+            "predictivo" => "type-predictivo",
+            _ => "type-default"
+        };
     }
 }

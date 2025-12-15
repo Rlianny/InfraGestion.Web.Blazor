@@ -1,0 +1,192 @@
+@page "/manager/dashboard"
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Features.Transfers.Models
+@using InfraGestion.Web.Features.Organization.Services
+@inject DeviceService DeviceService
+@inject TransferService TransferService
+@inject OrganizationService OrganizationService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Responsable de Sección</PageTitle>
+
+<div class="manager-dashboard">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-description">Panel de supervisión</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-export">
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M74.34,85.66A8,8,0,0,1,85.66,74.34L120,108.69V24a8,8,0,0,1,16,0v84.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-48,48a8,8,0,0,1-11.32,0ZM240,136v64a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V136a16,16,0,0,1,16-16H84.4a4,4,0,0,1,2.83,1.17L111,145A24,24,0,0,0,145,145l23.8-23.8A4,4,0,0,1,171.6,120H224A16,16,0,0,1,240,136Zm-40,32a12,12,0,1,0-12,12A12,12,0,0,0,200,168Z" />
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando datos...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Stats Cards Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <span class="stat-value stat-blue">@totalDevices</span>
+                <span class="stat-label">Total de activos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value stat-blue">@totalDepartments</span>
+                <span class="stat-label">Departamentos</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value stat-blue">@decommissionedCount</span>
+                <span class="stat-label">Bajas (trimestre)</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value stat-blue">$ @maintenanceCost</span>
+                <span class="stat-label">Costo Mantenimiento</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Cards Row -->
+        <div class="dashboard-cards-row">
+            <!-- Estado de mi sección -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">Estado de mi sección</h2>
+                    <div class="card-icon card-icon-blue">
+                        <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M224,48H32A16,16,0,0,0,16,64V88a16,16,0,0,0,16,16v88a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V104a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm-72,96H104a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm72-56H32V64H224V88Z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="status-counters">
+                        <div class="status-counter">
+                            <span class="counter-value counter-green">@operationalCount</span>
+                            <span class="counter-label">Operativos</span>
+                        </div>
+                        <div class="status-counter">
+                            <span class="counter-value counter-orange">@maintenanceCount</span>
+                            <span class="counter-label">Mantenimiento</span>
+                        </div>
+                        <div class="status-counter">
+                            <span class="counter-value counter-red">@decommissionedCount</span>
+                            <span class="counter-label">Bajas</span>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span>Estado general: @operationalPercentage% operativo</span>
+                            <span class="progress-percentage">@operationalPercentage%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: @operationalPercentage%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solicitudes de traslado pendientes -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2 class="card-title">Solicitudes de traslado pendientes</h2>
+                    <div class="card-icon card-icon-orange">
+                        <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M213.66,181.66l-32,32a8,8,0,0,1-11.32-11.32L188.69,184H48a8,8,0,0,1,0-16H188.69l-18.35-18.34a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,213.66,181.66Zm-139.32-64a8,8,0,0,0,11.32-11.32L67.31,88H208a8,8,0,0,0,0-16H67.31L85.66,53.66A8,8,0,0,0,74.34,42.34l-32,32a8,8,0,0,0,0,11.32Z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-content transfers-content">
+                    @if (recentTransfers == null || !recentTransfers.Any())
+                    {
+                        <div class="empty-transfers">
+                            <p>No hay solicitudes de traslado pendientes</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var transfer in recentTransfers.Take(3))
+                        {
+                            <div class="transfer-item">
+                                <div class="transfer-info">
+                                    <div class="transfer-title">Traslado de Equipo</div>
+                                    <div class="transfer-device">DEV@(transfer.DeviceId.ToString("D3"))</div>
+                                    <div class="transfer-detail"><strong>Origen:</strong> @transfer.Origin</div>
+                                    <div class="transfer-detail"><strong>Destino:</strong> @transfer.Destination</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private int totalDevices = 0;
+    private int totalDepartments = 0;
+    private int operationalCount = 0;
+    private int maintenanceCount = 0;
+    private int decommissionedCount = 0;
+    private int maintenanceCost = 800;
+    private int operationalPercentage = 0;
+    private List<Transfer>? recentTransfers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Load devices
+            var allDevices = await DeviceService.GetAllDevicesAsync();
+            totalDevices = allDevices.Count;
+            
+            // Count by state
+            operationalCount = allDevices.Count(d => d.State == OperationalState.Operational);
+            maintenanceCount = allDevices.Count(d => d.State == OperationalState.UnderMaintenance);
+            decommissionedCount = allDevices.Count(d => d.State == OperationalState.Decommissioned);
+            
+            // Calculate percentage
+            if (totalDevices > 0)
+            {
+                operationalPercentage = (int)Math.Round((double)operationalCount / totalDevices * 100);
+            }
+
+            // Load departments
+            var allDepartments = await OrganizationService.GetAllDepartmentsAsync();
+            totalDepartments = allDepartments.Count;
+
+            // Load transfers
+            var allTransfers = await TransferService.GetAllTransfersAsync();
+            recentTransfers = allTransfers.Take(3).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
