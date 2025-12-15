@@ -1,8 +1,8 @@
 @page "/technician/maintenance"
-@using InfraGestion.Web.Features.Technicians.Services
-@using InfraGestion.Web.Features.Technicians.Models
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.DTOs
 @using InfraGestion.Web.Features.Auth.Services
-@inject TechnicianService TechnicianService
+@inject MaintenanceService MaintenanceService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Stats Cards -->
-    @if (!isLoading && technicianDetails != null)
+    @if (!isLoading && allRecords != null)
     {
         <div class="stats-row">
             <div class="stat-card">
@@ -133,16 +133,16 @@
                         @foreach (var record in filteredRecords)
                         {
                             <tr>
-                                <td class="device-id-cell">@record.DeviceId</td>
+                                <td class="device-id-cell">DEV@(record.DeviceId.ToString("D3"))</td>
                                 <td class="device-name-cell">@record.DeviceName</td>
-                                <td class="date-cell">@record.Date.ToString("dd/MM/yyyy")</td>
+                                <td class="date-cell">@record.MaintenanceDate.ToString("dd/MM/yyyy")</td>
                                 <td class="type-cell">
-                                    <span class="type-badge @GetTypeBadgeClass(record.Type)">
-                                        @record.Type
+                                    <span class="type-badge @GetTypeBadgeClass(record.MaintenanceType)">
+                                        @GetMaintenanceTypeName(record.MaintenanceType)
                                     </span>
                                 </td>
-                                <td class="description-cell" title="@record.Notes">
-                                    @TruncateText(record.Notes, 60)
+                                <td class="description-cell" title="@record.Description">
+                                    @TruncateText(record.Description ?? "", 60)
                                 </td>
                                 <td class="cost-cell">@record.Cost.ToString("C0")</td>
                             </tr>
@@ -156,9 +156,8 @@
 
 @code {
     // Data
-    private TechnicianDetails? technicianDetails;
-    private List<MaintenanceRecord> allRecords = new();
-    private List<MaintenanceRecord> filteredRecords = new();
+    private List<MaintenanceRecordDto> allRecords = new();
+    private List<MaintenanceRecordDto> filteredRecords = new();
     private bool isLoading = true;
     private int currentTechnicianId = 0;
 
@@ -188,17 +187,10 @@
     {
         isLoading = true;
         
-        technicianDetails = await TechnicianService.GetTechnicianDetailsAsync(currentTechnicianId);
+        allRecords = await MaintenanceService.GetTechnicianMaintenanceHistoryAsync(currentTechnicianId);
+        allRecords = allRecords.OrderByDescending(m => m.MaintenanceDate).ToList();
         
-        if (technicianDetails != null && technicianDetails.MaintenanceHistory != null)
-        {
-            allRecords = technicianDetails.MaintenanceHistory
-                .OrderByDescending(m => m.Date)
-                .ToList();
-            
-            CalculateStats();
-        }
-        
+        CalculateStats();
         ApplyFilters();
         isLoading = false;
     }
@@ -206,9 +198,9 @@
     private void CalculateStats()
     {
         totalMaintenances = allRecords.Count;
-        preventiveCount = allRecords.Count(m => m.Type?.Equals("Preventivo", StringComparison.OrdinalIgnoreCase) == true);
-        correctiveCount = allRecords.Count(m => m.Type?.Equals("Correctivo", StringComparison.OrdinalIgnoreCase) == true);
-        predictiveCount = allRecords.Count(m => m.Type?.Equals("Predictivo", StringComparison.OrdinalIgnoreCase) == true);
+        preventiveCount = allRecords.Count(m => m.MaintenanceType == 0); // Preventive
+        correctiveCount = allRecords.Count(m => m.MaintenanceType == 1); // Corrective
+        predictiveCount = allRecords.Count(m => m.MaintenanceType == 2); // Predictive
     }
 
     private void HandleSearch()
@@ -229,28 +221,49 @@
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             query = query.Where(r =>
-                (r.DeviceId?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true) ||
-                (r.DeviceName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true) ||
-                (r.Notes?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true));
+                r.DeviceId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         // Type filter
         if (!string.IsNullOrEmpty(selectedType))
         {
-            query = query.Where(r => r.Type?.Equals(selectedType, StringComparison.OrdinalIgnoreCase) == true);
+            var typeValue = selectedType switch
+            {
+                "Preventivo" => 0,
+                "Correctivo" => 1,
+                "Predictivo" => 2,
+                _ => -1
+            };
+            if (typeValue >= 0)
+            {
+                query = query.Where(r => r.MaintenanceType == typeValue);
+            }
         }
 
         filteredRecords = query.ToList();
     }
 
-    private string GetTypeBadgeClass(string? type)
+    private string GetTypeBadgeClass(int maintenanceType)
     {
-        return type?.ToLowerInvariant() switch
+        return maintenanceType switch
         {
-            "preventivo" => "type-preventive",
-            "correctivo" => "type-corrective",
-            "predictivo" => "type-predictive",
+            0 => "type-preventive",
+            1 => "type-corrective",
+            2 => "type-predictive",
             _ => "type-default"
+        };
+    }
+
+    private string GetMaintenanceTypeName(int maintenanceType)
+    {
+        return maintenanceType switch
+        {
+            0 => "Preventivo",
+            1 => "Correctivo",
+            2 => "Predictivo",
+            _ => "Desconocido"
         };
     }
 

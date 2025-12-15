@@ -3,7 +3,10 @@
 @using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Features.Inventory.Helpers
 @using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Features.TechnicianPortal.Components
+@using InfraGestion.Web.Shared.Components
 @inject DecommissioningService DecommissioningService
+@inject DeviceService DeviceService
 @inject AuthService AuthService
 @inject NavigationManager Navigation
 
@@ -116,12 +119,28 @@
     </div>
 </div>
 
+<!-- Modal de Solicitud de Baja -->
+<Modal IsOpen="@showDecommissioningModal" Title="Crear Solicitud de Baja" OnClose="@CloseDecommissioningModal">
+    <DecommissioningRequestForm FormModel="@decommissioningRequest" 
+                                AvailableDevices="@availableDevices"
+                                PreselectedDeviceId="@null"
+                                OnValidSubmit="@HandleDecommissioningSubmit" 
+                                OnCancel="@CloseDecommissioningModal"
+                                IsSubmitting="@isSubmitting" />
+</Modal>
+
 @code {
     // Data
     private List<DecommissioningRequest> myRequests = new();
     private List<DecommissioningRequest> filteredRequests = new();
     private bool isLoading = true;
     private int currentTechnicianId = 0;
+
+    // Modal state
+    private bool showDecommissioningModal = false;
+    private bool isSubmitting = false;
+    private CreateDecommissioningRequest decommissioningRequest = new();
+    private List<Device> availableDevices = new();
 
     // Filters
     private string searchTerm = string.Empty;
@@ -138,6 +157,20 @@
         }
         
         await LoadData();
+        await LoadAvailableDevices();
+    }
+
+    private async Task LoadAvailableDevices()
+    {
+        try
+        {
+            availableDevices = await DeviceService.GetAllDevicesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] LoadAvailableDevices: {ex.Message}");
+            availableDevices = new List<Device>();
+        }
     }
 
     private async Task LoadData()
@@ -209,7 +242,36 @@
 
     private void OpenCreateModal()
     {
-        // TODO: Implement create modal for new decommissioning request
-        Console.WriteLine("Open create decommissioning request modal");
+        decommissioningRequest = new CreateDecommissioningRequest
+        {
+            TechnicianId = currentTechnicianId,
+            RequestDate = DateTime.Now
+        };
+        showDecommissioningModal = true;
+    }
+
+    private void CloseDecommissioningModal()
+    {
+        showDecommissioningModal = false;
+        decommissioningRequest = new();
+    }
+
+    private async Task HandleDecommissioningSubmit(CreateDecommissioningRequest request)
+    {
+        isSubmitting = true;
+        try
+        {
+            var success = await DecommissioningService.CreateDecommissioningRequestAsync(request);
+            if (success)
+            {
+                await LoadData();
+                await LoadAvailableDevices();
+            }
+            CloseDecommissioningModal();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 }
