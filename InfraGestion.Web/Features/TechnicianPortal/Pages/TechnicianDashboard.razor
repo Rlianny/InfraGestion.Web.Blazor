@@ -4,7 +4,6 @@
 @using InfraGestion.Web.Features.TechnicianPortal.Components
 @using InfraGestion.Web.Features.Inventory.DTOs
 @using InfraGestion.Web.Features.Inventory.Models
-@using static InfraGestion.Web.Features.TechnicianPortal.Components.InitialInspectionReviewForm
 @inject AuthService AuthService
 @inject InspectionService InspectionService
 
@@ -88,8 +87,7 @@
 
 <!-- Review Modal -->
 <Modal IsOpen="@showReviewModal" Title="Revisar Solicitud de Defectación Inicial" OnClose="@CloseReviewModal">
-    <InitialDefectReviewForm Request="@selectedRequest" OnReviewComplete="@HandleReviewComplete"
-        OnCancel="@CloseReviewModal" />
+    <InitialInspectionReviewForm Request="@selectedRequest" OnReviewComplete="@HandleReviewComplete" />
 </Modal>
 
 @code {

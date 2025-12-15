@@ -83,6 +83,7 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"[ERROR] GetPendingInspectionsAsync failed: {response.StatusCode} - {content}");
                 return new List<InspectionRequestDto>();
             }
 
@@ -100,8 +101,9 @@ public class InspectionService
 
             return new List<InspectionRequestDto>();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] GetPendingInspectionsAsync exception: {ex.Message}");
             return new List<InspectionRequestDto>();
         }
     }
@@ -196,13 +198,16 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ERROR] ProcessInspectionDecisionAsync failed: {response.StatusCode} - {content}");
                 return false;
             }
 
             return true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] ProcessInspectionDecisionAsync exception: {ex.Message}");
             return false;
         }
     }
