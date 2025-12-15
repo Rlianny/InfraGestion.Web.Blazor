@@ -6,6 +6,9 @@
 @using InfraGestion.Web.Features.Inventory.Models
 @inject AuthService AuthService
 @inject InspectionService InspectionService
+@inject DeviceService DeviceService
+@inject DecommissioningService DecommissioningService
+@inject MaintenanceService MaintenanceService
 
 <PageTitle>Dashboard Técnico - InfraCom</PageTitle>
 
@@ -90,12 +93,40 @@
     <InitialInspectionReviewForm Request="@selectedRequest" OnReviewComplete="@HandleReviewComplete" />
 </Modal>
 
+<!-- Maintenance Modal -->
+<Modal IsOpen="@showMaintenanceModal" Title="Registrar Mantenimiento" OnClose="@CloseMaintenanceModal">
+    <MaintenanceForm FormModel="@maintenanceRequest" 
+                     AvailableDevices="@availableDevices"
+                     PreselectedDeviceId="@null"
+                     OnValidSubmit="@HandleMaintenanceSubmit" 
+                     OnCancel="@CloseMaintenanceModal"
+                     IsSubmitting="@isSubmitting" />
+</Modal>
+
+<!-- Decommissioning Modal -->
+<Modal IsOpen="@showDecommissioningModal" Title="Crear Solicitud de Baja" OnClose="@CloseDecommissioningModal">
+    <DecommissioningRequestForm FormModel="@decommissioningRequest" 
+                                AvailableDevices="@availableDevices"
+                                PreselectedDeviceId="@null"
+                                OnValidSubmit="@HandleDecommissioningSubmit" 
+                                OnCancel="@CloseDecommissioningModal"
+                                IsSubmitting="@isSubmitting" />
+</Modal>
+
 @code {
     private bool isLoading = true;
     private bool showReviewModal = false;
+    private bool showMaintenanceModal = false;
+    private bool showDecommissioningModal = false;
+    private bool isSubmitting = false;
     private List<PendingInspection> pendingRequests = new();
     private PendingInspection selectedRequest = new();
     private int currentTechnicianId = 0;
+
+    // Modal data
+    private List<Device> availableDevices = new();
+    private CreateMaintenanceRequest maintenanceRequest = new();
+    private CreateDecommissioningRequest decommissioningRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,6 +138,7 @@
         }
 
         await LoadPendingRequests();
+        await LoadAvailableDevices();
     }
 
     private async Task LoadPendingRequests()
@@ -145,16 +177,89 @@
         StateHasChanged();
     }
 
-    private void RegisterMaintenance()
+    private async Task LoadAvailableDevices()
     {
-        // TODO: Navigate to maintenance registration page
-        Console.WriteLine("Register Maintenance");
+        try
+        {
+            // Get all devices for modal selection
+            availableDevices = await DeviceService.GetAllDevicesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] LoadAvailableDevices: {ex.Message}");
+            availableDevices = new List<Device>();
+        }
     }
 
+    // Maintenance Modal Handlers
+    private void RegisterMaintenance()
+    {
+        maintenanceRequest = new CreateMaintenanceRequest
+        {
+            TechnicianId = currentTechnicianId,
+            MaintenanceDate = DateTime.Now,
+            MaintenanceType = MaintenanceType.Preventive
+        };
+        showMaintenanceModal = true;
+    }
+
+    private void CloseMaintenanceModal()
+    {
+        showMaintenanceModal = false;
+        maintenanceRequest = new();
+    }
+
+    private async Task HandleMaintenanceSubmit(CreateMaintenanceRequest request)
+    {
+        isSubmitting = true;
+        try
+        {
+            var success = await MaintenanceService.CreateMaintenanceRecordAsync(request);
+            if (success)
+            {
+                await LoadAvailableDevices();
+            }
+            CloseMaintenanceModal();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    // Decommissioning Modal Handlers
     private void CreateDecommissionRequest()
     {
-        // TODO: Navigate to create decommission request page
-        Console.WriteLine("Create decommission request");
+        decommissioningRequest = new CreateDecommissioningRequest
+        {
+            TechnicianId = currentTechnicianId,
+            RequestDate = DateTime.Now
+        };
+        showDecommissioningModal = true;
+    }
+
+    private void CloseDecommissioningModal()
+    {
+        showDecommissioningModal = false;
+        decommissioningRequest = new();
+    }
+
+    private async Task HandleDecommissioningSubmit(CreateDecommissioningRequest request)
+    {
+        isSubmitting = true;
+        try
+        {
+            var success = await DecommissioningService.CreateDecommissioningRequestAsync(request);
+            if (success)
+            {
+                await LoadAvailableDevices();
+            }
+            CloseDecommissioningModal();
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 
     private void OpenReviewModal(PendingInspection request)

@@ -1,28 +1,12 @@
 @* Technician Action Buttons Component for Director Portal
-   Layout changed to stack buttons to avoid overflow inside narrow cards.
+   Only shows the Rate button.
 *@
 <div class="technician-actions">
-    <div class="action-row">
-        <button class="btn-action btn-rate btn-full" @onclick="HandleRate" title="Valorar">
-            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z" />
-            </svg>
-            Valorar
-        </button>
-    </div>
-
-    <button class="btn-action btn-bonus btn-full" @onclick="HandleBonus" title="Registrar Bonificación">
+    <button class="btn-action btn-rate btn-full" @onclick="HandleRate" title="Valorar">
         <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M240,56v64a8,8,0,0,1-13.66,5.66L200,99.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,188.69,88,162.34,61.66A8,8,0,0,1,168,48h64A8,8,0,0,1,240,56Z" />
+            <path d="M234.29,114.85l-45,38.83L203,211.75a16.4,16.4,0,0,1-24.5,17.82L128,198.49,77.47,229.57A16.4,16.4,0,0,1,53,211.75l13.76-58.07-45-38.83A16.46,16.46,0,0,1,31.08,86l59-4.76,22.76-55.08a16.36,16.36,0,0,1,30.27,0l22.75,55.08,59,4.76a16.46,16.46,0,0,1,9.37,28.86Z" />
         </svg>
-        Registrar Bonificación
-    </button>
-
-    <button class="btn-action btn-penalty btn-full" @onclick="HandlePenalty" title="Registrar Penalización">
-        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path d="M240,56v64a8,8,0,0,1-13.66,5.66L200,99.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,29.66,189.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0L136,140.69,188.69,88,162.34,61.66A8,8,0,0,1,168,48h64A8,8,0,0,1,240,56Z" />
-        </svg>
-        Registrar Penalización
+        Valorar
     </button>
 </div>
 
@@ -30,24 +14,8 @@
     [Parameter]
     public EventCallback OnRate { get; set; }
 
-    [Parameter]
-    public EventCallback OnBonus { get; set; }
-
-    [Parameter]
-    public EventCallback OnPenalty { get; set; }
-
     private async Task HandleRate()
     {
         if (OnRate.HasDelegate) await OnRate.InvokeAsync(null);
-    }
-
-    private async Task HandleBonus()
-    {
-        if (OnBonus.HasDelegate) await OnBonus.InvokeAsync(null);
-    }
-
-    private async Task HandlePenalty()
-    {
-        if (OnPenalty.HasDelegate) await OnPenalty.InvokeAsync(null);
     }
 }

@@ -32,6 +32,7 @@ builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<InspectionService>();
 builder.Services.AddScoped<DecommissioningService>();
+builder.Services.AddScoped<MaintenanceService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<TechnicianService>();

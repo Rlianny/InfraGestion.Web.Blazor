@@ -2,7 +2,14 @@
 @using InfraGestion.Web.Features.Inventory.Models
 @using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Features.TechnicianPortal.Components
+@using InfraGestion.Web.Shared.Components
 @inject DeviceService DeviceService
+@inject DecommissioningService DecommissioningService
+@inject MaintenanceService MaintenanceService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Detalles del Equipo - InfraCom</PageTitle>
@@ -187,6 +194,22 @@ else
     </div>
 }
 
+<!-- Modal de Mantenimiento -->
+<Modal IsOpen="@showMaintenanceModal" Title="Registrar Mantenimiento" OnClose="@CloseMaintenanceModal">
+    <MaintenanceForm FormModel="@maintenanceRequest" 
+                     Devices="@deviceList" 
+                     OnValidSubmit="@HandleCreateMaintenance" 
+                     OnCancel="@CloseMaintenanceModal" />
+</Modal>
+
+<!-- Modal de Solicitud de Baja -->
+<Modal IsOpen="@showDecommissioningModal" Title="Crear Solicitud de Baja" OnClose="@CloseDecommissioningModal">
+    <DecommissioningRequestForm FormModel="@decommissioningRequest" 
+                                AvailableDevices="@deviceList" 
+                                OnValidSubmit="@HandleCreateDecommissioningRequest" 
+                                OnCancel="@CloseDecommissioningModal" />
+</Modal>
+
 @code {
     [Parameter]
     public int DeviceId { get; set; }
@@ -194,9 +217,35 @@ else
     private DeviceDetails? device;
     private bool isLoading = true;
 
+    // Modal states
+    private bool showMaintenanceModal = false;
+    private bool showDecommissioningModal = false;
+    private CreateMaintenanceRequest maintenanceRequest = new();
+    private CreateDecommissioningRequest decommissioningRequest = new();
+    private List<Device> deviceList = new();
+    private int currentTechnicianId = 0;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadDeviceDetails();
+        await LoadCurrentTechnician();
+        await LoadDeviceForModals();
+    }
+
+    private async Task LoadCurrentTechnician()
+    {
+        var currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            currentTechnicianId = currentUser.Id;
+        }
+    }
+
+    private async Task LoadDeviceForModals()
+    {
+        // Load the current device for the modal dropdown (pre-selected)
+        var allDevices = await DeviceService.GetAllDevicesAsync();
+        deviceList = allDevices.Where(d => d.Id == DeviceId).ToList();
     }
 
     private async Task LoadDeviceDetails()
@@ -230,13 +279,65 @@ else
 
     private void RegisterMaintenance()
     {
-        // TODO: Navigate to maintenance registration page
-        Navigation.NavigateTo($"/technician/maintenance/create?deviceId={DeviceId}");
+        maintenanceRequest = new CreateMaintenanceRequest
+        {
+            DeviceId = DeviceId,
+            TechnicianId = currentTechnicianId,
+            MaintenanceDate = DateTime.Now
+        };
+        showMaintenanceModal = true;
     }
 
     private void CreateDecommissionRequest()
     {
-        // TODO: Navigate to create decommission request page
-        Navigation.NavigateTo($"/technician/decommissioning/create?deviceId={DeviceId}");
+        decommissioningRequest = new CreateDecommissioningRequest
+        {
+            DeviceId = DeviceId,
+            TechnicianId = currentTechnicianId,
+            RequestDate = DateTime.Now
+        };
+        showDecommissioningModal = true;
+    }
+
+    private void CloseMaintenanceModal()
+    {
+        showMaintenanceModal = false;
+        maintenanceRequest = new CreateMaintenanceRequest();
+    }
+
+    private void CloseDecommissioningModal()
+    {
+        showDecommissioningModal = false;
+        decommissioningRequest = new CreateDecommissioningRequest();
+    }
+
+    private async Task HandleCreateMaintenance()
+    {
+        try
+        {
+            await MaintenanceService.CreateMaintenanceRecordAsync(maintenanceRequest);
+            CloseMaintenanceModal();
+            // Reload device details to show updated maintenance history
+            await LoadDeviceDetails();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating maintenance: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCreateDecommissioningRequest(CreateDecommissioningRequest request)
+    {
+        try
+        {
+            await DecommissioningService.CreateDecommissioningRequestAsync(request);
+            CloseDecommissioningModal();
+            // Reload device details to show updated decommissioning info
+            await LoadDeviceDetails();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating decommissioning request: {ex.Message}");
+        }
     }
 }

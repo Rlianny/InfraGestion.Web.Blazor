@@ -8,9 +8,9 @@ public static class MaintenanceTypeHelper
     {
         return type switch
         {
-            MaintenanceType.Preventivo => "Preventivo",
-            MaintenanceType.Predictivo => "Predictivo",
-            MaintenanceType.Correctivo => "Correctivo",
+            MaintenanceType.Preventive => "Preventivo",
+            MaintenanceType.Predictive => "Predictivo",
+            MaintenanceType.Corrective => "Correctivo",
             _ => type.ToString()
         };
     }
@@ -19,9 +19,9 @@ public static class MaintenanceTypeHelper
     {
         return type switch
         {
-            MaintenanceType.Preventivo => "badge-preventive",
-            MaintenanceType.Predictivo => "badge-predictive",
-            MaintenanceType.Correctivo => "badge-corrective",
+            MaintenanceType.Preventive => "badge-preventive",
+            MaintenanceType.Predictive => "badge-predictive",
+            MaintenanceType.Corrective => "badge-corrective",
             _ => "badge-default"
         };
     }

@@ -40,7 +40,7 @@ public class MaintenanceRecordDto
         {
             0 => "Preventivo",
             1 => "Correctivo",
-            2 => "Emergencia",
+            2 => "Predictivo",
             _ => "Desconocido"
         };
     }

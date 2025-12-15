@@ -199,4 +199,15 @@ public static class ApiRoutes
         /// <summary>DELETE /decommissioning/requests/{id}</summary>
         public static string DeleteRequest(int id) => $"{Base}/requests/{id}";
     }
+
+    // ==========================================
+    // MAINTENANCE CONTROLLER
+    // ==========================================
+    public static class Maintenance
+    {
+        private const string Base = "maintenance";
+
+        /// <summary>POST /maintenance</summary>
+        public const string Create = Base;
+    }
 }

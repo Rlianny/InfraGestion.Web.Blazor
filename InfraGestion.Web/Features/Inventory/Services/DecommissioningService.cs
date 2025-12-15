@@ -149,6 +149,35 @@ public class DecommissioningService
     }
 
     /// <summary>
+    /// Creates a new decommissioning request
+    /// POST /decommissioning/requests
+    /// </summary>
+    public async Task<bool> CreateDecommissioningRequestAsync(CreateDecommissioningRequest request)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var url = ApiRoutes.Decommissioning.CreateRequest;
+            var response = await _httpClient.PostAsJsonAsync(url, request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ERROR] Failed to create decommissioning request: {errorContent}");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] CreateDecommissioningRequestAsync: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Updates a decommissioning request
     /// PUT /decommissioning/requests
     /// </summary>

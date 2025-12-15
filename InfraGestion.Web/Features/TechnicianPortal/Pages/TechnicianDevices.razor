@@ -3,8 +3,15 @@
 @using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Features.Inventory.Helpers
 @using InfraGestion.Web.Features.Departments.Services
+@using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Features.Transfers.Services
+@using InfraGestion.Web.Features.TechnicianPortal.Components
+@using InfraGestion.Web.Shared.Components
 @inject DeviceService DeviceService
 @inject DepartmentService DepartmentService
+@inject DecommissioningService DecommissioningService
+@inject MaintenanceService MaintenanceService
+@inject AuthService AuthService
 @inject NavigationManager Navigation
 
 <PageTitle>Inventario de Equipos - InfraCom</PageTitle>
@@ -163,6 +170,22 @@
     </div>
 </div>
 
+<!-- Modal de Mantenimiento -->
+<Modal IsOpen="@showMaintenanceModal" Title="Registrar Mantenimiento" OnClose="@CloseMaintenanceModal">
+    <MaintenanceForm FormModel="@maintenanceRequest" 
+                     Devices="@allDevices" 
+                     OnValidSubmit="@HandleCreateMaintenance" 
+                     OnCancel="@CloseMaintenanceModal" />
+</Modal>
+
+<!-- Modal de Solicitud de Baja -->
+<Modal IsOpen="@showDecommissioningModal" Title="Crear Solicitud de Baja" OnClose="@CloseDecommissioningModal">
+    <DecommissioningRequestForm FormModel="@decommissioningRequest" 
+                                AvailableDevices="@allDevices" 
+                                OnValidSubmit="@HandleCreateDecommissioningRequest" 
+                                OnCancel="@CloseDecommissioningModal" />
+</Modal>
+
 @code {
     private List<Device> allDevices = new();
     private List<Device> filteredDevices = new();
@@ -181,6 +204,13 @@
     private string selectedLocation = string.Empty;
 
     private List<string> availableDepartments = new();
+
+    // Modal states
+    private bool showMaintenanceModal = false;
+    private bool showDecommissioningModal = false;
+    private CreateMaintenanceRequest maintenanceRequest = new();
+    private CreateDecommissioningRequest decommissioningRequest = new();
+    private int currentTechnicianId = 0;
 
     // Dynamic filter options based on actual data
     private List<DeviceType> GetAvailableTypes()
@@ -216,6 +246,16 @@
         await LoadDepartments();
         await LoadDevices();
         await LoadStatistics();
+        await LoadCurrentTechnician();
+    }
+
+    private async Task LoadCurrentTechnician()
+    {
+        var currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            currentTechnicianId = currentUser.Id;
+        }
     }
 
     private async Task LoadDepartments()
@@ -284,14 +324,64 @@
 
     private void RegisterMaintenance(int deviceId)
     {
-        // TODO: Navigate to maintenance registration page
-        Navigation.NavigateTo($"/technician/maintenance/create?deviceId={deviceId}");
+        maintenanceRequest = new CreateMaintenanceRequest
+        {
+            DeviceId = deviceId,
+            TechnicianId = currentTechnicianId,
+            MaintenanceDate = DateTime.Now
+        };
+        showMaintenanceModal = true;
     }
 
     private void CreateDecommissionRequest(int deviceId)
     {
-        // TODO: Navigate to create decommission request page
-        Navigation.NavigateTo($"/technician/decommissioning/create?deviceId={deviceId}");
+        decommissioningRequest = new CreateDecommissioningRequest
+        {
+            DeviceId = deviceId,
+            TechnicianId = currentTechnicianId,
+            RequestDate = DateTime.Now
+        };
+        showDecommissioningModal = true;
+    }
+
+    private void CloseMaintenanceModal()
+    {
+        showMaintenanceModal = false;
+        maintenanceRequest = new CreateMaintenanceRequest();
+    }
+
+    private void CloseDecommissioningModal()
+    {
+        showDecommissioningModal = false;
+        decommissioningRequest = new CreateDecommissioningRequest();
+    }
+
+    private async Task HandleCreateMaintenance()
+    {
+        try
+        {
+            await MaintenanceService.CreateMaintenanceRecordAsync(maintenanceRequest);
+            CloseMaintenanceModal();
+            // Optionally show success notification
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating maintenance: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCreateDecommissioningRequest(CreateDecommissioningRequest request)
+    {
+        try
+        {
+            await DecommissioningService.CreateDecommissioningRequestAsync(request);
+            CloseDecommissioningModal();
+            // Optionally show success notification
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating decommissioning request: {ex.Message}");
+        }
     }
 
     private void NavigateToDetails(int deviceId)

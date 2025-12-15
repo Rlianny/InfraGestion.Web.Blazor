@@ -95,9 +95,7 @@
                         
                         <!-- Director Action Buttons -->
                         <TechnicianActionButtons 
-                            OnRate="@(() => HandleRate(technician.Id))"
-                            OnBonus="@(() => HandleBonus(technician.Id))"
-                            OnPenalty="@(() => HandlePenalty(technician.Id))" />
+                            OnRate="@(() => HandleRate(technician.Id))" />
                     </div>
                 </div>
             }
@@ -112,24 +110,6 @@
                         OnValidSubmit="@HandleRateSubmit" 
                         OnCancel="@CloseRateModal"
                         IsSubmitting="@isSubmitting" />
-</InfraGestion.Web.Shared.Components.Modal>
-
-<!-- Bonus Modal -->
-<InfraGestion.Web.Shared.Components.Modal IsOpen="@showBonusModal" Title="Registrar Bonificación" OnClose="@CloseBonusModal">
-    <BonusForm FormModel="@bonusRequest" 
-               TechnicianName="@selectedTechnicianName"
-               OnValidSubmit="@HandleBonusSubmit" 
-               OnCancel="@CloseBonusModal"
-               IsSubmitting="@isSubmitting" />
-</InfraGestion.Web.Shared.Components.Modal>
-
-<!-- Penalty Modal -->
-<InfraGestion.Web.Shared.Components.Modal IsOpen="@showPenaltyModal" Title="Registrar Penalización" OnClose="@ClosePenaltyModal">
-    <PenaltyForm FormModel="@penaltyRequest" 
-                 TechnicianName="@selectedTechnicianName"
-                 OnValidSubmit="@HandlePenaltySubmit" 
-                 OnCancel="@ClosePenaltyModal"
-                 IsSubmitting="@isSubmitting" />
 </InfraGestion.Web.Shared.Components.Modal>
 
 @code {
@@ -152,16 +132,12 @@
 
     // Modal State
     private bool showRateModal = false;
-    private bool showBonusModal = false;
-    private bool showPenaltyModal = false;
     private bool isSubmitting = false;
 
     // Modal Data
     private int selectedTechnicianId = 0;
     private string selectedTechnicianName = string.Empty;
     private RateTechnicianRequest rateRequest = new();
-    private BonusRequest bonusRequest = new();
-    private PenaltyRequest penaltyRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -265,91 +241,6 @@
                 await LoadData();
             }
             CloseRateModal();
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    // Bonus Modal Handlers
-    private void HandleBonus(int technicianId)
-    {
-        var technician = allTechnicians.FirstOrDefault(t => t.Id == technicianId);
-        if (technician == null) return;
-
-        selectedTechnicianId = technicianId;
-        selectedTechnicianName = technician.Name;
-        bonusRequest = new BonusRequest
-        {
-            TechnicianId = technicianId,
-            TechnicianName = technician.Name,
-            SuperiorId = currentUser?.Id,
-            SuperiorUsername = currentUser?.Username ?? string.Empty,
-            BonusType = BonusType.Descriptive
-        };
-        showBonusModal = true;
-    }
-
-    private void CloseBonusModal()
-    {
-        showBonusModal = false;
-        bonusRequest = new();
-    }
-
-    private async Task HandleBonusSubmit(BonusRequest request)
-    {
-        isSubmitting = true;
-        try
-        {
-            var success = await TechnicianService.AddBonusAsync(request);
-            if (success)
-            {
-                await LoadData();
-            }
-            CloseBonusModal();
-        }
-        finally
-        {
-            isSubmitting = false;
-        }
-    }
-
-    // Penalty Modal Handlers
-    private void HandlePenalty(int technicianId)
-    {
-        var technician = allTechnicians.FirstOrDefault(t => t.Id == technicianId);
-        if (technician == null) return;
-
-        selectedTechnicianId = technicianId;
-        selectedTechnicianName = technician.Name;
-        penaltyRequest = new PenaltyRequest
-        {
-            TechnicianId = technicianId,
-            TechnicianName = technician.Name,
-            SuperiorId = currentUser?.Id,
-            SuperiorUsername = currentUser?.Username ?? string.Empty
-        };
-        showPenaltyModal = true;
-    }
-
-    private void ClosePenaltyModal()
-    {
-        showPenaltyModal = false;
-        penaltyRequest = new();
-    }
-
-    private async Task HandlePenaltySubmit(PenaltyRequest request)
-    {
-        isSubmitting = true;
-        try
-        {
-            var success = await TechnicianService.AddPenaltyAsync(request);
-            if (success)
-            {
-                await LoadData();
-            }
-            ClosePenaltyModal();
         }
         finally
         {

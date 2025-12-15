@@ -1,0 +1,99 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="device" class="form-label">Equipo*</label>
+        <select id="device" class="form-input" @bind="FormModel.DeviceId" disabled="@(PreselectedDeviceId.HasValue)">
+            <option value="0">Seleccione un equipo</option>
+            @foreach (var device in AvailableDevices)
+            {
+                <option value="@device.Id">DEV@(device.Id.ToString("D3")) - @device.Name</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.DeviceId)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="reason" class="form-label">Motivo de la baja*</label>
+        <select id="reason" class="form-input" @bind="FormModel.Reason">
+            @foreach (var reason in Enum.GetValues<DecommissioningReason>())
+            {
+                <option value="@reason">@GetReasonDisplayName(reason)</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.Reason)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save btn-danger-submit" disabled="@(IsSubmitting || FormModel.DeviceId == 0)">
+            @if (IsSubmitting)
+            {
+                <span class="btn-spinner"></span>
+                <span>Enviando...</span>
+            }
+            else
+            {
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M223.16,68.42l-16-32A8,8,0,0,0,200,32H56a8,8,0,0,0-7.16,4.42l-16,32A8.08,8.08,0,0,0,32,72V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V72A8.08,8.08,0,0,0,223.16,68.42Zm-57.5,89.24-32,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32L120,164.69V104a8,8,0,0,1,16,0v60.69l18.34-18.35a8,8,0,0,1,11.32,11.32ZM52.94,64l8-16H195.06l8,16Z" />
+                </svg>
+                <span>Crear Solicitud de Baja</span>
+            }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public CreateDecommissioningRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public List<Device> AvailableDevices { get; set; } = new();
+
+    [Parameter]
+    public int? PreselectedDeviceId { get; set; }
+
+    [Parameter]
+    public EventCallback<CreateDecommissioningRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (PreselectedDeviceId.HasValue && FormModel.DeviceId == 0)
+        {
+            FormModel.DeviceId = PreselectedDeviceId.Value;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (FormModel.DeviceId == 0)
+            return;
+            
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+
+    private string GetReasonDisplayName(DecommissioningReason reason) => reason switch
+    {
+        DecommissioningReason.IrreparableTechnicalFailure => "Fallo técnico irreparable",
+        DecommissioningReason.TechnologicalObsolescence => "Obsolescencia tecnológica",
+        DecommissioningReason.EOL => "Fin de vida útil (EOL)",
+        DecommissioningReason.ExcessiveRepairCost => "Costo de reparación excesivo",
+        DecommissioningReason.SeverePhysicalDamage => "Daño físico severo",
+        DecommissioningReason.IncompatibilityWithNewInfrastructure => "Incompatibilidad con nueva infraestructura",
+        DecommissioningReason.PlannedTechnologyUpgrade => "Actualización tecnológica planificada",
+        DecommissioningReason.TheftOrLoss => "Robo o pérdida",
+        DecommissioningReason.CustomerContractTermination => "Terminación de contrato con cliente",
+        _ => reason.ToString()
+    };
+}

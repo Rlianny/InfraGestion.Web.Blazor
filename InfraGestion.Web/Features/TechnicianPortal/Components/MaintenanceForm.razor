@@ -1,0 +1,127 @@
+@using InfraGestion.Web.Features.Inventory.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-group">
+        <label for="device" class="form-label">Equipo*</label>
+        <select id="device" class="form-input" @bind="FormModel.DeviceId" disabled="@(PreselectedDeviceId.HasValue)">
+            <option value="0">Seleccione un equipo</option>
+            @foreach (var device in AvailableDevices)
+            {
+                <option value="@device.Id">DEV@(device.Id.ToString("D3")) - @device.Name</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.DeviceId)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="maintenanceType" class="form-label">Tipo de Mantenimiento*</label>
+        <select id="maintenanceType" class="form-input" @bind="FormModel.MaintenanceType">
+            @foreach (var type in Enum.GetValues<MaintenanceType>())
+            {
+                <option value="@type">@GetTypeDisplayName(type)</option>
+            }
+        </select>
+        <ValidationMessage For="@(() => FormModel.MaintenanceType)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="maintenanceDate" class="form-label">Fecha del Mantenimiento*</label>
+        <input type="date" 
+               id="maintenanceDate" 
+               class="form-input" 
+               @bind="FormModel.MaintenanceDate" />
+        <ValidationMessage For="@(() => FormModel.MaintenanceDate)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="cost" class="form-label">Costo (USD)</label>
+        <div class="cost-input-container">
+            <span class="cost-prefix">$</span>
+            <input type="number" 
+                   id="cost" 
+                   class="form-input cost-input" 
+                   @bind="FormModel.Cost"
+                   min="0"
+                   step="0.01"
+                   placeholder="0.00" />
+        </div>
+        <ValidationMessage For="@(() => FormModel.Cost)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="form-label">Descripción*</label>
+        <textarea id="description" 
+                  class="form-input form-textarea" 
+                  @bind="FormModel.Description"
+                  placeholder="Describa el trabajo de mantenimiento realizado..."
+                  rows="4"></textarea>
+        <ValidationMessage For="@(() => FormModel.Description)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save btn-maintenance-submit" disabled="@(IsSubmitting || FormModel.DeviceId == 0 || string.IsNullOrWhiteSpace(FormModel.Description))">
+            @if (IsSubmitting)
+            {
+                <span class="btn-spinner"></span>
+                <span>Registrando...</span>
+            }
+            else
+            {
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M232,96a72,72,0,0,1-100.94,66L79,222.22c-.12.14-.26.29-.39.42a32,32,0,0,1-45.26-45.26c.14-.13.28-.27.43-.39L94,124.94a72.07,72.07,0,0,1,83.54-98.78,8,8,0,0,1,3.93,13.19L144,80l5.66,26.35L176,112l40.65-37.52a8,8,0,0,1,13.19,3.93A72.6,72.6,0,0,1,232,96Z" />
+                </svg>
+                <span>Registrar Mantenimiento</span>
+            }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public CreateMaintenanceRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public List<Device> AvailableDevices { get; set; } = new();
+
+    [Parameter]
+    public int? PreselectedDeviceId { get; set; }
+
+    [Parameter]
+    public EventCallback<CreateMaintenanceRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (PreselectedDeviceId.HasValue && FormModel.DeviceId == 0)
+        {
+            FormModel.DeviceId = PreselectedDeviceId.Value;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (FormModel.DeviceId == 0 || string.IsNullOrWhiteSpace(FormModel.Description))
+            return;
+            
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+
+    private string GetTypeDisplayName(MaintenanceType type) => type switch
+    {
+        MaintenanceType.Preventive => "Preventivo",
+        MaintenanceType.Corrective => "Correctivo",
+        MaintenanceType.Predictive => "Predictivo",
+        _ => type.ToString()
+    };
+}
