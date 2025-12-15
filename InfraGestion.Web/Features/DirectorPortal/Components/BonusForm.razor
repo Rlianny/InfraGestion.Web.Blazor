@@ -1,0 +1,89 @@
+@using InfraGestion.Web.Features.Technicians.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-header">
+        <p class="form-subtitle">Técnico: <strong>@TechnicianName</strong></p>
+    </div>
+
+    <div class="form-group">
+        <label for="bonusType" class="form-label">Tipo de Bonificación*</label>
+        <select id="bonusType" class="form-input" @bind="FormModel.BonusType">
+            <option value="@BonusType.Descriptive">Descriptivo</option>
+            <option value="@BonusType.Monetary">Monetario</option>
+        </select>
+        <ValidationMessage For="@(() => FormModel.BonusType)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="form-label">Descripción*</label>
+        <textarea id="description" 
+                  class="form-input form-textarea" 
+                  @bind="FormModel.Description"
+                  placeholder="Describa la razón de la bonificación..."
+                  rows="3"></textarea>
+        <ValidationMessage For="@(() => FormModel.Description)" class="validation-message" />
+    </div>
+
+    @if (FormModel.BonusType == BonusType.Monetary)
+    {
+        <div class="form-group">
+            <label for="amount" class="form-label">Monto (CUP)*</label>
+            <div class="amount-input-container">
+                <span class="amount-prefix">$</span>
+                <input type="number" 
+                       id="amount" 
+                       class="form-input amount-input" 
+                       @bind="FormModel.Amount"
+                       min="0"
+                       step="0.01"
+                       placeholder="0.00" />
+            </div>
+            <ValidationMessage For="@(() => FormModel.Amount)" class="validation-message" />
+        </div>
+    }
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save btn-bonus" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span class="btn-spinner"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                </svg>
+                <span>Registrar Bonificación</span>
+            }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public BonusRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public string TechnicianName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<BonusRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}

@@ -1,0 +1,85 @@
+@using InfraGestion.Web.Features.Technicians.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@FormModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    
+    <div class="form-header">
+        <p class="form-subtitle">Técnico: <strong>@TechnicianName</strong></p>
+    </div>
+
+    <div class="form-group">
+        <label for="rate" class="form-label">Puntuación (0 - 5)*</label>
+        <div class="rating-input-container">
+            <input type="range" 
+                   id="rate" 
+                   class="rating-slider" 
+                   min="0" 
+                   max="5" 
+                   step="0.5"
+                   @bind="FormModel.Rate" />
+            <span class="rating-value">@FormModel.Rate.ToString("0.0")</span>
+        </div>
+        <div class="rating-labels">
+            <span>0</span>
+            <span>1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+        </div>
+        <ValidationMessage For="@(() => FormModel.Rate)" class="validation-message" />
+    </div>
+
+    <div class="form-group">
+        <label for="comments" class="form-label">Comentarios</label>
+        <textarea id="comments" 
+                  class="form-input form-textarea" 
+                  @bind="FormModel.Comments"
+                  placeholder="Ingrese comentarios sobre el desempeño del técnico..."
+                  rows="4"></textarea>
+        <ValidationMessage For="@(() => FormModel.Comments)" class="validation-message" />
+    </div>
+
+    <div class="form-actions">
+        <button type="button" class="btn-cancel" @onclick="OnCancel">
+            Cancelar
+        </button>
+        <button type="submit" class="btn-save" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span class="btn-spinner"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                </svg>
+                <span>Guardar Valoración</span>
+            }
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public RateTechnicianRequest FormModel { get; set; } = new();
+
+    [Parameter]
+    public string TechnicianName { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<RateTechnicianRequest> OnValidSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    [Parameter]
+    public bool IsSubmitting { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnValidSubmit.InvokeAsync(FormModel);
+    }
+}
