@@ -6,7 +6,11 @@
     <div class="device-info-section">
         <div class="info-row">
             <span class="info-label">ID Equipo:</span>
-            <span class="info-value">@Request.EquipmentId</span>
+            <span class="info-value">@Request.DeviceId</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Nombre del Equipo:</span>
+            <span class="info-value">@Request.DeviceName</span>
         </div>
         <div class="info-row">
             <span class="info-label">Fecha de Emisión:</span>
@@ -23,17 +27,17 @@
 
         <div class="form-group">
             <label for="rejectionReason" class="form-label">Motivo de Rechazo</label>
-            <select id="rejectionReason" 
-                    class="form-input form-select" 
-                    @bind="formModel.RejectionReason">
+            <select id="rejectionReason" class="form-input form-select" @bind="formModel.RejectionReason">
                 <option value="">-- Seleccione un motivo (solo si rechaza) --</option>
                 <option value="@DecommissioningReason.IrreparableTechnicalFailure">Fallo técnico irreparable</option>
                 <option value="@DecommissioningReason.TechnologicalObsolescence">Obsolescencia tecnológica</option>
                 <option value="@DecommissioningReason.EOL">Fin de vida útil</option>
                 <option value="@DecommissioningReason.ExcessiveRepairCost">Costo de reparación excesivo</option>
                 <option value="@DecommissioningReason.SeverePhysicalDamage">Daño físico severo</option>
-                <option value="@DecommissioningReason.IncompatibilityWithNewInfrastructure">Incompatibilidad con nueva infraestructura</option>
-                <option value="@DecommissioningReason.PlannedTechnologyUpgrade">Actualización tecnológica planificada</option>
+                <option value="@DecommissioningReason.IncompatibilityWithNewInfrastructure">Incompatibilidad con nueva
+                    infraestructura</option>
+                <option value="@DecommissioningReason.PlannedTechnologyUpgrade">Actualización tecnológica planificada
+                </option>
                 <option value="@DecommissioningReason.TheftOrLoss">Robo o pérdida</option>
                 <option value="@DecommissioningReason.CustomerContractTermination">Terminación de contrato</option>
             </select>
@@ -43,13 +47,15 @@
         <div class="form-actions">
             <button type="button" class="btn-reject" @onclick="HandleReject" disabled="@isProcessing">
                 <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
+                    <path
+                        d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
                 </svg>
                 @(isProcessing ? "Procesando..." : "Rechazar")
             </button>
             <button type="button" class="btn-accept" @onclick="HandleAccept" disabled="@isProcessing">
                 <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                    <path
+                        d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z" />
                 </svg>
                 @(isProcessing ? "Procesando..." : "Aceptar")
             </button>
@@ -75,7 +81,7 @@
     {
         isProcessing = true;
         validationError = null;
-        
+
         var result = new InitialDefectReviewResult
         {
             RequestId = Request.Id,
@@ -84,7 +90,7 @@
             IsApproved = true,
             RejectionReason = null
         };
-        
+
         await OnReviewComplete.InvokeAsync(result);
         isProcessing = false;
     }
@@ -99,7 +105,7 @@
 
         isProcessing = true;
         validationError = null;
-        
+
         var result = new InitialDefectReviewResult
         {
             RequestId = Request.Id,
@@ -108,7 +114,7 @@
             IsApproved = false,
             RejectionReason = formModel.RejectionReason
         };
-        
+
         await OnReviewComplete.InvokeAsync(result);
         isProcessing = false;
     }
@@ -131,8 +137,10 @@
     {
         public int Id { get; set; }
         public int DeviceId { get; set; }
+        public string FormatedDeviceId => $"DEV{DeviceId:D3}";
+        
+        public string DeviceName { get; set; } = string.Empty;
         public int TechnicianId { get; set; }
-        public string EquipmentId { get; set; } = string.Empty;
         public DateTime EmissionDate { get; set; }
         public string RequesterName { get; set; } = string.Empty;
     }

@@ -52,6 +52,7 @@
                             <tr>
                                 <th>FECHA EMISIÓN</th>
                                 <th>ID EQUIPO</th>
+                                <th>NOMBRE DEL EQUIPO</th>
                                 <th>SOLICITANTE</th>
                                 <th></th>
                             </tr>
@@ -61,7 +62,8 @@
                             {
                                 <tr>
                                     <td>@request.EmissionDate.ToString("dd/MM/yyyy")</td>
-                                    <td>@request.EquipmentId</td>
+                                    <td>@request.FormatedDeviceId</td>
+                                    <td>@request.DeviceName</td>
                                     <td>@request.RequesterName</td>
                                     <td>
                                         <button class="btn-icon-action" @onclick="() => OpenReviewModal(request)" title="Revisar solicitud">
@@ -123,9 +125,9 @@
             {
                 Id = r.RequestId,
                 DeviceId = r.DeviceId,
+                DeviceName = r.DeviceName,
                 TechnicianId = r.TechnicianId,
                 EmissionDate = r.RequestDate,
-                EquipmentId = $"DEV{r.DeviceId:D3}", // Format device ID
                 RequesterName = string.IsNullOrWhiteSpace(r.RequesterFullName)
                     ? $"Usuario #{r.RequesterId}"
                     : r.RequesterFullName
