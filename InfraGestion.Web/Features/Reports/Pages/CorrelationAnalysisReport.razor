@@ -31,39 +31,47 @@
             <StatCard Label="Técnicos Evaluados" 
                       Value="@reportData.Count.ToString()" 
                       Color="#673AB7">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                    <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
-                    <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
-                </svg>
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                        <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
+                        <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
+                    </svg>
+                </IconContent>
             </StatCard>
             <StatCard Label="Costo Promedio" 
                       Value="@($"${reportData.Average(r => r.TotalMaintenanceCost):N0}")" 
                       Color="#F44336">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
-                </svg>
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
+                    </svg>
+                </IconContent>
             </StatCard>
             <StatCard Label="Longevidad Promedio" 
                       Value="@($"{reportData.Average(r => r.AverageEquipmentLongevity):N1} años")" 
                       Color="#4CAF50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-                </svg>
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                    </svg>
+                </IconContent>
             </StatCard>
             <StatCard Label="Índice Promedio" 
                       Value="@($"{reportData.Average(r => r.CorrelationIndex):N2}")" 
                       Color="#2196F3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
-                </svg>
+                <IconContent>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 0h1v15h15v1H0V0Zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07Z"/>
+                    </svg>
+                </IconContent>
             </StatCard>
         </div>
     }
 
     <!-- Data Table -->
-    <DataTable TItem="CorrelationAnalysisReportItemDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay datos de correlación disponibles">
+    <DataTable TItem="CorrelationAnalysisReportDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay datos de correlación disponibles">
         <HeaderTemplate>
             <th>Ranking</th>
             <th>Técnico</th>
@@ -90,7 +98,7 @@
             </td>
             <td>
                 <div class="correlation-bar">
-                    <div class="bar-fill" style="width: @(Math.Min((double)item.CorrelationIndex * 100, 100))%; background: @GetCorrelationColor(item.CorrelationIndex)"></div>
+                    <div class="bar-fill" style="width: @(Math.Min(item.CorrelationIndex * 100, 100))%; background: @GetCorrelationColor(item.CorrelationIndex)"></div>
                     <span class="bar-value">@item.CorrelationIndex.ToString("N2")</span>
                 </div>
             </td>
@@ -123,7 +131,7 @@
 </div>
 
 @code {
-    private List<CorrelationAnalysisReportItemDto> reportData = new();
+    private List<CorrelationAnalysisReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
@@ -141,7 +149,7 @@
             errorMessage = null;
             StateHasChanged();
 
-            reportData = await ReportService.GetCorrelationAnalysisAsync();
+            reportData = await ReportService.GenerateCorrelationAnalysisReportAsync();
         }
         catch (Exception ex)
         {
@@ -158,13 +166,13 @@
 
     private void LoadMockData()
     {
-        reportData = new List<CorrelationAnalysisReportItemDto>
+        reportData = new List<CorrelationAnalysisReportDto>
         {
-            new() { Rank = 1, TechnicianId = 1, TechnicianName = "Carlos Rodríguez", TotalMaintenanceCost = 45000, AverageEquipmentLongevity = 6.5m, CorrelationIndex = 0.92m },
-            new() { Rank = 2, TechnicianId = 2, TechnicianName = "María González", TotalMaintenanceCost = 52000, AverageEquipmentLongevity = 5.8m, CorrelationIndex = 0.85m },
-            new() { Rank = 3, TechnicianId = 3, TechnicianName = "Pedro Sánchez", TotalMaintenanceCost = 38000, AverageEquipmentLongevity = 5.2m, CorrelationIndex = 0.78m },
-            new() { Rank = 4, TechnicianId = 4, TechnicianName = "Ana Martínez", TotalMaintenanceCost = 61000, AverageEquipmentLongevity = 4.9m, CorrelationIndex = 0.65m },
-            new() { Rank = 5, TechnicianId = 5, TechnicianName = "Luis García", TotalMaintenanceCost = 72000, AverageEquipmentLongevity = 4.1m, CorrelationIndex = 0.48m }
+            new() { Rank = 1, TechnicianId = 1, TechnicianName = "Carlos Rodríguez", Specialty = "Redes", YearsOfExperience = 5, EquipmentType = "Switches", TotalMaintenanceCost = 45000, AverageEquipmentLongevity = 6.5, CorrelationIndex = 0.92 },
+            new() { Rank = 2, TechnicianId = 2, TechnicianName = "María González", Specialty = "Servidores", YearsOfExperience = 8, EquipmentType = "Servidores", TotalMaintenanceCost = 52000, AverageEquipmentLongevity = 5.8, CorrelationIndex = 0.85 },
+            new() { Rank = 3, TechnicianId = 3, TechnicianName = "Pedro Sánchez", Specialty = "Hardware", YearsOfExperience = 6, EquipmentType = "PCs", TotalMaintenanceCost = 38000, AverageEquipmentLongevity = 5.2, CorrelationIndex = 0.78 },
+            new() { Rank = 4, TechnicianId = 4, TechnicianName = "Ana Martínez", Specialty = "Redes", YearsOfExperience = 4, EquipmentType = "Routers", TotalMaintenanceCost = 61000, AverageEquipmentLongevity = 4.9, CorrelationIndex = 0.65 },
+            new() { Rank = 5, TechnicianId = 5, TechnicianName = "Luis García", Specialty = "Hardware", YearsOfExperience = 3, EquipmentType = "Impresoras", TotalMaintenanceCost = 72000, AverageEquipmentLongevity = 4.1, CorrelationIndex = 0.48 }
         };
     }
 
@@ -176,24 +184,24 @@
         _ => "default"
     };
 
-    private string GetCorrelationColor(decimal index) => index switch
+    private string GetCorrelationColor(double index) => index switch
     {
-        >= 0.8m => "#4CAF50",
-        >= 0.5m => "#FF9800",
+        >= 0.8 => "#4CAF50",
+        >= 0.5 => "#FF9800",
         _ => "#F44336"
     };
 
-    private string GetEfficiencyClass(decimal index) => index switch
+    private string GetEfficiencyClass(double index) => index switch
     {
-        >= 0.8m => "excellent",
-        >= 0.5m => "good",
+        >= 0.8 => "excellent",
+        >= 0.5 => "good",
         _ => "needs-improvement"
     };
 
-    private string GetEfficiencyLabel(decimal index) => index switch
+    private string GetEfficiencyLabel(double index) => index switch
     {
-        >= 0.8m => "Excelente",
-        >= 0.5m => "Buena",
+        >= 0.8 => "Excelente",
+        >= 0.5 => "Buena",
         _ => "Mejorar"
     };
 
@@ -207,7 +215,8 @@
             var pdfBytes = await ReportService.ExportToPdfAsync("correlation-analysis");
             if (pdfBytes != null && pdfBytes.Length > 0)
             {
-                await JS.InvokeVoidAsync("downloadFile", pdfBytes, "reporte-correlacion.pdf", "application/pdf");
+                var base64 = Convert.ToBase64String(pdfBytes);
+                await JS.InvokeVoidAsync("downloadFile", "reporte-correlacion.pdf", "application/pdf", base64);
             }
         }
         catch (Exception ex)

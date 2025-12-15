@@ -20,7 +20,7 @@
                 </svg>
                 Volver
             </button>
-            <ExportButton Text="Exportar PDF" OnClick="ExportToPdf" />
+            <ExportButton Text="Exportar PDF" OnClick="ExportToPdf" IsLoading="isExporting" />
         </Actions>
     </PageHeader>
 
@@ -109,6 +109,7 @@
 @code {
     private List<BonusDeterminationReportDto> reportData = new();
     private bool isLoading = true;
+    private bool isExporting = false;
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -124,7 +125,7 @@
             errorMessage = null;
             
             var criteria = new BonusReportCriteria();
-            reportData = new List<BonusDeterminationReportDto> { await ReportService.GenerateBonusDeterminationReportAsync(criteria) };
+            reportData = await ReportService.GenerateBonusDeterminationReportAsync(criteria);
         }
         catch (Exception ex)
         {
@@ -160,12 +161,21 @@
     {
         try
         {
+            isExporting = true;
+            StateHasChanged();
+
             var pdfBytes = await ReportService.GetPdfReportAsync("bonus-determination");
-            await JS.InvokeVoidAsync("downloadFile", pdfBytes, "reporte-bonificaciones.pdf", "application/pdf");
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JS.InvokeVoidAsync("downloadFile", "reporte-bonificaciones.pdf", "application/pdf", base64);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error exporting PDF: {ex.Message}");
+        }
+        finally
+        {
+            isExporting = false;
+            StateHasChanged();
         }
     }
 

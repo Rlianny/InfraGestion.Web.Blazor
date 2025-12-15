@@ -72,7 +72,7 @@
     }
 
     <!-- Data Table -->
-    <DataTable TItem="DeviceReplacementReportItemDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay equipos críticos para reemplazo">
+    <DataTable TItem="DeviceReplacementReportDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay equipos críticos para reemplazo">
         <HeaderTemplate>
             <th>ID</th>
             <th>Equipo</th>
@@ -105,8 +105,8 @@
                 <span class="reason-badge">@device.ReplacementReason</span>
             </td>
             <td>
-                <span class="priority-badge @GetPriorityClass(device.MaintenanceCountLastYear, device.TotalMaintenanceCost)">
-                    @GetPriorityLabel(device.MaintenanceCountLastYear, device.TotalMaintenanceCost)
+                <span class="priority-badge @GetPriorityClass(device.MaintenanceCountLastYear, (double)device.TotalMaintenanceCost)">
+                    @GetPriorityLabel(device.MaintenanceCountLastYear, (double)device.TotalMaintenanceCost)
                 </span>
             </td>
         </RowTemplate>
@@ -114,7 +114,7 @@
 </div>
 
 @code {
-    private List<DeviceReplacementReportItemDto> reportData = new();
+    private List<DeviceReplacementReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
@@ -132,7 +132,7 @@
             errorMessage = null;
             StateHasChanged();
 
-            reportData = await ReportService.GetDeviceReplacementAsync();
+            reportData = await ReportService.GenerateEquipmentReplacementReportAsync();
         }
         catch (Exception ex)
         {
@@ -149,14 +149,14 @@
 
     private void LoadMockData()
     {
-        reportData = new List<DeviceReplacementReportItemDto>
+        reportData = new List<DeviceReplacementReportDto>
         {
-            new() { DeviceId = 101, DeviceName = "Servidor Dell PowerEdge R720", MaintenanceCountLastYear = 15, TotalMaintenanceCost = 125000, ReplacementReason = "Obsolescencia técnica" },
-            new() { DeviceId = 102, DeviceName = "Impresora HP LaserJet Enterprise", MaintenanceCountLastYear = 12, TotalMaintenanceCost = 45000, ReplacementReason = "Alto costo de mantenimiento" },
-            new() { DeviceId = 103, DeviceName = "Switch Cisco Catalyst 2960", MaintenanceCountLastYear = 10, TotalMaintenanceCost = 38000, ReplacementReason = "Fin de vida útil" },
-            new() { DeviceId = 104, DeviceName = "UPS APC Smart-UPS 3000", MaintenanceCountLastYear = 8, TotalMaintenanceCost = 52000, ReplacementReason = "Baterías degradadas" },
-            new() { DeviceId = 105, DeviceName = "Aire Acondicionado Data Center", MaintenanceCountLastYear = 7, TotalMaintenanceCost = 89000, ReplacementReason = "Eficiencia reducida" },
-            new() { DeviceId = 106, DeviceName = "Router Juniper MX80", MaintenanceCountLastYear = 6, TotalMaintenanceCost = 67000, ReplacementReason = "Capacidad insuficiente" }
+            new(101, "Servidor Dell PowerEdge R720") { MaintenanceCountLastYear = 15, TotalMaintenanceCost = 125000, ReplacementReason = "Obsolescencia técnica", DeviceType = "Servidor", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-5) },
+            new(102, "Impresora HP LaserJet Enterprise") { MaintenanceCountLastYear = 12, TotalMaintenanceCost = 45000, ReplacementReason = "Alto costo de mantenimiento", DeviceType = "Impresora", DepartmentName = "Administración", AcquisitionDate = DateTime.Now.AddYears(-4) },
+            new(103, "Switch Cisco Catalyst 2960") { MaintenanceCountLastYear = 10, TotalMaintenanceCost = 38000, ReplacementReason = "Fin de vida útil", DeviceType = "Switch", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-6) },
+            new(104, "UPS APC Smart-UPS 3000") { MaintenanceCountLastYear = 8, TotalMaintenanceCost = 52000, ReplacementReason = "Baterías degradadas", DeviceType = "UPS", DepartmentName = "Data Center", AcquisitionDate = DateTime.Now.AddYears(-3) },
+            new(105, "Aire Acondicionado Data Center") { MaintenanceCountLastYear = 7, TotalMaintenanceCost = 89000, ReplacementReason = "Eficiencia reducida", DeviceType = "Climatización", DepartmentName = "Data Center", AcquisitionDate = DateTime.Now.AddYears(-7) },
+            new(106, "Router Juniper MX80") { MaintenanceCountLastYear = 6, TotalMaintenanceCost = 67000, ReplacementReason = "Capacidad insuficiente", DeviceType = "Router", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-5) }
         };
     }
 
@@ -167,12 +167,12 @@
         _ => "normal"
     };
 
-    private string GetPriorityClass(int maintenanceCount, decimal cost) => 
+    private string GetPriorityClass(int maintenanceCount, double cost) => 
         maintenanceCount >= 10 || cost >= 100000 ? "critical" :
         maintenanceCount >= 5 || cost >= 50000 ? "high" :
         "medium";
 
-    private string GetPriorityLabel(int maintenanceCount, decimal cost) =>
+    private string GetPriorityLabel(int maintenanceCount, double cost) =>
         maintenanceCount >= 10 || cost >= 100000 ? "Crítica" :
         maintenanceCount >= 5 || cost >= 50000 ? "Alta" :
         "Media";
@@ -187,7 +187,8 @@
             var pdfBytes = await ReportService.ExportToPdfAsync("equipment-replacement");
             if (pdfBytes != null && pdfBytes.Length > 0)
             {
-                await JS.InvokeVoidAsync("downloadFile", pdfBytes, "reporte-equipos-criticos.pdf", "application/pdf");
+                var base64 = Convert.ToBase64String(pdfBytes);
+                await JS.InvokeVoidAsync("downloadFile", "reporte-equipos-criticos.pdf", "application/pdf", base64);
             }
         }
         catch (Exception ex)

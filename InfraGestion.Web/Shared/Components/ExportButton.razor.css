@@ -22,6 +22,14 @@
     flex-shrink: 0;
 }
 
+/* Spinner for loading state */
+.export-btn .spinner-border {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+    margin-right: 4px;
+}
+
 /* Primary Variant */
 .export-btn.btn-primary {
     background: var(--color-primary);
