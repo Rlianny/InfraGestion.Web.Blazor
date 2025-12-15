@@ -90,10 +90,10 @@
                         <tr>
                             <td class="device-id-cell">DEV@(transfer.DeviceId.ToString("D3"))</td>
                             <td class="device-name-cell">@transfer.DeviceName</td>
-                            <td class="origin-cell">@transfer.Origin</td>
-                            <td class="destination-cell">@transfer.Destination</td>
+                            <td class="origin-cell">@transfer.SourceSectionName</td>
+                            <td class="destination-cell">@transfer.DestinationSectionName</td>
                             <td class="date-cell">@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
-                            <td class="receiver-cell">@transfer.ReceiverName</td>
+                            <td class="receiver-cell">@transfer.DeviceReceiverName</td>
                         </tr>
                     }
                 }
@@ -144,9 +144,9 @@
         {
             query = query.Where(t =>
                 t.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                t.Origin.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                t.Destination.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                t.ReceiverName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                t.SourceSectionName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.DestinationSectionName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.DeviceReceiverName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         // Date filter
