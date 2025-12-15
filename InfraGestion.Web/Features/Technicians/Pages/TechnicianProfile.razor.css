@@ -311,6 +311,45 @@
     font-size: 14px;
 }
 
+/* Maintenance Type Badges */
+.maintenance-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.type-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.type-preventivo {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.type-correctivo {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.type-predictivo {
+    background: rgba(168, 85, 247, 0.1);
+    color: #9333ea;
+}
+
+.type-default {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+}
+
 /* Action Cell */
 .action-cell {
     text-align: right;

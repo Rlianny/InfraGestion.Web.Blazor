@@ -1,0 +1,215 @@
+@page "/technician/decommissioning"
+@using InfraGestion.Web.Features.Inventory.Models
+@using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Auth.Services
+@inject DecommissioningService DecommissioningService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Bajas Técnicas - InfraCom</PageTitle>
+
+<div class="decommissioning-page">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Bajas Técnicas</h1>
+                <p class="page-description">Solicitudes de baja asociadas a este usuario.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-create" @onclick="OpenCreateModal">
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M224,48H32A16,16,0,0,0,16,64V88a16,16,0,0,0,16,16v88a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V104a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM208,192H48V104H208ZM224,88H32V64H224V88Z"/>
+                    </svg>
+                    Crear propuesta de baja
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input type="text" class="search-input" 
+                   placeholder="Buscar por nombre ..." 
+                   @bind="searchTerm"
+                   @bind:event="oninput" 
+                   @bind:after="HandleSearch" />
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" @bind="selectedDate" @bind:after="HandleFilterChange">
+                <option value="">Fecha: Todos</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+            </select>
+
+            <select class="filter-select" @bind="selectedStatus" @bind:after="HandleFilterChange">
+                <option value="">Estado: Todos</option>
+                @foreach (var status in Enum.GetValues<DecommissioningStatus>())
+                {
+                    <option value="@status">@DecommissioningStatusHelper.GetStatusDisplayName(status)</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <table class="decommissioning-table">
+            <thead>
+                <tr>
+                    <th>ID de equipo</th>
+                    <th>Fecha de emisión</th>
+                    <th>Receptor</th>
+                    <th>Motivo</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (isLoading)
+                {
+                    <tr>
+                        <td colspan="5" class="loading-cell">
+                            <div class="spinner"></div>
+                            <span>Cargando datos...</span>
+                        </td>
+                    </tr>
+                }
+                else if (filteredRequests == null || !filteredRequests.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="empty-cell">
+                            <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                            </svg>
+                            <p>No has realizado solicitudes de baja técnica aún</p>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var request in filteredRequests)
+                    {
+                        <tr>
+                            <td class="device-id-cell">@($"DEV{request.DeviceId:D3}")</td>
+                            <td class="date-cell">@request.RequestDate.ToString("dd/MM/yyyy")</td>
+                            <td class="receiver-cell">@(string.IsNullOrEmpty(request.ReceiverName) ? "-" : request.ReceiverName)</td>
+                            <td class="reason-cell">@DecommissioningReasonHelper.GetReasonDisplayName(request.Reason)</td>
+                            <td class="status-cell">
+                                <span class="status-badge @GetStatusBadgeClass(request.Status)">
+                                    <span class="status-dot"></span>
+                                    @DecommissioningStatusHelper.GetStatusDisplayName(request.Status)
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    // Data
+    private List<DecommissioningRequest> myRequests = new();
+    private List<DecommissioningRequest> filteredRequests = new();
+    private bool isLoading = true;
+    private int currentTechnicianId = 0;
+
+    // Filters
+    private string searchTerm = string.Empty;
+    private string selectedStatus = string.Empty;
+    private string selectedDate = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get current technician ID
+        var currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            currentTechnicianId = currentUser.Id;
+        }
+        
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        // Get all requests and filter by current technician
+        var allRequests = await DecommissioningService.GetAllDecommissioningRequestsAsync();
+        myRequests = allRequests.Where(r => r.TechnicianId == currentTechnicianId).ToList();
+        
+        ApplyFilters();
+        isLoading = false;
+    }
+
+    private void HandleSearch()
+    {
+        ApplyFilters();
+    }
+
+    private void HandleFilterChange()
+    {
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = myRequests.AsEnumerable();
+
+        // Search filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(r =>
+                r.DeviceId.ToString().Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                r.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                (r.ReceiverName != null && r.ReceiverName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // Status filter
+        if (!string.IsNullOrEmpty(selectedStatus))
+        {
+            if (Enum.TryParse<DecommissioningStatus>(selectedStatus, out var statusFilter))
+            {
+                query = query.Where(r => r.Status == statusFilter);
+            }
+        }
+
+        // Date filter (by year)
+        if (!string.IsNullOrEmpty(selectedDate))
+        {
+            if (int.TryParse(selectedDate, out var year))
+            {
+                query = query.Where(r => r.RequestDate.Year == year);
+            }
+        }
+
+        filteredRequests = query.OrderByDescending(r => r.RequestDate).ToList();
+    }
+
+    private string GetStatusBadgeClass(DecommissioningStatus status)
+    {
+        return status switch
+        {
+            DecommissioningStatus.Pending => "status-pending",
+            DecommissioningStatus.Accepted => "status-accepted",
+            DecommissioningStatus.Rejected => "status-rejected",
+            _ => "status-default"
+        };
+    }
+
+    private void OpenCreateModal()
+    {
+        // TODO: Implement create modal for new decommissioning request
+        Console.WriteLine("Open create decommissioning request modal");
+    }
+}

@@ -163,9 +163,9 @@ public class NavigationService
             },
             new NavItem
             {
-                Title = "Equipo Técnico",
-                Route = "technician/team",
-                IconPath = Icons.Technicians,
+                Title = "Perfil",
+                Route = "technician/profile",
+                IconPath = Icons.Profile,
                 AllowedRoles = [Roles.Technician],
                 Order = 40
             },
@@ -243,6 +243,68 @@ public class NavigationService
                 IconPath = Icons.Reports,
                 AllowedRoles = [Roles.Director],
                 Order = 70
+            },
+
+            // === ITEMS LOGISTICIAN ===
+            new NavItem
+            {
+                Title = "Dashboard",
+                Route = "logistician/dashboard",
+                IconPath = Icons.Dashboard,
+                AllowedRoles = [Roles.Logistician],
+                ExactMatch = false,
+                Order = 0
+            },
+            new NavItem
+            {
+                Title = "Reportes",
+                Route = "logistician/reports",
+                IconPath = Icons.Reports,
+                AllowedRoles = [Roles.Logistician],
+                Order = 10
+            },
+
+            // === ITEMS MANAGER (Responsable de Sección) ===
+            new NavItem
+            {
+                Title = "Dashboard",
+                Route = "manager/dashboard",
+                IconPath = Icons.Dashboard,
+                AllowedRoles = [Roles.Manager],
+                ExactMatch = false,
+                Order = 0
+            },
+            new NavItem
+            {
+                Title = "Organización",
+                Route = "manager/organization",
+                IconPath = Icons.Organization,
+                AllowedRoles = [Roles.Manager],
+                Order = 10
+            },
+            new NavItem
+            {
+                Title = "Inventario",
+                Route = "manager/inventory",
+                IconPath = Icons.Inventory,
+                AllowedRoles = [Roles.Manager],
+                Order = 20
+            },
+            new NavItem
+            {
+                Title = "Traslados",
+                Route = "manager/transfers",
+                IconPath = Icons.Transfers,
+                AllowedRoles = [Roles.Manager],
+                Order = 30
+            },
+            new NavItem
+            {
+                Title = "Equipo Técnico",
+                Route = "manager/technicians",
+                IconPath = Icons.Technicians,
+                AllowedRoles = [Roles.Manager],
+                Order = 40
             },
 
             // === SEPARADOR ===

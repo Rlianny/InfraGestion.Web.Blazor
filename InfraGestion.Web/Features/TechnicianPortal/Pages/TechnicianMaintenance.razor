@@ -1,0 +1,263 @@
+@page "/technician/maintenance"
+@using InfraGestion.Web.Features.Technicians.Services
+@using InfraGestion.Web.Features.Technicians.Models
+@using InfraGestion.Web.Features.Auth.Services
+@inject TechnicianService TechnicianService
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Mis Mantenimientos - InfraCom</PageTitle>
+
+<div class="maintenance-page">
+    <!-- Header -->
+    <div class="page-header-wrapper">
+        <div class="page-header">
+            <div class="header-text">
+                <h1 class="page-title">Mis Mantenimientos</h1>
+                <p class="page-description">Historial de mantenimientos que has realizado a los equipos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    @if (!isLoading && technicianDetails != null)
+    {
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon total-icon">
+                    <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M226.76,69a8,8,0,0,0-12.84-2.88l-40.3,37.19-17.23-3.7-3.7-17.23,37.19-40.3A8,8,0,0,0,187,29.24,72,72,0,0,0,88,96,72.34,72.34,0,0,0,94,124.94L33.79,177c-.15.12-.29.26-.43.39a32,32,0,0,0,45.26,45.26c.13-.13.27-.28.39-.42L131.06,162A72,72,0,0,0,232,96,71.56,71.56,0,0,0,226.76,69ZM160,152a56.14,56.14,0,0,1-27.07-7,8,8,0,0,0-9.92,1.77L67.11,211.51a16,16,0,0,1-22.62-22.62L109.18,133a8,8,0,0,0,1.77-9.93,56,56,0,0,1,58.36-82.31l-31.2,33.81a8,8,0,0,0-1.94,7.1L141.83,108a8,8,0,0,0,6.14,6.14l26.35,5.66a8,8,0,0,0,7.1-1.94l33.81-31.2A56.06,56.06,0,0,1,160,152Z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">@totalMaintenances</span>
+                    <span class="stat-label">Total Mantenimientos</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon preventive-icon">
+                    <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm56-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h40A8,8,0,0,1,184,128Z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">@preventiveCount</span>
+                    <span class="stat-label">Preventivos</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon corrective-icon">
+                    <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">@correctiveCount</span>
+                    <span class="stat-label">Correctivos</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon predictive-icon">
+                    <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M236.8,188.09,149.35,36.22a24,24,0,0,0-42.7,0L19.2,188.09A23.89,23.89,0,0,0,40,224H216a23.89,23.89,0,0,0,20.8-35.91ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-value">@predictiveCount</span>
+                    <span class="stat-label">Predictivos</span>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filters -->
+    <div class="filters-container">
+        <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+            </svg>
+            <input type="text" class="search-input" 
+                   placeholder="Buscar por ID equipo, nombre, descripción..." 
+                   @bind="searchTerm"
+                   @bind:event="oninput" 
+                   @bind:after="HandleSearch" />
+        </div>
+
+        <div class="filter-group">
+            <select class="filter-select" @bind="selectedType" @bind:after="HandleFilterChange">
+                <option value="">Tipo: Todos</option>
+                <option value="Preventivo">Preventivo</option>
+                <option value="Predictivo">Predictivo</option>
+                <option value="Correctivo">Correctivo</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <div class="table-container">
+            <table class="maintenance-table">
+                <thead>
+                    <tr>
+                        <th>ID del equipo</th>
+                        <th>Nombre del Equipo</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Costo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr>
+                            <td colspan="6" class="loading-cell">
+                                <div class="spinner"></div>
+                                <span>Cargando datos...</span>
+                            </td>
+                        </tr>
+                    }
+                    else if (filteredRecords == null || !filteredRecords.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="empty-cell">
+                                <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M226.76,69a8,8,0,0,0-12.84-2.88l-40.3,37.19-17.23-3.7-3.7-17.23,37.19-40.3A8,8,0,0,0,187,29.24,72,72,0,0,0,88,96,72.34,72.34,0,0,0,94,124.94L33.79,177c-.15.12-.29.26-.43.39a32,32,0,0,0,45.26,45.26c.13-.13.27-.28.39-.42L131.06,162A72,72,0,0,0,232,96,71.56,71.56,0,0,0,226.76,69Z"/>
+                                </svg>
+                                <p>No has realizado mantenimientos aún</p>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var record in filteredRecords)
+                        {
+                            <tr>
+                                <td class="device-id-cell">@record.DeviceId</td>
+                                <td class="device-name-cell">@record.DeviceName</td>
+                                <td class="date-cell">@record.Date.ToString("dd/MM/yyyy")</td>
+                                <td class="type-cell">
+                                    <span class="type-badge @GetTypeBadgeClass(record.Type)">
+                                        @record.Type
+                                    </span>
+                                </td>
+                                <td class="description-cell" title="@record.Notes">
+                                    @TruncateText(record.Notes, 60)
+                                </td>
+                                <td class="cost-cell">@record.Cost.ToString("C0")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Data
+    private TechnicianDetails? technicianDetails;
+    private List<MaintenanceRecord> allRecords = new();
+    private List<MaintenanceRecord> filteredRecords = new();
+    private bool isLoading = true;
+    private int currentTechnicianId = 0;
+
+    // Stats
+    private int totalMaintenances = 0;
+    private int preventiveCount = 0;
+    private int correctiveCount = 0;
+    private int predictiveCount = 0;
+
+    // Filters
+    private string searchTerm = string.Empty;
+    private string selectedType = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get current technician ID
+        var currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            currentTechnicianId = currentUser.Id;
+        }
+        
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        
+        technicianDetails = await TechnicianService.GetTechnicianDetailsAsync(currentTechnicianId);
+        
+        if (technicianDetails != null && technicianDetails.MaintenanceHistory != null)
+        {
+            allRecords = technicianDetails.MaintenanceHistory
+                .OrderByDescending(m => m.Date)
+                .ToList();
+            
+            CalculateStats();
+        }
+        
+        ApplyFilters();
+        isLoading = false;
+    }
+
+    private void CalculateStats()
+    {
+        totalMaintenances = allRecords.Count;
+        preventiveCount = allRecords.Count(m => m.Type?.Equals("Preventivo", StringComparison.OrdinalIgnoreCase) == true);
+        correctiveCount = allRecords.Count(m => m.Type?.Equals("Correctivo", StringComparison.OrdinalIgnoreCase) == true);
+        predictiveCount = allRecords.Count(m => m.Type?.Equals("Predictivo", StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    private void HandleSearch()
+    {
+        ApplyFilters();
+    }
+
+    private void HandleFilterChange()
+    {
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = allRecords.AsEnumerable();
+
+        // Search filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            query = query.Where(r =>
+                (r.DeviceId?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true) ||
+                (r.DeviceName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true) ||
+                (r.Notes?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true));
+        }
+
+        // Type filter
+        if (!string.IsNullOrEmpty(selectedType))
+        {
+            query = query.Where(r => r.Type?.Equals(selectedType, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        filteredRecords = query.ToList();
+    }
+
+    private string GetTypeBadgeClass(string? type)
+    {
+        return type?.ToLowerInvariant() switch
+        {
+            "preventivo" => "type-preventive",
+            "correctivo" => "type-corrective",
+            "predictivo" => "type-predictive",
+            _ => "type-default"
+        };
+    }
+
+    private string TruncateText(string? text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text ?? string.Empty;
+        return text.Substring(0, maxLength) + "...";
+    }
+}

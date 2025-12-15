@@ -52,7 +52,17 @@
 
             if (response.Success)
             {
-                Navigation.NavigateTo("/");
+                var user = response.User;
+                var target = user?.Role switch
+                {
+                    "Administrator" => "/admin/dashboard",
+                    "Technician" => "/technician/dashboard",
+                    "Director" => "/director/dashboard",
+                    "Logistician" => "/logistician/dashboard",
+                    "SectionManager" => "/manager/dashboard",
+                    _ => "/"
+                };
+                Navigation.NavigateTo(target, forceLoad: true);
             }
             else
             {
@@ -76,7 +86,17 @@
 
             if (response.Success)
             {
-                Navigation.NavigateTo("/");
+                var user = response.User;
+                var target = user?.Role switch
+                {
+                    "Administrator" => "/admin/dashboard",
+                    "Technician" => "/technician/dashboard",
+                    "Director" => "/director/dashboard",
+                    "Logistician" => "/logistician/dashboard",
+                    "SectionManager" => "/manager/dashboard",
+                    _ => "/"
+                };
+                Navigation.NavigateTo(target, forceLoad: true);
             }
             else
             {

@@ -1,0 +1,140 @@
+@namespace InfraGestion.Web.Features.Reports.Components
+
+<div class="search-modal-overlay @(IsVisible ? "visible" : "")" @onclick="HandleOverlayClick">
+    <div class="search-modal" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h3 class="modal-title">@Title</h3>
+            <button class="btn-close" @onclick="Cancel">
+                <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                </svg>
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    placeholder="@Placeholder"
+                    @bind="searchText"
+                    @bind:event="oninput"
+                    @onkeyup="HandleKeyUp" />
+                @if (!string.IsNullOrEmpty(searchText))
+                {
+                    <button class="btn-clear" @onclick="ClearSearch">
+                        <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm37.66,130.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32L139.31,128Z" />
+                        </svg>
+                    </button>
+                }
+            </div>
+            
+            <div class="results-list">
+                @if (FilteredItems.Any())
+                {
+                    @foreach (var item in FilteredItems)
+                    {
+                        <div class="result-item @(selectedItem?.Id == item.Id ? "selected" : "")" 
+                             @onclick="() => SelectItem(item)">
+                            <span class="item-name">@item.Name</span>
+                            @if (!string.IsNullOrEmpty(item.SubText))
+                            {
+                                <span class="item-subtext">@item.SubText</span>
+                            }
+                        </div>
+                    }
+                }
+                else if (!string.IsNullOrEmpty(searchText))
+                {
+                    <div class="no-results">
+                        <p>No se encontraron resultados para "@searchText"</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-results">
+                        <p>Escribe para buscar...</p>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn-cancel" @onclick="Cancel">Cancelar</button>
+            <button class="btn-accept" @onclick="Accept" disabled="@(selectedItem == null)">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public string Title { get; set; } = "Buscar";
+    [Parameter] public string Placeholder { get; set; } = "Buscar...";
+    [Parameter] public List<SearchItem> Items { get; set; } = new();
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<SearchItem> OnAccept { get; set; }
+
+    private string searchText = string.Empty;
+    private SearchItem? selectedItem;
+
+    private IEnumerable<SearchItem> FilteredItems => string.IsNullOrWhiteSpace(searchText)
+        ? Items.Take(10)
+        : Items.Where(i => 
+            i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+            (i.SubText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+            .Take(10);
+
+    private void SelectItem(SearchItem item)
+    {
+        selectedItem = item;
+    }
+
+    private void ClearSearch()
+    {
+        searchText = string.Empty;
+        selectedItem = null;
+    }
+
+    private async Task Cancel()
+    {
+        ClearSearch();
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task Accept()
+    {
+        if (selectedItem != null)
+        {
+            await OnAccept.InvokeAsync(selectedItem);
+            ClearSearch();
+        }
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            _ = Cancel();
+        }
+        else if (e.Key == "Enter" && selectedItem != null)
+        {
+            _ = Accept();
+        }
+    }
+
+    private void HandleOverlayClick()
+    {
+        _ = Cancel();
+    }
+
+    public class SearchItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? SubText { get; set; }
+    }
+}
