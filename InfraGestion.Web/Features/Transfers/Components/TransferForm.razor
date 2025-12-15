@@ -16,17 +16,6 @@
         <ValidationMessage For="@(() => FormModel.DeviceId)" class="validation-message" />
     </div>
 
-    <div class="form-group">
-        <label for="origin" class="form-label">Origen*</label>
-        <select id="origin" class="form-input" @bind="FormModel.Origin">
-            <option value="">Seleccione el origen</option>
-            @foreach (var location in Locations)
-            {
-                <option value="@location">@location</option>
-            }
-        </select>
-        <ValidationMessage For="@(() => FormModel.Origin)" class="validation-message" />
-    </div>
 
     <div class="form-group">
         <label for="destination" class="form-label">Destino*</label>
@@ -57,16 +46,6 @@
                @bind="FormModel.ReceiverName"
                placeholder="Nombre del receptor" />
         <ValidationMessage For="@(() => FormModel.ReceiverName)" class="validation-message" />
-    </div>
-
-    <div class="form-group">
-        <label for="notes" class="form-label">Notas</label>
-        <textarea id="notes" 
-                  class="form-input form-textarea" 
-                  @bind="FormModel.Notes" 
-                  placeholder="Observaciones adicionales..."
-                  rows="3"></textarea>
-        <ValidationMessage For="@(() => FormModel.Notes)" class="validation-message" />
     </div>
 
     <div class="form-actions">

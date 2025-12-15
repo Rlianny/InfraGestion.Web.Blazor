@@ -5,13 +5,12 @@ namespace InfraGestion.Web.Features.Transfers.Models;
 /// </summary>
 public class Transfer
 {
-    public int Id { get; set; }
+    public int TransferId { get; set; }
     public int DeviceId { get; set; }
     public string DeviceName { get; set; } = string.Empty;
-    public string Origin { get; set; } = string.Empty;
-    public string Destination { get; set; } = string.Empty;
+    public string SourceSectionName{ get; set; } = string.Empty;
+    public string DestinationSectionName { get; set; } = string.Empty;
     public DateTime TransferDate { get; set; }
-    public string ReceiverName { get; set; } = string.Empty;
+    public string DeviceReceiverName { get; set; } = string.Empty;
     public string? Notes { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

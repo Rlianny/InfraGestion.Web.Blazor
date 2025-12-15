@@ -28,7 +28,7 @@ public class TransferService // TODO: Replace with real implementation
 
     public async Task<Transfer?> GetTransferByIdAsync(int id)
     {
-        var endPoint = $"/transfers{id}";
+        var endPoint = $"/transfers/{id}";
         var response = await _httpClient.GetFromJsonAsync<ApiResponse<Transfer>>(endPoint)?? throw new Exception($"Error while trying to make a GET {endPoint}");
         if (response.Success)
         {
@@ -71,26 +71,4 @@ public class TransferService // TODO: Replace with real implementation
         return true;
     }
 
-    public async Task<List<(string Id, string Name)>> GetDevicesAsync()
-    {
-        HashSet<(string Id, string Name)> devices = new();
-        var transfers = await GetAllTransfersAsync();
-        foreach (var transfer in transfers)
-        {
-
-            devices.Add(($"DEV{transfer.Id}", transfer.DeviceName));
-        }
-        return devices.ToList();
-    }
-
-    public async Task<List<string>> GetLocationsAsync()
-    {
-       HashSet<string> locations = new();
-       var transfers = await GetAllTransfersAsync();
-       foreach (var transfer in transfers)
-       {
-           locations.Add(transfer.Destination);
-       }
-        return locations.ToList();
-    }
 }

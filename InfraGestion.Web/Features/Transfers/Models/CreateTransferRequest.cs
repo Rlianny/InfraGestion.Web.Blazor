@@ -10,9 +10,6 @@ public class CreateTransferRequest
     [Required(ErrorMessage = "El equipo es requerido")]
     public string DeviceId { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "El origen es requerido")]
-    public string Origin { get; set; } = string.Empty;
-
     [Required(ErrorMessage = "El destino es requerido")]
     public string Destination { get; set; } = string.Empty;
 
@@ -23,6 +20,4 @@ public class CreateTransferRequest
     [StringLength(100, ErrorMessage = "El nombre del receptor no puede exceder 100 caracteres")]
     public string ReceiverName { get; set; } = string.Empty;
 
-    [StringLength(500, ErrorMessage = "Las notas no pueden exceder 500 caracteres")]
-    public string? Notes { get; set; }
 }

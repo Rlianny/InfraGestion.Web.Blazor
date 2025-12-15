@@ -3,6 +3,8 @@
 @using InfraGestion.Web.Features.Transfers.Services
 @using InfraGestion.Web.Features.Transfers.Components
 @inject TransferService TransferService
+@inject Inventory.Services.DeviceService  DeviceService;
+@inject Organization.Services.OrganizationService OrganizationService;
 @inject NavigationManager Navigation
 
 <PageTitle>Gestión de Traslados - InfraCom</PageTitle>
@@ -100,11 +102,11 @@
                         <tr>
                             <td class="device-id-cell">>@($"DEV{transfer.DeviceId}")</td>
                             <td class="device-name-cell">@transfer.DeviceName</td>
-                            <td class="origin-cell">@transfer.Origin</td>
-                            <td class="destination-cell">@transfer.Destination</td>
+                            <td class="origin-cell">@transfer.SourceSectionName</td>
+                            <td class="destination-cell">@transfer.DestinationSectionName</td>
                             <td class="date-cell">@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
                             <td class="actions-cell">
-                                <button class="btn-action btn-edit" @onclick="() => OpenEditModal(transfer.Id)" title="Editar">
+                                <button class="btn-action btn-edit" @onclick="() => OpenEditModal(transfer.TransferId)" title="Editar">
                                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path
@@ -112,7 +114,7 @@
                                     </svg>
                                 </button>
                                 <button class="btn-action btn-delete"
-                                    @onclick="() => OpenDeleteConfirmModal(transfer.Id, transfer.DeviceName)" title="Eliminar">
+                                    @onclick="() => OpenDeleteConfirmModal(transfer.TransferId, transfer.DeviceName)" title="Eliminar">
                                     <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path
@@ -147,6 +149,13 @@
     OnCancel="@CloseDeleteConfirmModal" />
 
 @code {
+
+
+
+
+
+
+
     // Data
     private List<Transfer> allTransfers = new();
     private List<Transfer> filteredTransfers = new();
@@ -179,9 +188,9 @@
         isLoading = true;
 
         allTransfers = await TransferService.GetAllTransfersAsync();
-        devices = await TransferService.GetDevicesAsync();
-        locations = await TransferService.GetLocationsAsync();
 
+        devices = (await DeviceService.GetAllDevicesAsync()).Select(x => ($"DEV-{x.Id}", x.Name)).ToList();
+        locations = (await OrganizationService.GetAllSectionsAsync()).Select(x=>x.Name).ToList();
         ApplyFilters();
         isLoading = false;
     }
@@ -204,8 +213,8 @@
         {
             query = query.Where(t =>
                 t.DeviceName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                t.Origin.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                t.Destination.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                t.SourceSectionName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.DestinationSectionName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrEmpty(selectedDateFilter) && int.TryParse(selectedDateFilter, out int year))
@@ -246,12 +255,12 @@
         {
             updateRequest = new UpdateTransferRequest
             {
-                Id = transfer.Id,
+                Id = transfer.TransferId,
                 DeviceId = transfer.DeviceId,
-                Origin = transfer.Origin,
-                Destination = transfer.Destination,
+                Origin = transfer.SourceSectionName,
+                Destination = transfer.DestinationSectionName,
                 TransferDate = transfer.TransferDate,
-                ReceiverName = transfer.ReceiverName,
+                ReceiverName = transfer.DeviceReceiverName,
                 Notes = transfer.Notes
             };
             showEditModal = true;
