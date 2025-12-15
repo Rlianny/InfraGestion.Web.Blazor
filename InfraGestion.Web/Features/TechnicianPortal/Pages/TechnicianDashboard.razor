@@ -1,11 +1,11 @@
 @page "/technician/dashboard"
 @using InfraGestion.Web.Features.Auth.Services
 @using InfraGestion.Web.Features.Inventory.Services
-@using InfraGestion.Web.Features.Inventory.Models
 @using InfraGestion.Web.Features.TechnicianPortal.Components
-@using static InfraGestion.Web.Features.TechnicianPortal.Components.InitialDefectReviewForm
+@using InfraGestion.Web.Features.Inventory.DTOs
+@using InfraGestion.Web.Features.Inventory.Models
+@using static InfraGestion.Web.Features.TechnicianPortal.Components.InitialInspectionReviewForm
 @inject AuthService AuthService
-@inject InspectionService InspectionService
 @inject InspectionService InspectionService
 
 <PageTitle>Dashboard Técnico - InfraCom</PageTitle>
@@ -13,87 +13,90 @@
 <h1 class="page-title">Dashboard</h1>
 
 <div class="dashboard-content">
-        <!-- Quick Actions Section -->
-        <div class="quick-actions-card">
-            <h2 class="card-title">Acciones Rápidas</h2>
-            <div class="action-buttons">
-                <button class="btn-action btn-primary" @onclick="RegisterMaintenance">
-                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
-                    </svg>
-                    Registrar Mantenimiento
-                </button>
-                <button class="btn-action btn-danger" @onclick="CreateDecommissionRequest">
-                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/>
-                    </svg>
-                    Crear solicitud de baja
-                </button>
-            </div>
-        </div>
-
-        <!-- Pending Initial Defect Requests Section -->
-        <div class="pending-requests-card">
-            <h2 class="card-title">Solicitudes de Defectación Inicial pendientes</h2>
-            
-            @if (isLoading)
-            {
-                <div class="loading-state">Cargando solicitudes...</div>
-            }
-            else if (!pendingRequests.Any())
-            {
-                <div class="empty-state">No hay solicitudes pendientes</div>
-            }
-            else
-            {
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>FECHA EMISIÓN</th>
-                                <th>ID EQUIPO</th>
-                                <th>NOMBRE DEL EQUIPO</th>
-                                <th>SOLICITANTE</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var request in pendingRequests)
-                            {
-                                <tr>
-                                    <td>@request.EmissionDate.ToString("dd/MM/yyyy")</td>
-                                    <td>@request.FormatedDeviceId</td>
-                                    <td>@request.DeviceName</td>
-                                    <td>@request.RequesterName</td>
-                                    <td>
-                                        <button class="btn-icon-action" @onclick="() => OpenReviewModal(request)" title="Revisar solicitud">
-                                            <svg class="action-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z"/>
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
+    <!-- Quick Actions Section -->
+    <div class="quick-actions-card">
+        <h2 class="card-title">Acciones Rápidas</h2>
+        <div class="action-buttons">
+            <button class="btn-action btn-primary" @onclick="RegisterMaintenance">
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+                </svg>
+                Registrar Mantenimiento
+            </button>
+            <button class="btn-action btn-danger" @onclick="CreateDecommissionRequest">
+                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+                </svg>
+                Crear solicitud de baja
+            </button>
         </div>
     </div>
 
+    <!-- Pending Initial Defect Requests Section -->
+    <div class="pending-requests-card">
+        <h2 class="card-title">Solicitudes de Defectación Inicial pendientes</h2>
+
+        @if (isLoading)
+        {
+            <div class="loading-state">Cargando solicitudes...</div>
+        }
+        else if (!pendingRequests.Any())
+        {
+            <div class="empty-state">No hay solicitudes pendientes</div>
+        }
+        else
+        {
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>FECHA EMISIÓN</th>
+                            <th>ID EQUIPO</th>
+                            <th>NOMBRE DEL EQUIPO</th>
+                            <th>SOLICITANTE</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in pendingRequests)
+                        {
+                            <tr>
+                                <td>@request.EmissionDate.ToString("dd/MM/yyyy")</td>
+                                <td>@request.FormatedDeviceId</td>
+                                <td>@request.DeviceName</td>
+                                <td>@request.RequesterName</td>
+                                <td>
+                                    <button class="btn-icon-action" @onclick="() => OpenReviewModal(request)"
+                                        title="Revisar solicitud">
+                                        <svg class="action-icon" viewBox="0 0 256 256" fill="currentColor"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
 <!-- Review Modal -->
 <Modal IsOpen="@showReviewModal" Title="Revisar Solicitud de Defectación Inicial" OnClose="@CloseReviewModal">
-    <InitialDefectReviewForm 
-        Request="@selectedRequest" 
-        OnReviewComplete="@HandleReviewComplete" 
+    <InitialDefectReviewForm Request="@selectedRequest" OnReviewComplete="@HandleReviewComplete"
         OnCancel="@CloseReviewModal" />
 </Modal>
 
 @code {
     private bool isLoading = true;
     private bool showReviewModal = false;
-    private List<PendingDefectRequest> pendingRequests = new();
-    private PendingDefectRequest selectedRequest = new();
+    private List<PendingInspection> pendingRequests = new();
+    private PendingInspection selectedRequest = new();
     private int currentTechnicianId = 0;
 
     protected override async Task OnInitializedAsync()
@@ -104,7 +107,7 @@
         {
             currentTechnicianId = currentUser.Id;
         }
-        
+
         await LoadPendingRequests();
     }
 
@@ -112,16 +115,17 @@
     {
         isLoading = true;
         StateHasChanged();
-        
+
         try
         {
 
             // Get pending inspection requests from backend
-            List<Inventory.DTOs.ReceivingInspectionRequestDto>? requests = await InspectionService.GetPendingInspectionsAsync(currentTechnicianId);
-        
+            List<Inventory.DTOs.InspectionRequestDto>? requests = await
+            InspectionService.GetPendingInspectionsAsync(currentTechnicianId);
+
 
             // Map backend DTOs to UI model
-            pendingRequests = requests.Select(r => new PendingDefectRequest
+            pendingRequests = requests.Select(r => new PendingInspection
             {
                 Id = r.RequestId,
                 DeviceId = r.DeviceId,
@@ -129,16 +133,16 @@
                 TechnicianId = r.TechnicianId,
                 EmissionDate = r.RequestDate,
                 RequesterName = string.IsNullOrWhiteSpace(r.RequesterFullName)
-                    ? $"Usuario #{r.RequesterId}"
-                    : r.RequesterFullName
+            ? $"Usuario #{r.RequesterId}"
+            : r.RequesterFullName
             }).ToList();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[ERROR] TechnicianDashboard - LoadPendingRequests: {ex.Message}");
-            pendingRequests = new List<PendingDefectRequest>();
+            pendingRequests = new List<PendingInspection>();
         }
-        
+
         isLoading = false;
         StateHasChanged();
     }
@@ -155,7 +159,7 @@
         Console.WriteLine("Create decommission request");
     }
 
-    private void OpenReviewModal(PendingDefectRequest request)
+    private void OpenReviewModal(PendingInspection request)
     {
         selectedRequest = request;
         showReviewModal = true;
@@ -167,50 +171,9 @@
         selectedRequest = new();
     }
 
-    private async Task HandleReviewComplete(InitialDefectReviewResult result)
+    private async Task HandleReviewComplete(InspectionDecisionDto result)
     {
-        try
-        {
-            bool success;
-            
-            if (result.IsApproved)
-            {
-
-                success = await InspectionService.ApproveDeviceInspectionAsync(result.DeviceId, result.TechnicianId);
-                
-                if (success)
-                {
-                    Console.WriteLine($"[INFO] Device {result.DeviceId} approved successfully");
-                }
-                else
-                {
-                    Console.WriteLine($"[ERROR] Failed to approve device {result.DeviceId}");
-                }
-            }
-            else
-            {
-                if (!result.RejectionReason.HasValue)
-                {
-                    Console.WriteLine("[ERROR] Rejection reason is required");
-                    return;
-                }
-                success = await InspectionService.RejectDeviceInspectionAsync(result.DeviceId, result.TechnicianId, result.RejectionReason.Value);
-                
-                if (success)
-                {
-                    Console.WriteLine($"[INFO] Device {result.DeviceId} rejected successfully");
-                }
-                else
-                {
-                    Console.WriteLine($"[ERROR] Failed to reject device {result.DeviceId}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] HandleReviewComplete: {ex.Message}");
-        }
-        
+        bool success = await InspectionService.ProcessInspectionDecisionAsync(result);
         CloseReviewModal();
         await LoadPendingRequests();
     }

@@ -3,7 +3,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
-public class ReceivingInspectionRequestDto
+public class InspectionRequestDto
 {
     [JsonPropertyName("requestId")]
     public int RequestId { get; set; }

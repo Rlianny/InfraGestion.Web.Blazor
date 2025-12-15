@@ -3,7 +3,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
 
-public class RegisterDeviceDto
+public class RegisterDeviceDto //Create
 {
     public string Name { get; set; } = string.Empty;
     public string? DepartmentName { get; set; }

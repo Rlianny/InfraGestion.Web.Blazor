@@ -25,7 +25,6 @@ public class DeviceService
         _authService = authService;
     }
 
-    
     public async Task<List<Device>> GetAllDevicesAsync(DeviceFilterDto? filter = null)
     {
         try
@@ -235,7 +234,6 @@ public class DeviceService
         }
     }
 
-
     public async Task<List<Device>> GetSectionDevicesAsync(int sectionId)
     {
         try
@@ -324,7 +322,6 @@ public class DeviceService
         return await GetAllDevicesAsync(filter);
     }
 
-
     public async Task<Device?> CreateDeviceAsync(CreateDeviceRequest request)
     {
         try
@@ -368,63 +365,11 @@ public class DeviceService
         }
     }
 
-    public async Task<bool> RejectDeviceAsync(int deviceId, int technicianId, string reason)
-    {
-        try
-        {
-            var dto = new RejectDeviceRequestDto
-            {
-                DeviceID = deviceId,
-                TechnicianID = technicianId,
-                Reason = reason,
-            };
-
-            var response = await _httpClient.PostAsJsonAsync("inventory/rejections", dto);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch (Exception ex)
-        {
-            return false;
-        }
-    }
-
-    public async Task<bool> ApproveDeviceAsync(int deviceId, int technicianId)
-    {
-        try
-        {
-            var dto = new AcceptDeviceRequestDto
-            {
-                DeviceId = deviceId,
-                TechnicianId = technicianId,
-            };
-
-            var response = await _httpClient.PostAsJsonAsync("inventory/approbals", dto);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return true;
-            }
-
-            return false;
-        }
-        catch (Exception ex)
-        {
-            return false;
-        }
-    }
-
-
     public async Task<Device?> UpdateDeviceAsync(UpdateDeviceRequest request)
     {
         try
         {
-            var dto = new UpdateDeviceRequestDto
+            var dto = new UpdateDeviceDto
             {
                 DeviceId = request.Id,
                 Name = request.Name,
@@ -509,7 +454,6 @@ public class DeviceService
         }
     }
 
-
     public async Task<Dictionary<string, int>> GetStatisticsAsync()
     {
         var devices = await GetAllDevicesAsync();
@@ -525,7 +469,6 @@ public class DeviceService
             ["BeingTransferred"] = devices.Count(d => d.State == OperationalState.BeingTransferred),
         };
     }
-
 
     private Device MapDtoToDevice(DeviceDto dto)
     {
@@ -644,6 +587,4 @@ public class DeviceService
             ReviewedByUserName = null,
         };
     }
-
-    
 }

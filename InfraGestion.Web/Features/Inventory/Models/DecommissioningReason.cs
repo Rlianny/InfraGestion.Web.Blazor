@@ -10,5 +10,5 @@ public enum DecommissioningReason
     IncompatibilityWithNewInfrastructure,
     PlannedTechnologyUpgrade,
     TheftOrLoss,
-    CustomerContractTermination
+    CustomerContractTermination,
 }

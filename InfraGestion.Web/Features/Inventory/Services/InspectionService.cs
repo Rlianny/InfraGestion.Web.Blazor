@@ -5,6 +5,7 @@ using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.Inventory.DTOs;
 using InfraGestion.Web.Features.Inventory.Models;
+using InfraGestion.Web.Features.Inventory.DTOs;
 
 namespace InfraGestion.Web.Features.Inventory.Services;
 
@@ -29,7 +30,7 @@ public class InspectionService
         await _authService.GetCurrentUserAsync();
     }
 
-    public async Task<List<ReceivingInspectionRequestDto>> GetTechnicianInspectionRequestsAsync(
+    public async Task<List<InspectionRequestDto>> GetTechnicianInspectionRequestsAsync(
         int technicianId
     )
     {
@@ -44,7 +45,7 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new List<ReceivingInspectionRequestDto>();
+                return new List<InspectionRequestDto>();
             }
 
             using var document = JsonDocument.Parse(content);
@@ -52,22 +53,22 @@ public class InspectionService
 
             if (root.TryGetProperty("data", out var dataElement))
             {
-                var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
+                var requests = JsonSerializer.Deserialize<List<InspectionRequestDto>>(
                     dataElement.GetRawText(),
                     JsonOptions
                 );
-                return requests ?? new List<ReceivingInspectionRequestDto>();
+                return requests ?? new List<InspectionRequestDto>();
             }
 
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
         catch (Exception)
         {
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
     }
 
-    public async Task<List<ReceivingInspectionRequestDto>> GetPendingInspectionsAsync(
+    public async Task<List<InspectionRequestDto>> GetPendingInspectionsAsync(
         int technicianId
     )
     {
@@ -82,7 +83,7 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new List<ReceivingInspectionRequestDto>();
+                return new List<InspectionRequestDto>();
             }
 
             using var document = JsonDocument.Parse(content);
@@ -90,25 +91,22 @@ public class InspectionService
 
             if (root.TryGetProperty("data", out var dataElement))
             {
-                var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
+                var requests = JsonSerializer.Deserialize<List<InspectionRequestDto>>(
                     dataElement.GetRawText(),
                     JsonOptions
                 );
-                return requests ?? new List<ReceivingInspectionRequestDto>();
+                return requests ?? new List<InspectionRequestDto>();
             }
 
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
         catch (Exception)
         {
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
     }
 
-    // ==========================================
-    // ADMIN ENDPOINTS
-    // ==========================================
-
+    
     /// <summary>
     /// Gets revised devices for an administrator
     /// GET /api/inspections/admin/{adminId}/revised-devices
@@ -149,7 +147,7 @@ public class InspectionService
         }
     }
 
-    public async Task<List<ReceivingInspectionRequestDto>> GetAdminInspectionRequestsAsync(
+    public async Task<List<InspectionRequestDto>> GetAdminInspectionRequestsAsync(
         int adminId
     )
     {
@@ -164,7 +162,7 @@ public class InspectionService
 
             if (!response.IsSuccessStatusCode)
             {
-                return new List<ReceivingInspectionRequestDto>();
+                return new List<InspectionRequestDto>();
             }
 
             using var document = JsonDocument.Parse(content);
@@ -172,22 +170,22 @@ public class InspectionService
 
             if (root.TryGetProperty("data", out var dataElement))
             {
-                var requests = JsonSerializer.Deserialize<List<ReceivingInspectionRequestDto>>(
+                var requests = JsonSerializer.Deserialize<List<InspectionRequestDto>>(
                     dataElement.GetRawText(),
                     JsonOptions
                 );
-                return requests ?? new List<ReceivingInspectionRequestDto>();
+                return requests ?? new List<InspectionRequestDto>();
             }
 
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
         catch (Exception)
         {
-            return new List<ReceivingInspectionRequestDto>();
+            return new List<InspectionRequestDto>();
         }
     }
 
-    public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionRequestDto request)
+    public async Task<bool> ProcessInspectionDecisionAsync(InspectionDecisionDto request)
     {
         try
         {
@@ -230,35 +228,5 @@ public class InspectionService
         {
             return false;
         }
-    }
-
-    public async Task<bool> ApproveDeviceInspectionAsync(int deviceId, int technicianId)
-    {
-        var request = new InspectionDecisionRequestDto
-        {
-            DeviceId = deviceId,
-            TechnicianId = technicianId,
-            IsApproved = true,
-            Reason = null,
-        };
-
-        return await ProcessInspectionDecisionAsync(request);
-    }
-
-    public async Task<bool> RejectDeviceInspectionAsync(
-        int deviceId,
-        int technicianId,
-        DecommissioningReason reason
-    )
-    {
-        var request = new InspectionDecisionRequestDto
-        {
-            DeviceId = deviceId,
-            TechnicianId = technicianId,
-            IsApproved = false,
-            Reason = reason,
-        };
-
-        return await ProcessInspectionDecisionAsync(request);
     }
 }

@@ -3,7 +3,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
 
-public class UpdateDeviceRequestDto
+public class UpdateDeviceDto //Update
 {
     public int DeviceId { get; set; }
     public string Name { get; set; } = string.Empty;

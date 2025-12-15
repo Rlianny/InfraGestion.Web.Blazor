@@ -3,7 +3,7 @@ using InfraGestion.Web.Features.Inventory.Models;
 namespace InfraGestion.Web.Features.Inventory.DTOs;
 
 
-public class InspectionDecisionRequestDto
+public class InspectionDecisionDto
 {
     public int DeviceId { get; set; }
     public int TechnicianId { get; set; }
