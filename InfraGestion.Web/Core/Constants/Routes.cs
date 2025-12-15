@@ -187,11 +187,17 @@ public static class ApiRoutes
         /// <summary>GET /decommissioning/requests</summary>
         public const string GetAllRequests = $"{Base}/requests";
 
+        /// <summary>GET /decommissioning/requests/pending</summary>
+        public const string GetPendingRequests = $"{Base}/requests/pending";
+
         /// <summary>GET /decommissioning/requests/{id}</summary>
         public static string GetRequestById(int id) => $"{Base}/requests/{id}";
 
         /// <summary>POST /decommissioning/requests</summary>
         public const string CreateRequest = $"{Base}/requests";
+
+        /// <summary>POST /decommissioning/requests/review</summary>
+        public const string ReviewRequest = $"{Base}/requests/review";
 
         /// <summary>PUT /decommissioning/requests</summary>
         public const string UpdateRequest = $"{Base}/requests";
@@ -209,5 +215,8 @@ public static class ApiRoutes
 
         /// <summary>POST /maintenance</summary>
         public const string Create = Base;
+
+        /// <summary>GET /maintenance/technician/{technicianId}</summary>
+        public static string GetByTechnician(int technicianId) => $"{Base}/technician/{technicianId}";
     }
 }

@@ -77,6 +77,78 @@ public class DecommissioningService
     }
 
     /// <summary>
+    /// Gets all pending decommissioning requests
+    /// GET /decommissioning/requests/pending
+    /// </summary>
+    public async Task<List<DecommissioningRequest>> GetPendingDecommissioningRequestsAsync()
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var url = ApiRoutes.Decommissioning.GetPendingRequests;
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[ERROR] Failed to get pending decommissioning requests: {content}");
+                return new List<DecommissioningRequest>();
+            }
+
+            using var document = JsonDocument.Parse(content);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("data", out var dataElement))
+            {
+                var dtos = JsonSerializer.Deserialize<List<DecommissioningRequestDto>>(
+                    dataElement.GetRawText(), JsonOptions);
+
+                if (dtos != null)
+                {
+                    return dtos.Select(MapDtoToModel).ToList();
+                }
+            }
+
+            return new List<DecommissioningRequest>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] GetPendingDecommissioningRequestsAsync: {ex.Message}");
+            return new List<DecommissioningRequest>();
+        }
+    }
+
+    /// <summary>
+    /// Review (approve/reject) a decommissioning request
+    /// POST /decommissioning/requests/review
+    /// </summary>
+    public async Task<bool> ReviewDecommissioningRequestAsync(ReviewDecommissioningRequestDto review)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var url = ApiRoutes.Decommissioning.ReviewRequest;
+            var response = await _httpClient.PostAsJsonAsync(url, review);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ERROR] Failed to review decommissioning request: {errorContent}");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] ReviewDecommissioningRequestAsync: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gets a decommissioning request by ID
     /// GET /decommissioning/requests/{id}
     /// </summary>

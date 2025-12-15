@@ -126,6 +126,54 @@ public class UserService
     }
 
     /// <summary>
+    /// Get users by role
+    /// GET /Users/user/{currentUserId}/role/{role}
+    /// </summary>
+    public async Task<List<User>> GetUsersByRoleAsync(string role)
+    {
+        try
+        {
+            var currentUserId = await GetCurrentUserIdAsync();
+            if (currentUserId == 0)
+            {
+                Console.WriteLine("Error: No se pudo obtener el usuario actual");
+                return new List<User>();
+            }
+
+            // GET /Users/user/{currentUserId}/role/{role}
+            var response = await _httpClient.GetAsync(ApiRoutes.Users.GetUsersByRole(currentUserId, role));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Error HTTP {response.StatusCode} al obtener usuarios por rol: {role}");
+                return new List<User>();
+            }
+
+            // Deserialize ApiResponse<IEnumerable<UserDto>>
+            var apiResponse = await response.Content.ReadFromJsonAsync<
+                ApiResponse<IEnumerable<UserDto>>
+            >();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
+            {
+                return apiResponse.Data.Select(MapDtoToUser).ToList();
+            }
+
+            return new List<User>();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error de red al obtener usuarios por rol: {ex.Message}");
+            return new List<User>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error inesperado al obtener usuarios por rol: {ex.Message}");
+            return new List<User>();
+        }
+    }
+
+    /// <summary>
     /// Search user with filters
     /// NOTE: the actual API has not search endpoint
     /// </summary>

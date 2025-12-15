@@ -2,9 +2,17 @@
 @using InfraGestion.Web.Features.Auth.Services
 @using InfraGestion.Web.Features.Inventory.Models
 @using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Inventory.DTOs
 @using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Users.Services
+@using InfraGestion.Web.Features.Users.Models
+@using InfraGestion.Web.Shared.Components
 @inject AuthService AuthService
 @inject DecommissioningService DecommissioningService
+@inject OrganizationService OrganizationService
+@inject UserService UserService
 @inject NavigationManager Navigation
 
 <div class="logistician-dashboard">
@@ -46,13 +54,13 @@
                             @foreach (var item in pendingDecommissions)
                             {
                                 <tr>
-                                    <td class="id-cell">DEV@item.DeviceId.ToString("D3")</td>
+                                    <td class="id-cell">DEV@(item.DeviceId.ToString("D3"))</td>
                                     <td>@item.DeviceName</td>
                                     <td>@item.RequestDate.ToString("dd/MM/yyyy")</td>
                                     <td>@DecommissioningReasonHelper.GetReasonDisplayName(item.Reason)</td>
-                                    <td class="description-cell">@item.Justification</td>
+                                    <td class="description-cell" title="@item.Justification">@TruncateText(item.Justification, 50)</td>
                                     <td class="action-cell">
-                                        <button class="btn-view" @onclick="() => ViewDecommissionDetails(item.Id)">
+                                        <button class="btn-view" @onclick="() => OpenReviewModal(item)" title="Revisar solicitud">
                                             <svg viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/>
                                             </svg>
@@ -117,13 +125,158 @@
     }
 </div>
 
+<!-- Modal de Revisión -->
+<Modal IsOpen="@showReviewModal" Title="Revisar Solicitud de Baja" OnClose="@CloseReviewModal">
+    @if (selectedRequest != null)
+    {
+        <div class="review-modal-content">
+            <!-- Request Details -->
+            <div class="request-details">
+                <div class="detail-row">
+                    <span class="detail-label">Equipo:</span>
+                    <span class="detail-value">DEV@selectedRequest.DeviceId.ToString("D3") - @selectedRequest.DeviceName</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Técnico:</span>
+                    <span class="detail-value">@selectedRequest.TechnicianName</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Fecha:</span>
+                    <span class="detail-value">@selectedRequest.RequestDate.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Motivo:</span>
+                    <span class="detail-value">@DecommissioningReasonHelper.GetReasonDisplayName(selectedRequest.Reason)</span>
+                </div>
+                <div class="detail-row detail-row-full">
+                    <span class="detail-label">Justificación del técnico:</span>
+                    <span class="detail-value detail-value-full">@selectedRequest.Justification</span>
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="form-group">
+                <label for="reviewJustification" class="form-label">Justificación de la decisión*</label>
+                <textarea id="reviewJustification" class="form-input form-textarea" 
+                          @bind="reviewJustification" 
+                          placeholder="Ingrese la justificación de su decisión..."
+                          rows="3"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="review-actions">
+                <button type="button" class="btn-cancel" @onclick="CloseReviewModal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-reject" @onclick="HandleReject" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(reviewJustification))">
+                    @if (isSubmitting && !isApproving)
+                    {
+                        <span class="btn-spinner"></span>
+                        <span>Rechazando...</span>
+                    }
+                    else
+                    {
+                        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
+                        </svg>
+                        <span>Rechazar</span>
+                    }
+                </button>
+                <button type="button" class="btn-approve" @onclick="OpenApprovalModal" disabled="@(isSubmitting || string.IsNullOrWhiteSpace(reviewJustification))">
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                    </svg>
+                    <span>Aprobar</span>
+                </button>
+            </div>
+        </div>
+    }
+</Modal>
+
+<!-- Modal de Aprobación (Destino Final y Receptor) -->
+<Modal IsOpen="@showApprovalModal" Title="Completar Aprobación" OnClose="@CloseApprovalModal">
+    <div class="approval-modal-content">
+        <p class="approval-description">
+            Para completar la aprobación, seleccione el destino final del equipo y el usuario receptor.
+        </p>
+
+        <div class="form-group">
+            <label for="finalDestination" class="form-label">Destino Final (Departamento)*</label>
+            <select id="finalDestination" class="form-input" @bind="selectedDepartmentId">
+                <option value="0">Seleccione un departamento</option>
+                @foreach (var dept in departments)
+                {
+                    <option value="@dept.Id">@dept.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="receiver" class="form-label">Usuario Receptor (Logístico)*</label>
+            <select id="receiver" class="form-input" @bind="selectedReceiverId">
+                <option value="0">Seleccione un usuario</option>
+                @foreach (var user in logisticUsers)
+                {
+                    <option value="@user.Id">@user.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-cancel" @onclick="CloseApprovalModal">
+                Volver
+            </button>
+            <button type="button" class="btn-save btn-approve-submit" 
+                    @onclick="HandleApprove" 
+                    disabled="@(isSubmitting || selectedDepartmentId == 0 || selectedReceiverId == 0)">
+                @if (isSubmitting && isApproving)
+                {
+                    <span class="btn-spinner"></span>
+                    <span>Procesando...</span>
+                }
+                else
+                {
+                    <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/>
+                    </svg>
+                    <span>Confirmar Aprobación</span>
+                }
+            </button>
+        </div>
+    </div>
+</Modal>
+
 @code {
+    // Loading state
     private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool isApproving = false;
+
+    // Data
     private List<DecommissioningRequest>? pendingDecommissions;
     private List<PendingEquipmentItem>? pendingEquipment;
+    private List<Department> departments = new();
+    private List<User> logisticUsers = new();
+    private int currentUserId = 0;
+
+    // Review Modal State
+    private bool showReviewModal = false;
+    private DecommissioningRequest? selectedRequest;
+    private string reviewJustification = string.Empty;
+
+    // Approval Modal State
+    private bool showApprovalModal = false;
+    private int selectedDepartmentId = 0;
+    private int selectedReceiverId = 0;
 
     protected override async Task OnInitializedAsync()
     {
+        var currentUser = await AuthService.GetCurrentUserAsync();
+        if (currentUser != null)
+        {
+            currentUserId = currentUser.Id;
+        }
+        
         await LoadData();
     }
 
@@ -133,16 +286,18 @@
         {
             isLoading = true;
 
-            // Load pending decommissioning requests (status = Pending)
-            var allDecommissions = await DecommissioningService.GetAllDecommissioningRequestsAsync();
-            pendingDecommissions = allDecommissions
-                .Where(d => d.Status == DecommissioningStatus.Pending)
+            // Load pending decommissioning requests from API
+            pendingDecommissions = await DecommissioningService.GetPendingDecommissioningRequestsAsync();
+            pendingDecommissions = pendingDecommissions
                 .OrderByDescending(d => d.RequestDate)
                 .Take(10)
                 .ToList();
 
             // Load pending equipment to receive
             pendingEquipment = await GetPendingEquipmentAsync();
+
+            // Load departments and logistic users for approval modal
+            await LoadDepartmentsAndUsers();
         }
         catch (Exception ex)
         {
@@ -151,6 +306,30 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task LoadDepartmentsAndUsers()
+    {
+        try
+        {
+            departments = await OrganizationService.GetAllDepartmentsAsync();
+            
+            // Get logistic users by role from API
+            logisticUsers = await UserService.GetUsersByRoleAsync("Logistician");
+            
+            // Filter by active status
+            logisticUsers = logisticUsers.Where(u => u.Status == UserStatus.Active).ToList();
+            
+            Console.WriteLine($"[DEBUG] Logistic users found: {logisticUsers.Count}");
+            foreach (var user in logisticUsers)
+            {
+                Console.WriteLine($"[DEBUG] Logistic User: {user.Name}, Status: {user.Status}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading departments/users: {ex.Message}");
         }
     }
 
@@ -172,14 +351,127 @@
         };
     }
 
-    private void ViewDecommissionDetails(int id)
+    // Review Modal Methods
+    private void OpenReviewModal(DecommissioningRequest request)
     {
-        Navigation.NavigateTo($"/logistician/decommissioning/{id}");
+        selectedRequest = request;
+        reviewJustification = string.Empty;
+        showReviewModal = true;
+    }
+
+    private void CloseReviewModal()
+    {
+        showReviewModal = false;
+        selectedRequest = null;
+        reviewJustification = string.Empty;
+    }
+
+    // Approval Modal Methods
+    private void OpenApprovalModal()
+    {
+        selectedDepartmentId = 0;
+        selectedReceiverId = 0;
+        showApprovalModal = true;
+    }
+
+    private void CloseApprovalModal()
+    {
+        showApprovalModal = false;
+        selectedDepartmentId = 0;
+        selectedReceiverId = 0;
+    }
+
+    // Handle Reject
+    private async Task HandleReject()
+    {
+        if (selectedRequest == null || string.IsNullOrWhiteSpace(reviewJustification))
+            return;
+
+        try
+        {
+            isSubmitting = true;
+            isApproving = false;
+
+            var review = new ReviewDecommissioningRequestDto
+            {
+                DecommissioningRequestId = selectedRequest.Id,
+                IsApproved = false,
+                Date = DateTime.Now,
+                Description = reviewJustification,
+                LogisticId = currentUserId
+            };
+
+            var success = await DecommissioningService.ReviewDecommissioningRequestAsync(review);
+
+            if (success)
+            {
+                CloseReviewModal();
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rejecting request: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    // Handle Approve
+    private async Task HandleApprove()
+    {
+        if (selectedRequest == null || selectedDepartmentId == 0 || selectedReceiverId == 0)
+            return;
+
+        try
+        {
+            isSubmitting = true;
+            isApproving = true;
+
+            var review = new ReviewDecommissioningRequestDto
+            {
+                DecommissioningRequestId = selectedRequest.Id,
+                IsApproved = true,
+                Date = DateTime.Now,
+                Description = reviewJustification,
+                DecommissioningReason = (int)selectedRequest.Reason,
+                FinalDestination = selectedDepartmentId,
+                ReceiverID = selectedReceiverId,
+                LogisticId = currentUserId
+            };
+
+            var success = await DecommissioningService.ReviewDecommissioningRequestAsync(review);
+
+            if (success)
+            {
+                CloseApprovalModal();
+                CloseReviewModal();
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error approving request: {ex.Message}");
+        }
+        finally
+        {
+            isSubmitting = false;
+            isApproving = false;
+        }
     }
 
     private void ViewTransferDetails(int id)
     {
         Navigation.NavigateTo($"/logistician/equipment/{id}");
+    }
+
+    private string TruncateText(string? text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text ?? string.Empty;
+        return text.Substring(0, maxLength) + "...";
     }
 
     // Helper class for pending equipment
