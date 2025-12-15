@@ -131,6 +131,10 @@ public class TechnicianService
             }
 
             var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(
+                $"[TechnicianService] Raw API response for technician {technicianId}: {content.Substring(0, Math.Min(500, content.Length))}..."
+            );
+
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<TechnicianDetailDto>>(
                 content,
                 JsonOptions
@@ -138,8 +142,15 @@ public class TechnicianService
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
             {
+                Console.WriteLine(
+                    $"[TechnicianService] API response was not successful or Data is null"
+                );
                 return await BuildBasicTechnicianDetailsAsync(technicianId);
             }
+
+            Console.WriteLine(
+                $"[TechnicianService] Successfully deserialized. MaintenanceRecords count: {apiResponse.Data.MaintenanceRecords.Count}"
+            );
 
             return MapToTechnicianDetails(apiResponse.Data);
         }
@@ -409,7 +420,7 @@ public class TechnicianService
         }
 
         var rating = dto.AverageRating.HasValue ? (decimal)dto.AverageRating.Value : 0m;
-        
+
         return new Technician
         {
             Id = dto.TechnicianId,
@@ -427,24 +438,17 @@ public class TechnicianService
     /// </summary>
     private static TechnicianDetails MapToTechnicianDetails(TechnicianDetailDto dto)
     {
-        return new TechnicianDetails
-        {
-            Id = dto.TechnicianId,
-            Name = dto.Name,
-            IdentificationNumber = $"TECH{dto.TechnicianId:D3}",
-            Specialty = dto.Specialty,
-            YearsOfExperience = dto.YearsOfExperience,
-            Status = dto.IsActive.HasValue ? (dto.IsActive.Value ? TechnicianStatus.Active : TechnicianStatus.Inactive) : TechnicianStatus.Active,
-            Rating = (decimal)dto.AverageRating,
-            HireDate = dto.CreatedAt,
-            CreatedAt = dto.CreatedAt,
-            LastInterventionDate = dto.LastInterventionDate,
-            Section = dto.SectionName,
-            Department = dto.DepartmentName,
-            SectionManager = dto.SectionManagerName,
+        Console.WriteLine(
+            $"[TechnicianService] Mapping {dto.MaintenanceRecords.Count} maintenance records for technician {dto.Name}"
+        );
 
-            MaintenanceHistory = dto
-                .MaintenanceRecords.Select(m => new MaintenanceRecord
+        var maintenanceHistory = dto
+            .MaintenanceRecords.Select(m =>
+            {
+                Console.WriteLine(
+                    $"[TechnicianService] Maintenance record - DeviceId: {m.DeviceId}, DeviceName: '{m.DeviceName}', Date: {m.MaintenanceDate}"
+                );
+                return new MaintenanceRecord
                 {
                     Id = m.MaintenanceRecordId,
                     Date = m.MaintenanceDate,
@@ -454,19 +458,44 @@ public class TechnicianService
                     Cost = (decimal)m.Cost,
                     DeviceId = m.DeviceId.ToString(),
                     DeviceName = m.DeviceName,
-                })
-                .ToList(),
+                };
+            })
+            .ToList();
+
+        return new TechnicianDetails
+        {
+            Id = dto.TechnicianId,
+            Name = dto.Name,
+            IdentificationNumber = $"TECH{dto.TechnicianId:D3}",
+            Specialty = dto.Specialty,
+            YearsOfExperience = dto.YearsOfExperience,
+            Status = dto.IsActive.HasValue
+                ? (dto.IsActive.Value ? TechnicianStatus.Active : TechnicianStatus.Inactive)
+                : TechnicianStatus.Active,
+            Rating = (decimal)dto.AverageRating,
+            HireDate = dto.CreatedAt,
+            CreatedAt = dto.CreatedAt,
+            LastInterventionDate = dto.LastInterventionDate,
+            Section = dto.SectionName,
+            Department = dto.DepartmentName,
+            SectionManager = dto.SectionManagerName,
+
+            MaintenanceHistory = maintenanceHistory,
 
             DecommissionProposals = dto
-                .DecommissioningRequests.Select(d => new DecommissionProposal
+                .DecommissioningRequests.Select(d =>
                 {
-                    Id = d.DecommissioningRequestId,
-                    Date = d.RequestDate,
-                    DeviceId = d.DeviceId.ToString(),
-                    DeviceName = d.DeviceName,
-                    Cause = d.ReasonDescription,
-                    Receiver = d.DeviceReceiverName,
-                    Status = d.GetStatusName(),
+                    Console.WriteLine($"[TechnicianService] Decommission request - DeviceId: {d.DeviceId}, DeviceName: '{d.DeviceName}', Receiver: '{d.DeviceReceiverName}', Status: {d.Status}");
+                    return new DecommissionProposal
+                    {
+                        Id = d.DecommissioningRequestId,
+                        Date = d.RequestDate,
+                        DeviceId = d.DeviceId.ToString(),
+                        DeviceName = d.DeviceName,
+                        Cause = d.GetReasonName(),
+                        Receiver = d.DeviceReceiverName,
+                        Status = d.GetStatusName(),
+                    };
                 })
                 .ToList(),
 

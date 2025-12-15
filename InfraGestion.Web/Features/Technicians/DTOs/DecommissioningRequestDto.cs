@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using InfraGestion.Web.Features.Inventory.Helpers;
+using InfraGestion.Web.Features.Inventory.Models;
 
 namespace InfraGestion.Web.Features.Technicians.DTOs;
 
@@ -51,4 +53,9 @@ public class DecommissioningRequestDto
         };
     }
 
+    public string GetReasonName()
+    {
+        var reason = (DecommissioningReason)ReasonId;
+        return DecommissioningReasonHelper.GetReasonDisplayName(reason);
+    }
 }

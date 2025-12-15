@@ -164,7 +164,6 @@ else
                             <th>FECHA</th>
                             <th>EQUIPO</th>
                             <th>CAUSA</th>
-                            <th>RECEPTOR</th>
                             <th>ESTADO</th>
                         </tr>
                     </thead>
@@ -185,7 +184,6 @@ else
                                     <td>@proposal.Date.ToString("dd/MM/yyyy")</td>
                                     <td>@(proposal.DeviceName)</td>
                                     <td>@proposal.Cause</td>
-                                    <td>@proposal.Receiver</td>
                                     <td>
                                         <span class="proposal-status @TechnicianStatusHelper.GetProposalStatusClass(proposal.Status)">
                                             @proposal.Status
@@ -258,6 +256,7 @@ else
         isLoading = true;
         technician = await TechnicianService.GetTechnicianDetailsAsync(TechnicianId);
         isLoading = false;
+        StateHasChanged();
     }
 
     private void NavigateBack()
