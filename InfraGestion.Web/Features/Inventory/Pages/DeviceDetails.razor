@@ -175,7 +175,7 @@ else
                                     <td>@transfer.SourceSectionName</td>
                                     <td>@transfer.DestinationSectionName</td>
                                     <td>@transfer.ReceiverName</td>
-                                    <td>@transfer.Status</td>
+                                    <td class="@TransferStatusHelper.GetStatusBadgeClass(transfer.Status)">@TransferStatusHelper.GetStatusDisplayName(transfer.Status)</td>
                                 </tr>
                             }
                         }
@@ -248,6 +248,7 @@ else
         isLoading = true;
         device = await DeviceService.GetDeviceDetailsAsync(DeviceId);
         isLoading = false;
+        StateHasChanged();
     }
 
     private void NavigateBack()

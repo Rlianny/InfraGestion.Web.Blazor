@@ -199,7 +199,7 @@ else
                         @if (device.DecommissioningInfo == null)
                         {
                             <tr>
-                                <td colspan="5" class="empty-cell">
+                                <td colspan="4" class="empty-cell">
                                     No se encontró solicitud de baja para este equipo
                                 </td>
                             </tr>
@@ -244,8 +244,20 @@ else
     private async Task LoadDeviceDetails()
     {
         isLoading = true;
-        device = await DeviceService.GetDeviceDetailsAsync(DeviceId);
+        StateHasChanged();
+        
+        try
+        {
+            device = await DeviceService.GetDeviceDetailsAsync(DeviceId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] DirectorDeviceDetails - LoadDeviceDetails: {ex.Message}");
+            device = null;
+        }
+        
         isLoading = false;
+        StateHasChanged();
     }
 
     private void NavigateBack()

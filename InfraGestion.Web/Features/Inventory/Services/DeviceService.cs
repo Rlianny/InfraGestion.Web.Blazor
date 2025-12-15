@@ -178,58 +178,37 @@ public class DeviceService
         try
         {
             var response = await _httpClient.GetAsync(ApiRoutes.Devices.GetDeviceById(id));
-            var content = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
             {
-                return null;
-            }
-
-            try
-            {
-                using var doc = System.Text.Json.JsonDocument.Parse(content);
-                var root = doc.RootElement;
-
-                System.Text.Json.JsonElement dataElement;
-
-                if (
-                    root.ValueKind == System.Text.Json.JsonValueKind.Object
-                    && root.TryGetProperty("data", out var dataProp)
-                    && dataProp.ValueKind == System.Text.Json.JsonValueKind.Object
-                )
-                {
-                    dataElement = dataProp;
-                }
-                else if (root.ValueKind == System.Text.Json.JsonValueKind.Object)
-                {
-                    dataElement = root;
-                }
-                else
-                {
-                    return null;
-                }
-
-                var dto = System.Text.Json.JsonSerializer.Deserialize<DeviceDetailDto>(
-                    dataElement.GetRawText(),
-                    new System.Text.Json.JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                    }
+                Console.WriteLine(
+                    $"[ERROR] GetDeviceDetailsAsync - Failed to fetch device {id}: {response.StatusCode}"
                 );
-
-                if (dto != null)
-                {
-                    return MapDetailDtoToDeviceDetails(dto);
-                }
-
                 return null;
             }
-            catch (System.Text.Json.JsonException)
+
+            var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<DeviceDetailDto>>();
+
+            if (apiResponse?.Success == true && apiResponse.Data != null)
             {
-                return null;
+                return MapDetailDtoToDeviceDetails(apiResponse.Data);
             }
+
+            Console.WriteLine($"[ERROR] GetDeviceDetailsAsync - Invalid response for device {id}");
+            return null;
         }
-        catch (Exception)
+        catch (HttpRequestException ex)
         {
+            Console.WriteLine(
+                $"[ERROR] GetDeviceDetailsAsync - Network error for device {id}: {ex.Message}"
+            );
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[ERROR] GetDeviceDetailsAsync - Unexpected error for device {id}: {ex.Message}"
+            );
             return null;
         }
     }
@@ -264,7 +243,7 @@ public class DeviceService
 
             return new List<Device>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return new List<Device>();
         }
@@ -298,7 +277,7 @@ public class DeviceService
 
             return new List<Device>();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return new List<Device>();
         }
@@ -406,7 +385,7 @@ public class DeviceService
 
             return null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return null;
         }
@@ -510,7 +489,7 @@ public class DeviceService
             LastMaintenanceDate = lastMaintenanceDate,
             MaintenanceHistory = maintenanceHistory,
             TransferHistory = MapTransferHistory(dto.TransferHistory.ToList()),
-            DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningInfo),
+            DecommissioningInfo = MapDecommissioningInfo(dto.DecommissioningRequestInfo),
         };
     }
 
@@ -568,8 +547,14 @@ public class DeviceService
             .ToList();
     }
 
-    private DecommissioningRequest? MapDecommissioningInfo(DecommissioningDto? dto)
+    private DecommissioningRequest? MapDecommissioningInfo(IEnumerable<DecommissioningRequestDto>? dtos)
     {
+        if (dtos == null || !dtos.Any())
+            return null;
+
+        // Take the most recent decommissioning request
+        var dto = dtos.OrderByDescending(d => d.RequestDate).FirstOrDefault();
+        
         if (dto == null)
             return null;
 
@@ -578,13 +563,14 @@ public class DeviceService
             Id = dto.DecommissioningRequestId,
             DeviceId = dto.DeviceId,
             DeviceName = dto.DeviceName,
-            ReceiverName = dto.DeviceReceiverName,
-            DecommissioningDate = dto.DecommissioningDate,
+            ReceiverName = dto.ReceiverUserName ?? "N/A",
+            DecommissioningDate = dto.RequestDate,
             Reason = (DecommissioningReason)dto.Reason,
-            FinalDestination = dto.FinalDestination,
-            ReviewedDate = null,
-            ReviewedByUserId = null,
-            ReviewedByUserName = null,
+            ReasonDescription = dto.ReasonDescription,
+            FinalDestination = dto.FinalDestinationName,
+            ReviewedDate = dto.ReviewedDate,
+            ReviewedByUserId = dto.ReviewedByUserId,
+            ReviewedByUserName = dto.ReviewedByUserName,
         };
     }
 }
