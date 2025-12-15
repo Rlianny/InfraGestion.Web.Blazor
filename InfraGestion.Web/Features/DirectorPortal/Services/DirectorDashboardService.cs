@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using InfraGestion.Web.Features.Auth.DTOs;
+using InfraGestion.Web.Features.Auth.Services;
 using InfraGestion.Web.Features.DirectorPortal.DTOs;
 
 namespace InfraGestion.Web.Features.DirectorPortal.Services;
@@ -10,10 +11,17 @@ namespace InfraGestion.Web.Features.DirectorPortal.Services;
 public class DirectorDashboardService
 {
     private readonly HttpClient _httpClient;
+    private readonly AuthService _authService;
 
-    public DirectorDashboardService(HttpClient httpClient)
+    public DirectorDashboardService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
+    }
+
+    private async Task EnsureAuthenticatedAsync()
+    {
+        await _authService.GetCurrentUserAsync();
     }
 
     /// <summary>
@@ -24,6 +32,8 @@ public class DirectorDashboardService
     {
         try
         {
+            await EnsureAuthenticatedAsync();
+            
             var response = await _httpClient.GetAsync("Users/director/dashboardInfo");
 
             if (!response.IsSuccessStatusCode)

@@ -1,6 +1,8 @@
 @using InfraGestion.Web.Features.Inventory.Models
 @using InfraGestion.Web.Features.Inventory.Helpers
+@using InfraGestion.Web.Features.Inventory.Services
 @using InfraGestion.Web.Shared.Components
+@inject DecommissioningService DecommissioningService
 
 <Modal IsOpen="@IsOpen" Title="@ModalTitle" OnClose="@HandleClose">
     <form class="decommissioning-form" @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
@@ -14,25 +16,27 @@
         else if (EditRequest != null)
         {
             <div class="form-section">
-                <div class="form-group">
+                <!-- Device Name (Read-only) -->
+                <div class="form-group full-width">
                     <label class="form-label">
-                        ID del Equipo <span class="required">*</span>
+                        Nombre del Equipo
                     </label>
                     <input type="text"
-                           class="form-control"
-                           @bind="EditRequest.DeviceId"
-                           placeholder="Ingrese el ID del equipo"
-                           required />
+                           class="form-control readonly-field"
+                           value="@EditRequest.DeviceName"
+                           readonly
+                           disabled />
+                    <span class="field-hint">Este campo no es editable</span>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">
-                        ID del Técnico <span class="required">*</span>
+                        Técnico Responsable <span class="required">*</span>
                     </label>
                     <input type="text"
                            class="form-control"
-                           @bind="EditRequest.TechnicianId"
-                           placeholder="Ingrese el ID del técnico"
+                           @bind="EditRequest.TechnicianName"
+                           placeholder="Nombre del técnico"
                            required />
                 </div>
 
@@ -101,6 +105,16 @@
                            @bind="EditRequest.FinalDestination"
                            placeholder="Ej: Reciclaje, Almacén, Donación" />
                 </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        Receptor del Equipo
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           @bind="EditRequest.ReceiverName"
+                           placeholder="Nombre de la persona o entidad que recibe el equipo" />
+                </div>
             </div>
 
             <div class="form-actions">
@@ -133,13 +147,15 @@
     private DecommissioningRequest? EditRequest { get; set; }
     private bool isLoading = false;
     private bool isSubmitting = false;
+    private int currentRequestId = 0;
 
-    private string ModalTitle => $"Editar Baja Técnica #{RequestId}";
+    private string ModalTitle => $"Editar Baja Técnica #{currentRequestId}";
 
     protected override async Task OnParametersSetAsync()
     {
-        if (IsOpen && RequestId > 0)
+        if (IsOpen && RequestId != 0 && RequestId != currentRequestId)
         {
+            currentRequestId = RequestId;
             await LoadRequest();
         }
     }
@@ -147,12 +163,41 @@
     private async Task LoadRequest()
     {
         isLoading = true;
+        EditRequest = null;
         StateHasChanged();
 
-        await OnLoadRequest.InvokeAsync(RequestId);
-        
-        isLoading = false;
-        StateHasChanged();
+        try
+        {
+            // Carga directa desde el servicio
+            var request = await DecommissioningService.GetDecommissioningRequestByIdAsync(currentRequestId);
+            if (request != null)
+            {
+                EditRequest = new DecommissioningRequest
+                {
+                    Id = request.Id,
+                    DeviceId = request.DeviceId,
+                    DeviceName = request.DeviceName,
+                    TechnicianId = request.TechnicianId,
+                    TechnicianName = request.TechnicianName,
+                    RequestDate = request.RequestDate,
+                    Status = request.Status,
+                    Reason = request.Reason,
+                    Justification = request.Justification,
+                    DecommissioningDate = request.DecommissioningDate,
+                    FinalDestination = request.FinalDestination,
+                    ReceiverName = request.ReceiverName
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading request: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     public void SetRequest(DecommissioningRequest request)
@@ -189,6 +234,7 @@
         if (!isSubmitting)
         {
             EditRequest = null;
+            currentRequestId = 0;
             await OnClose.InvokeAsync();
         }
     }

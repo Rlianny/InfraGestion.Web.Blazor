@@ -148,6 +148,53 @@ public class DecommissioningService
         }
     }
 
+    /// <summary>
+    /// Updates a decommissioning request
+    /// PUT /decommissioning/requests
+    /// </summary>
+    public async Task<bool> UpdateDecommissioningRequestAsync(DecommissioningRequest request)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            // Map the model to the API DTO
+            var updateDto = new UpdateDecommissioningRequestDto
+            {
+                DecommissioningRequestId = request.Id,
+                TechnicianId = request.TechnicianId,
+                DeviceId = request.DeviceId,
+                EmissionDate = request.RequestDate,
+                AnswerDate = request.DecommissioningDate,
+                Status = (int)request.Status,
+                Reason = (int)request.Reason,
+                DeviceReceiverId = null, // Will be set if we have receiver info
+                IsApproved = request.Status == DecommissioningStatus.Accepted ? true : 
+                             request.Status == DecommissioningStatus.Rejected ? false : null,
+                FinalDestinationDepartmentID = null, // Needs to be set based on FinalDestination lookup
+                LogisticId = null,
+                Description = request.Justification
+            };
+
+            var url = ApiRoutes.Decommissioning.UpdateRequest;
+            var response = await _httpClient.PutAsJsonAsync(url, updateDto);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ERROR] Failed to update decommissioning request: {errorContent}");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] UpdateDecommissioningRequestAsync: {ex.Message}");
+            return false;
+        }
+    }
+
     // Mapper
     private DecommissioningRequest MapDtoToModel(DecommissioningRequestDto dto)
     {

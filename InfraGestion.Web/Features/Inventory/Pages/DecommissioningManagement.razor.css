@@ -168,7 +168,7 @@
 
 .decommissioning-table {
     width: 100%;
-    min-width: 1400px; /* Minimum width to trigger horizontal scroll */
+    min-width: 1600px; /* Increased to accommodate full justification text */
     border-collapse: collapse;
 }
 
@@ -241,10 +241,10 @@
 }
 
 .justification-cell {
-    min-width: 200px;
-    max-width: 250px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 300px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .destination-cell {
