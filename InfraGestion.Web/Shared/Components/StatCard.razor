@@ -1,0 +1,45 @@
+@* StatCard Component - Reusable statistics card for dashboards *@
+
+<div class="stat-card @ColorClass @CssClass">
+    <div class="stat-icon">
+        @IconContent
+    </div>
+    <div class="stat-info">
+        <span class="stat-label">@Label</span>
+        <span class="stat-value">@Value</span>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// The label/title of the stat
+    /// </summary>
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The value to display
+    /// </summary>
+    [Parameter]
+    public string Value { get; set; } = "0";
+
+    /// <summary>
+    /// Color theme: blue, green, purple, orange, red, yellow, cyan, teal
+    /// </summary>
+    [Parameter]
+    public string Color { get; set; } = "blue";
+
+    /// <summary>
+    /// Icon content (SVG or other HTML)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? IconContent { get; set; }
+
+    /// <summary>
+    /// Additional CSS classes
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    private string ColorClass => $"stat-{Color}";
+}

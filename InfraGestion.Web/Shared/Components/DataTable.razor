@@ -1,0 +1,102 @@
+@*
+    DataTable Component
+    Componente genérico para tablas de datos con estados de carga y vacío
+*@
+@typeparam TItem
+
+<div class="table-container">
+    <table class="data-table @TableClass">
+        <thead>
+            <tr>
+                @HeaderTemplate
+            </tr>
+        </thead>
+        <tbody>
+            @if (IsLoading)
+            {
+                <tr>
+                    <td colspan="@ColumnCount" class="loading-cell">
+                        <div class="spinner"></div>
+                        <span>@LoadingText</span>
+                    </td>
+                </tr>
+            }
+            else if (Items == null || !Items.Any())
+            {
+                <tr>
+                    <td colspan="@ColumnCount" class="empty-cell">
+                        <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                        </svg>
+                        <p>@EmptyText</p>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in Items)
+                {
+                    <tr @onclick="() => OnRowClick.InvokeAsync(item)" class="@(OnRowClick.HasDelegate ? "clickable-row" : "")">
+                        @RowTemplate(item)
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    /// <summary>
+    /// Lista de items a mostrar
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IEnumerable<TItem>? Items { get; set; }
+
+    /// <summary>
+    /// Template para el header de la tabla (columnas)
+    /// </summary>
+    [Parameter, EditorRequired]
+    public RenderFragment HeaderTemplate { get; set; } = null!;
+
+    /// <summary>
+    /// Template para cada fila
+    /// </summary>
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> RowTemplate { get; set; } = null!;
+
+    /// <summary>
+    /// Número de columnas (para colspan en estados vacío/cargando)
+    /// </summary>
+    [Parameter]
+    public int ColumnCount { get; set; } = 6;
+
+    /// <summary>
+    /// Indica si está cargando datos
+    /// </summary>
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    /// <summary>
+    /// Texto a mostrar cuando está cargando
+    /// </summary>
+    [Parameter]
+    public string LoadingText { get; set; } = "Cargando datos...";
+
+    /// <summary>
+    /// Texto a mostrar cuando no hay datos
+    /// </summary>
+    [Parameter]
+    public string EmptyText { get; set; } = "No se encontraron registros";
+
+    /// <summary>
+    /// Clase CSS adicional para la tabla
+    /// </summary>
+    [Parameter]
+    public string TableClass { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback cuando se hace clic en una fila
+    /// </summary>
+    [Parameter]
+    public EventCallback<TItem> OnRowClick { get; set; }
+}

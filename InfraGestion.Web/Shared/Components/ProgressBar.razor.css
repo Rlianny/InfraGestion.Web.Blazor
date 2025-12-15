@@ -1,0 +1,111 @@
+/* ProgressBar Component Styles */
+.progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progress-label {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+.progress-value {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.progress-bar {
+    height: 8px;
+    background: rgb(226, 232, 240);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Color Variants */
+.progress-fill.progress-blue {
+    background: rgb(59, 130, 246);
+}
+
+.progress-fill.progress-green {
+    background: rgb(34, 197, 94);
+}
+
+.progress-fill.progress-purple {
+    background: rgb(139, 92, 246);
+}
+
+.progress-fill.progress-orange {
+    background: rgb(249, 115, 22);
+}
+
+.progress-fill.progress-red {
+    background: rgb(239, 68, 68);
+}
+
+.progress-fill.progress-yellow {
+    background: rgb(234, 179, 8);
+}
+
+.progress-fill.progress-cyan {
+    background: rgb(6, 182, 212);
+}
+
+.progress-fill.progress-teal {
+    background: rgb(20, 184, 166);
+}
+
+.progress-fill.progress-gray {
+    background: rgb(100, 116, 139);
+}
+
+/* Size Variants */
+.progress-item.progress-sm .progress-bar {
+    height: 6px;
+}
+
+.progress-item.progress-lg .progress-bar {
+    height: 12px;
+}
+
+/* Striped Animation */
+.progress-fill.progress-striped {
+    background-image: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 1rem 1rem;
+}
+
+.progress-fill.progress-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    from {
+        background-position: 1rem 0;
+    }
+    to {
+        background-position: 0 0;
+    }
+}

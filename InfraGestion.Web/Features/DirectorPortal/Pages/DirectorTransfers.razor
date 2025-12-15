@@ -8,96 +8,44 @@
 
 <div class="transfers-page">
     <!-- Header -->
-    <div class="page-header-wrapper">
-        <div class="page-header">
-            <div class="header-text">
-                <h1 class="page-title">Gestión de Traslados</h1>
-                <p class="page-description">Administración de traslados de equipos entre secciones de la empresa</p>
-            </div>
-        </div>
-    </div>
+    <PageHeader Title="Gestión de Traslados" Description="Administración de traslados de equipos entre secciones de la empresa" />
 
     <!-- Filters -->
-    <div class="filters-container">
-        <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path
-                    d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-            </svg>
-            <input type="text" class="search-input" placeholder="Buscar por nombre ..." @bind="searchTerm"
-                @bind:event="oninput" @bind:after="HandleSearch" />
-        </div>
-
-        <div class="filter-group">
-            <select class="filter-select" @bind="selectedDateFilter" @bind:after="HandleFilterChange">
+    <FilterBar>
+        <SearchBox>
+            <SearchBox @bind-Value="searchTerm" Placeholder="Buscar por nombre ..." OnSearch="HandleSearch" />
+        </SearchBox>
+        <Filters>
+            <FilterSelect @bind-Value="selectedDateFilter" OnChange="HandleFilterChange">
                 <option value="">Fecha: Todos</option>
                 <option value="2024">2024</option>
                 <option value="2023">2023</option>
                 <option value="2022">2022</option>
                 <option value="2021">2021</option>
-            </select>
+            </FilterSelect>
 
-            <button class="btn-export">
-                <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M74.34,85.66A8,8,0,0,1,85.66,74.34L120,108.69V24a8,8,0,0,1,16,0v84.69l34.34-34.35a8,8,0,0,1,11.32,11.32l-48,48a8,8,0,0,1-11.32,0ZM240,136v64a16,16,0,0,1-16,16H32a16,16,0,0,1-16-16V136a16,16,0,0,1,16-16H84.4a4,4,0,0,1,2.83,1.17L111,145A24,24,0,0,0,145,145l23.8-23.8A4,4,0,0,1,171.6,120H224A16,16,0,0,1,240,136Zm-40,32a12,12,0,1,0-12,12A12,12,0,0,0,200,168Z" />
-                </svg>
-                Exportar
-            </button>
-        </div>
-    </div>
+            <ExportButton Text="Exportar" />
+        </Filters>
+    </FilterBar>
 
     <!-- Table -->
-    <div class="table-container">
-        <table class="transfers-table">
-            <thead>
-                <tr>
-                    <th>ID de equipo</th>
-                    <th>Nombre del equipo</th>
-                    <th>Origen</th>
-                    <th>Destino</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (isLoading)
-                {
-                    <tr>
-                        <td colspan="5" class="loading-cell">
-                            <div class="spinner"></div>
-                            <span>Cargando datos...</span>
-                        </td>
-                    </tr>
-                }
-                else if (filteredTransfers == null || !filteredTransfers.Any())
-                {
-                    <tr>
-                        <td colspan="5" class="empty-cell">
-                            <svg class="empty-icon" viewBox="0 0 256 256" fill="currentColor"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                    d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
-                            </svg>
-                            <p>No se encontraron registros que coincidan con los filtros aplicados</p>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var transfer in filteredTransfers)
-                    {
-                        <tr>
-                            <td class="device-id-cell">@transfer.DeviceId</td>
-                            <td class="device-name-cell">@transfer.DeviceName</td>
-                            <td class="origin-cell">@transfer.SourceSectionName</td>
-                            <td class="destination-cell">@transfer.DestinationSectionName</td>
-                            <td class="date-cell">@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
+    <DataTable TItem="Transfer" Items="filteredTransfers ?? new List<Transfer>()" IsLoading="isLoading" ColSpan="5"
+               EmptyMessage="No se encontraron registros que coincidan con los filtros aplicados">
+        <HeaderTemplate>
+            <th>ID de equipo</th>
+            <th>Nombre del equipo</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Fecha</th>
+        </HeaderTemplate>
+        <RowTemplate Context="transfer">
+            <td class="device-id-cell">@transfer.DeviceId</td>
+            <td class="device-name-cell">@transfer.DeviceName</td>
+            <td class="origin-cell">@transfer.SourceSectionName</td>
+            <td class="destination-cell">@transfer.DestinationSectionName</td>
+            <td class="date-cell">@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
+        </RowTemplate>
+    </DataTable>
 </div>
 
 @code {

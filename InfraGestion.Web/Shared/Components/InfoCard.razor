@@ -1,0 +1,57 @@
+@* InfoCard Component - Reusable card with header and content *@
+
+<div class="info-card @CssClass">
+    @if (!string.IsNullOrEmpty(Title) || HeaderActions != null)
+    {
+        <div class="card-header">
+            <h3 class="card-title">@Title</h3>
+            @if (HeaderActions != null)
+            {
+                <div class="card-actions">
+                    @HeaderActions
+                </div>
+            }
+        </div>
+    }
+    <div class="card-content">
+        @ChildContent
+    </div>
+    @if (FooterContent != null)
+    {
+        <div class="card-footer">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Card title
+    /// </summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Main card content
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Header action buttons or links
+    /// </summary>
+    [Parameter]
+    public RenderFragment? HeaderActions { get; set; }
+
+    /// <summary>
+    /// Footer content
+    /// </summary>
+    [Parameter]
+    public RenderFragment? FooterContent { get; set; }
+
+    /// <summary>
+    /// Additional CSS classes
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+}

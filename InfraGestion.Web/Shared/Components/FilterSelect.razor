@@ -1,0 +1,72 @@
+@*
+    FilterSelect Component
+    Componente reutilizable para selects de filtros
+*@
+
+<select class="filter-select" value="@Value" @onchange="HandleChange">
+    @if (!string.IsNullOrEmpty(DefaultOptionText))
+    {
+        <option value="">@DefaultOptionText</option>
+    }
+    @foreach (var option in Options)
+    {
+        <option value="@option.Value">@option.Text</option>
+    }
+</select>
+
+@code {
+    /// <summary>
+    /// Valor seleccionado actual
+    /// </summary>
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Callback cuando cambia el valor
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>
+    /// Texto de la opción por defecto (ej: "Estado: Todos")
+    /// </summary>
+    [Parameter]
+    public string DefaultOptionText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Lista de opciones del select
+    /// </summary>
+    [Parameter]
+    public List<SelectOption> Options { get; set; } = new();
+
+    /// <summary>
+    /// Callback cuando se cambia la selección
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnChange { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? string.Empty;
+        Value = newValue;
+        await ValueChanged.InvokeAsync(newValue);
+        await OnChange.InvokeAsync(newValue);
+    }
+
+    /// <summary>
+    /// Representa una opción del select
+    /// </summary>
+    public class SelectOption
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+
+        public SelectOption() { }
+        
+        public SelectOption(string value, string text)
+        {
+            Value = value;
+            Text = text;
+        }
+    }
+}

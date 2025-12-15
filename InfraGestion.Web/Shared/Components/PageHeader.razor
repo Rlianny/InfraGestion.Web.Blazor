@@ -1,0 +1,42 @@
+@* 
+    PageHeader Component
+    Componente reutilizable para encabezados de página con título, descripción y acciones opcionales
+*@
+
+<div class="page-header-wrapper">
+    <div class="page-header">
+        <div class="header-text">
+            <h1 class="page-title">@Title</h1>
+            @if (!string.IsNullOrEmpty(Description))
+            {
+                <p class="page-description">@Description</p>
+            }
+        </div>
+        @if (Actions != null)
+        {
+            <div class="header-actions">
+                @Actions
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Título principal de la página
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Descripción opcional debajo del título
+    /// </summary>
+    [Parameter]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// Contenido opcional para botones de acción (agregar, exportar, etc.)
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+}

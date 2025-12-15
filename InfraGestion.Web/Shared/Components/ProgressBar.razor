@@ -1,0 +1,78 @@
+@* ProgressBar Component - Reusable progress bar with label *@
+
+<div class="progress-item @CssClass">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <div class="progress-header">
+            <span class="progress-label">@Label</span>
+            @if (ShowValue)
+            {
+                <span class="progress-value">@ValueDisplay</span>
+            }
+        </div>
+    }
+    <div class="progress-bar">
+        <div class="progress-fill @ColorClass" style="width: @Percentage%"></div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Label text for the progress bar
+    /// </summary>
+    [Parameter]
+    public string? Label { get; set; }
+
+    /// <summary>
+    /// Current value
+    /// </summary>
+    [Parameter]
+    public double Value { get; set; } = 0;
+
+    /// <summary>
+    /// Maximum value
+    /// </summary>
+    [Parameter]
+    public double Max { get; set; } = 100;
+
+    /// <summary>
+    /// Percentage (0-100). If set, overrides Value/Max calculation
+    /// </summary>
+    [Parameter]
+    public double? PercentageOverride { get; set; }
+
+    /// <summary>
+    /// Whether to show the value display
+    /// </summary>
+    [Parameter]
+    public bool ShowValue { get; set; } = true;
+
+    /// <summary>
+    /// Format for value display: "percentage", "value", "fraction"
+    /// </summary>
+    [Parameter]
+    public string ValueFormat { get; set; } = "percentage";
+
+    /// <summary>
+    /// Color: blue, green, purple, orange, red, yellow, cyan, teal
+    /// </summary>
+    [Parameter]
+    public string Color { get; set; } = "blue";
+
+    /// <summary>
+    /// Additional CSS classes
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    private double Percentage => PercentageOverride ?? (Max > 0 ? Math.Min(100, (Value / Max) * 100) : 0);
+
+    private string ColorClass => $"progress-{Color}";
+
+    private string ValueDisplay => ValueFormat switch
+    {
+        "value" => Value.ToString("N0"),
+        "fraction" => $"{Value:N0}/{Max:N0}",
+        _ => $"{Percentage:N0}%"
+    };
+}

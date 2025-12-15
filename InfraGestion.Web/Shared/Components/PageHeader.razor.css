@@ -1,0 +1,48 @@
+/* PageHeader Component Styles */
+.page-header-wrapper {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 1.5rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.header-text {
+    flex: 1;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.page-description {
+    color: var(--color-text-light);
+    font-size: 14px;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+}

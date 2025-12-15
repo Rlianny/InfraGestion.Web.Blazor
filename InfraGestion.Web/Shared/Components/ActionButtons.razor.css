@@ -1,0 +1,137 @@
+/* ActionButtons Component Styles */
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* View Button - Blue */
+.action-btn.view-btn {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.action-btn.view-btn:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Edit Button - Blue */
+.action-btn.edit-btn {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.action-btn.edit-btn:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Delete Button - Red */
+.action-btn.delete-btn {
+    color: rgb(239, 68, 68);
+    border-color: rgb(239, 68, 68);
+}
+
+.action-btn.delete-btn:hover {
+    background: rgb(239, 68, 68);
+    color: white;
+}
+
+/* Rate Button - Yellow/Gold */
+.action-btn.rate-btn {
+    color: rgb(234, 179, 8);
+    border-color: rgb(234, 179, 8);
+    background: white;
+}
+
+.action-btn.rate-btn:hover {
+    background: rgb(254, 249, 195);
+}
+
+/* Transfer Button - Turquoise */
+.action-btn.transfer-btn {
+    color: rgb(20, 184, 166);
+    border-color: rgb(20, 184, 166);
+}
+
+.action-btn.transfer-btn:hover {
+    background: rgb(20, 184, 166);
+    color: white;
+}
+
+/* Approve Button - Green */
+.action-btn.approve-btn {
+    color: rgb(34, 197, 94);
+    border-color: rgb(34, 197, 94);
+}
+
+.action-btn.approve-btn:hover {
+    background: rgb(34, 197, 94);
+    color: white;
+}
+
+/* Reject Button - Red */
+.action-btn.reject-btn {
+    color: rgb(239, 68, 68);
+    border-color: rgb(239, 68, 68);
+}
+
+.action-btn.reject-btn:hover {
+    background: rgb(239, 68, 68);
+    color: white;
+}
+
+/* Disabled state */
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Compact variant */
+.action-buttons.compact .action-btn {
+    width: 28px;
+    height: 28px;
+}
+
+.action-buttons.compact .action-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Large variant */
+.action-buttons.large .action-btn {
+    width: 36px;
+    height: 36px;
+}
+
+.action-buttons.large .action-btn svg {
+    width: 18px;
+    height: 18px;
+}

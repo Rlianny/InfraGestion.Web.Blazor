@@ -1,0 +1,97 @@
+/* InfoCard Component Styles */
+.info-card {
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-main);
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.card-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-main);
+}
+
+/* Compact variant */
+.info-card.compact .card-header,
+.info-card.compact .card-content,
+.info-card.compact .card-footer {
+    padding: 12px 16px;
+}
+
+/* No padding variant */
+.info-card.no-padding .card-content {
+    padding: 0;
+}
+
+/* Hover effect variant */
+.info-card.hoverable:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+/* Clickable variant */
+.info-card.clickable {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.info-card.clickable:hover {
+    border-color: var(--color-primary);
+}
+
+/* Color accent variants */
+.info-card.accent-blue {
+    border-top: 3px solid rgb(59, 130, 246);
+}
+
+.info-card.accent-green {
+    border-top: 3px solid rgb(34, 197, 94);
+}
+
+.info-card.accent-purple {
+    border-top: 3px solid rgb(139, 92, 246);
+}
+
+.info-card.accent-orange {
+    border-top: 3px solid rgb(249, 115, 22);
+}
+
+.info-card.accent-red {
+    border-top: 3px solid rgb(239, 68, 68);
+}
+
+.info-card.accent-yellow {
+    border-top: 3px solid rgb(234, 179, 8);
+}
+
+.info-card.accent-teal {
+    border-top: 3px solid rgb(20, 184, 166);
+}
