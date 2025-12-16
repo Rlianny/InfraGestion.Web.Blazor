@@ -65,32 +65,36 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
-	public async Task<List<DepartmentTransferReportDto>> GenerateDepartmentTransferReportAsync(string? departmentId = null)
+	public async Task<List<SectionTransferReportDto>> GenerateDepartmentTransferReportAsync()
 	{
-		string endPoint = "reports/department-transfer";
-		if (!string.IsNullOrEmpty(departmentId))
+		string endPoint = "reports/transfers";
+        try
 		{
-			endPoint += $"?departmentId={departmentId}";
-		}
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DepartmentTransferReportDto>>>(endPoint)
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<SectionTransferReportDto>>>(endPoint);
+				
+            if (response.Success)
+            {
+                return response.Data ?? new List<SectionTransferReportDto>();
+            }
+            throw new Exception(string.Join("\n", response.Errors));
+        }
+		catch(Exception ex)
 		{
-			return response.Data ?? new List<DepartmentTransferReportDto>();
-		}
-		throw new Exception(string.Join("\n", response.Errors));
+			throw new Exception($"Failed to generate department transfer report: {ex.Message}");
+        }
 	}
 
 	public async Task<List<CorrelationAnalysisReportDto>> GenerateCorrelationAnalysisReportAsync()
 	{
 		string endPoint = "reports/correlation-analysis";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<CorrelationAnalysisReportDto>>>(endPoint)
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
-		{
-			return response.Data ?? new List<CorrelationAnalysisReportDto>();
-		}
-		throw new Exception(string.Join("\n", response.Errors));
+		
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<CorrelationAnalysisReportDto>>>(endPoint)
+				?? throw new Exception($"Error while trying to make a GET {endPoint}");
+            if (response.Success)
+            {
+                return response.Data ?? new List<CorrelationAnalysisReportDto>();
+            }
+            throw new Exception(string.Join("\n", response.Errors)); 
 	}
 
 	public async Task<List<BonusDeterminationReportDto>> GenerateBonusDeterminationReportAsync(BonusReportCriteria criteria)
@@ -144,12 +148,12 @@ public class FrontendReport
 	public async Task<byte[]> GetPdfReportAsync(string reportName)
 	{
 		string endPoint = $"reports/export/{reportName}/pdf";
-		var response = await _httpClient.GetAsync(endPoint);
-		if (response.IsSuccessStatusCode)
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<PdfExportDto>>(endPoint);
+		if (response is not null && response.Success)
 		{
-			return await response.Content.ReadAsByteArrayAsync();
+			return response.Data!.PdfContent;
 		}
-		throw new Exception($"Error while trying to make a GET {endPoint}");
+		return Array.Empty<byte>();
 	}
 
 	public async Task<byte[]> ExportToPdfAsync(string reportName)

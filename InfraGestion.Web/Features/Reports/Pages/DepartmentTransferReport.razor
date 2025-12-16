@@ -2,17 +2,15 @@
 @page "/reports/transfers"
 @page "/reportes/transferencias"
 @using InfraGestion.Web.Features.Reports.DTOs
-@using InfraGestion.Web.Features.Reports.Services
-@inject FrontendReport ReportService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
-
+@inject Reports.Services.FrontendReport FrontendReportService
 <PageTitle>Reporte de Transferencias entre Departamentos - InfraCom</PageTitle>
 
 <div class="report-page">
     <!-- Header -->
-    <PageHeader Title="Transferencias entre Departamentos" 
-                Description="Historial de movimientos de equipos entre departamentos">
+    <PageHeader Title="Traslados entre Secciones" 
+                Description="Historial de movimientos de equipos entre secciones">
         <Actions>
             <button class="btn-back" @onclick="GoBack">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -37,8 +35,8 @@
                     </svg>
                 </IconContent>
             </StatCard>
-            <StatCard Label="Departamentos Origen" 
-                      Value="@reportData.Select(r => r.SourceDepartmentName).Distinct().Count().ToString()" 
+            <StatCard Label="Secciones Origen" 
+                      Value="@reportData.Select(r => r.SourceSectionName).Distinct().Count().ToString()" 
                       Color="#9C27B0">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
@@ -46,8 +44,8 @@
                     </svg>
                 </IconContent>
             </StatCard>
-            <StatCard Label="Departamentos Destino" 
-                      Value="@reportData.Select(r => r.DestinationDepartmentName).Distinct().Count().ToString()" 
+            <StatCard Label="Secciones Destino" 
+                      Value="@reportData.Select(r => r.DestinationSectionName).Distinct().Count().ToString()" 
                       Color="#FF9800">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
@@ -56,7 +54,7 @@
                 </IconContent>
             </StatCard>
             <StatCard Label="Equipos Transferidos" 
-                      Value="@reportData.Select(r => r.DeviceId).Distinct().Count().ToString()" 
+                      Value="@reportData.Select(r => r.DeviceName).Distinct().Count().ToString()" 
                       Color="#4CAF50">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
@@ -68,14 +66,13 @@
     }
 
     <!-- Data Table -->
-    <DataTable TItem="DepartmentTransferReportDto" Items="reportData" IsLoading="isLoading" ColumnCount="7" EmptyText="No hay transferencias registradas">
+    <DataTable TItem="SectionTransferReportDto" Items="reportData" IsLoading="isLoading" ColumnCount="7" EmptyText="No hay transferencias registradas">
         <HeaderTemplate>
             <th>ID Transferencia</th>
             <th>Equipo</th>
             <th>Fecha</th>
             <th>Origen</th>
             <th>Destino</th>
-            <th>Enviado por</th>
             <th>Recibido por</th>
         </HeaderTemplate>
         <RowTemplate Context="transfer">
@@ -85,24 +82,22 @@
             <td>
                 <div class="device-info">
                     <span class="device-name">@transfer.DeviceName</span>
-                    <span class="device-id">ID: @transfer.DeviceId</span>
                 </div>
             </td>
             <td>@transfer.TransferDate.ToString("dd/MM/yyyy")</td>
             <td>
-                <span class="department-badge origin">@transfer.SourceDepartmentName</span>
+                <span class="department-badge origin">@transfer.SourceSectionName</span>
             </td>
             <td>
-                <span class="department-badge destination">@transfer.DestinationDepartmentName</span>
+                <span class="department-badge destination">@transfer.DestinationSectionName</span>
             </td>
-            <td>@transfer.SenderName</td>
             <td>@transfer.ReceiverName</td>
         </RowTemplate>
     </DataTable>
 </div>
 
 @code {
-    private List<DepartmentTransferReportDto> reportData = new();
+    private List<SectionTransferReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
@@ -119,14 +114,14 @@
             isLoading = true;
             errorMessage = null;
             StateHasChanged();
-
-            reportData = await ReportService.GenerateDepartmentTransferReportAsync();
+            
+            reportData = await FrontendReportService.GenerateDepartmentTransferReportAsync();
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"Error loading department transfer report: {ex}");
-            LoadMockData();
+            
         }
         finally
         {
@@ -135,17 +130,7 @@
         }
     }
 
-    private void LoadMockData()
-    {
-        reportData = new List<DepartmentTransferReportDto>
-        {
-            new() { TransferId = 1, DeviceId = 101, DeviceName = "Laptop Dell XPS 15", DeviceType = "Laptop", TransferDate = DateTime.Now.AddDays(-5), SourceDepartmentName = "Desarrollo", DestinationDepartmentName = "Marketing", SenderName = "Carlos Rodríguez", ReceiverName = "María González", TransferStatus = "Completada" },
-            new() { TransferId = 2, DeviceId = 102, DeviceName = "Impresora HP LaserJet", DeviceType = "Impresora", TransferDate = DateTime.Now.AddDays(-12), SourceDepartmentName = "Contabilidad", DestinationDepartmentName = "Recursos Humanos", SenderName = "Ana Martínez", ReceiverName = "Pedro Sánchez", TransferStatus = "Completada" },
-            new() { TransferId = 3, DeviceId = 103, DeviceName = "Monitor LG 27\"", DeviceType = "Monitor", TransferDate = DateTime.Now.AddDays(-20), SourceDepartmentName = "Ventas", DestinationDepartmentName = "Desarrollo", SenderName = "Luis García", ReceiverName = "Carmen López", TransferStatus = "Completada" },
-            new() { TransferId = 4, DeviceId = 104, DeviceName = "Servidor Dell PowerEdge", DeviceType = "Servidor", TransferDate = DateTime.Now.AddDays(-30), SourceDepartmentName = "TI", DestinationDepartmentName = "Operaciones", SenderName = "Roberto Díaz", ReceiverName = "Elena Ruiz", TransferStatus = "Completada" },
-            new() { TransferId = 5, DeviceId = 105, DeviceName = "Proyector Epson", DeviceType = "Proyector", TransferDate = DateTime.Now.AddDays(-45), SourceDepartmentName = "Capacitación", DestinationDepartmentName = "Ventas", SenderName = "Fernando Torres", ReceiverName = "Laura Méndez", TransferStatus = "Completada" }
-        };
-    }
+   
 
     private async Task ExportToPdf()
     {
@@ -154,7 +139,7 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await ReportService.ExportToPdfAsync("department-transfer");
+            var pdfBytes = await FrontendReportService.ExportToPdfAsync("transfers");
             if (pdfBytes != null && pdfBytes.Length > 0)
             {
                 var base64 = Convert.ToBase64String(pdfBytes);
