@@ -47,7 +47,6 @@
             <th>Causa de Baja</th>
             <th>Destino Final</th>
             <th>Receptor</th>
-            <th>Fecha de Baja</th>
         </HeaderTemplate>
         <RowTemplate Context="item">
             <td class="id-cell">DEV@(item.EquipmentId.ToString("D3"))</td>
@@ -59,7 +58,6 @@
             </td>
             <td>@item.FinalDestination</td>
             <td>@item.ReceiverName</td>
-            <td class="date-cell">@item.DecommissionDate.ToString("dd/MM/yyyy")</td>
         </RowTemplate>
     </DataTable>
 
@@ -92,19 +90,14 @@
             isLoading = true;
             errorMessage = null;
             
-            // Get decommissionings from the last year
-            var filter = new DecommissioningReportFilterDto 
-            { 
-                FromDate = DateTime.Now.AddYears(-1),
-                ToDate = DateTime.Now
-            };
-            reportData = await ReportService.GenerateDecommissioningReportAsync(filter);
+           
+            reportData = await ReportService.GenerateDecommissioningReportAsync();
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"[DecommissioningReport] Error: {ex.Message}");
-            LoadMockData();
+           
         }
         finally
         {
@@ -112,17 +105,7 @@
         }
     }
 
-    private void LoadMockData()
-    {
-        reportData = new List<DecommissioningReportDto>
-        {
-            new() { EquipmentId = 15, EquipmentName = "Router Cisco 2901", DecommissionCause = "Fallo irreparable", FinalDestination = "Almacén de bajas", ReceiverName = "Juan Pérez", DecommissionDate = new DateTime(2024, 3, 15) },
-            new() { EquipmentId = 28, EquipmentName = "Switch HP 2530", DecommissionCause = "Obsolescencia", FinalDestination = "Reciclaje", ReceiverName = "María García", DecommissionDate = new DateTime(2024, 5, 22) },
-            new() { EquipmentId = 42, EquipmentName = "UPS APC 3000", DecommissionCause = "Mantenimiento excesivo", FinalDestination = "Donación", ReceiverName = "Carlos López", DecommissionDate = new DateTime(2024, 8, 10) },
-            new() { EquipmentId = 67, EquipmentName = "Servidor Dell R740", DecommissionCause = "Fallo irreparable", FinalDestination = "Almacén de bajas", ReceiverName = "Ana Martínez", DecommissionDate = new DateTime(2024, 11, 5) }
-        };
-        errorMessage = null;
-    }
+  
 
     private void GoBack()
     {

@@ -12,5 +12,4 @@ public class DecommissioningReportDto
 
     public string ReceiverName { get; set; }
 
-    public DateTime DecommissionDate { get; set; }
 }

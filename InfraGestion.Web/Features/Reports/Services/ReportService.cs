@@ -28,17 +28,16 @@ public class FrontendReport
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
-	public async Task<List<DecommissioningReportDto>> GenerateDecommissioningReportAsync(DecommissioningReportFilterDto filter)
+	public async Task<List<DecommissioningReportDto>> GenerateDecommissioningReportAsync()
 	{
 		string endPoint = "reports/decommissionings";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DecommissioningReportDto>>>(endPoint + QueryString(filter))
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DecommissioningReportDto>>>(endPoint);
+		if (response is not null && response.Success)
 		{
-			return response.Data ?? new List<DecommissioningReportDto>();
+			return response.Data!;
 		}
-		throw new Exception(string.Join("\n", response.Errors));
-	}
+		return new List<DecommissioningReportDto>();
+    }
 
 	public async Task<List<PersonnelEffectivenessReportDto>> GeneratePersonnelEffectivenessReportAsync(PersonnelReportFilterDto criteria)
 	{
