@@ -56,13 +56,13 @@ public class FrontendReport
 	public async Task<List<DeviceReplacementReportDto>> GenerateEquipmentReplacementReportAsync()
 	{
 		string endPoint = "reports/equipment-replacement";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DeviceReplacementReportDto>>>(endPoint)
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DeviceReplacementReportDto>>>(endPoint);
+			
+		if (response is not null &&response.Success)
 		{
-			return response.Data ?? new List<DeviceReplacementReportDto>();
+			return response.Data!;
 		}
-		throw new Exception(string.Join("\n", response.Errors));
+		return new();
 	}
 
 	public async Task<List<SectionTransferReportDto>> GenerateDepartmentTransferReportAsync()

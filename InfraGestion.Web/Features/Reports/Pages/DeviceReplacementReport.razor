@@ -78,8 +78,6 @@
             <th>Equipo</th>
             <th>Mantenimientos (Último Año)</th>
             <th>Costo Total</th>
-            <th>Razón de Reemplazo</th>
-            <th>Prioridad</th>
         </HeaderTemplate>
         <RowTemplate Context="device">
             <td>
@@ -89,26 +87,14 @@
                 <span class="device-name">@device.DeviceName</span>
             </td>
             <td>
-                <div class="maintenance-count">
-                    <span class="count-value @GetMaintenanceCountClass(device.MaintenanceCountLastYear)">
-                        @device.MaintenanceCountLastYear
-                    </span>
-                    <div class="count-bar">
-                        <div class="bar-fill" style="width: @(Math.Min(device.MaintenanceCountLastYear * 10, 100))%"></div>
-                    </div>
-                </div>
+                <span class="count-value">
+                       @device.MaintenanceCountLastYear
+                </span>  
             </td>
             <td>
                 <span class="cost-value">$@device.TotalMaintenanceCost.ToString("N0")</span>
             </td>
-            <td>
-                <span class="reason-badge">@device.ReplacementReason</span>
-            </td>
-            <td>
-                <span class="priority-badge @GetPriorityClass(device.MaintenanceCountLastYear, (double)device.TotalMaintenanceCost)">
-                    @GetPriorityLabel(device.MaintenanceCountLastYear, (double)device.TotalMaintenanceCost)
-                </span>
-            </td>
+           
         </RowTemplate>
     </DataTable>
 </div>
@@ -138,7 +124,6 @@
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"Error loading device replacement report: {ex}");
-            LoadMockData();
         }
         finally
         {
@@ -147,35 +132,9 @@
         }
     }
 
-    private void LoadMockData()
-    {
-        reportData = new List<DeviceReplacementReportDto>
-        {
-            new(101, "Servidor Dell PowerEdge R720") { MaintenanceCountLastYear = 15, TotalMaintenanceCost = 125000, ReplacementReason = "Obsolescencia técnica", DeviceType = "Servidor", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-5) },
-            new(102, "Impresora HP LaserJet Enterprise") { MaintenanceCountLastYear = 12, TotalMaintenanceCost = 45000, ReplacementReason = "Alto costo de mantenimiento", DeviceType = "Impresora", DepartmentName = "Administración", AcquisitionDate = DateTime.Now.AddYears(-4) },
-            new(103, "Switch Cisco Catalyst 2960") { MaintenanceCountLastYear = 10, TotalMaintenanceCost = 38000, ReplacementReason = "Fin de vida útil", DeviceType = "Switch", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-6) },
-            new(104, "UPS APC Smart-UPS 3000") { MaintenanceCountLastYear = 8, TotalMaintenanceCost = 52000, ReplacementReason = "Baterías degradadas", DeviceType = "UPS", DepartmentName = "Data Center", AcquisitionDate = DateTime.Now.AddYears(-3) },
-            new(105, "Aire Acondicionado Data Center") { MaintenanceCountLastYear = 7, TotalMaintenanceCost = 89000, ReplacementReason = "Eficiencia reducida", DeviceType = "Climatización", DepartmentName = "Data Center", AcquisitionDate = DateTime.Now.AddYears(-7) },
-            new(106, "Router Juniper MX80") { MaintenanceCountLastYear = 6, TotalMaintenanceCost = 67000, ReplacementReason = "Capacidad insuficiente", DeviceType = "Router", DepartmentName = "TI", AcquisitionDate = DateTime.Now.AddYears(-5) }
-        };
-    }
+    
 
-    private string GetMaintenanceCountClass(int count) => count switch
-    {
-        >= 10 => "critical",
-        >= 5 => "warning",
-        _ => "normal"
-    };
-
-    private string GetPriorityClass(int maintenanceCount, double cost) => 
-        maintenanceCount >= 10 || cost >= 100000 ? "critical" :
-        maintenanceCount >= 5 || cost >= 50000 ? "high" :
-        "medium";
-
-    private string GetPriorityLabel(int maintenanceCount, double cost) =>
-        maintenanceCount >= 10 || cost >= 100000 ? "Crítica" :
-        maintenanceCount >= 5 || cost >= 50000 ? "Alta" :
-        "Media";
+   
 
     private async Task ExportToPdf()
     {
