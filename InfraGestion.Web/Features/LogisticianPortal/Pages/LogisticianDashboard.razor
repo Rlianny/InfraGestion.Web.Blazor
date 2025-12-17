@@ -364,8 +364,9 @@
                 .ToList();
 
             // Load pending transfers for this logistician from API
-            if (currentUserId > 0)
+            if (currentUserId != 0)
             {
+                Console.WriteLine($"[DEBUG] Loading pending transfers for logistician ID: {currentUserId}");
                 pendingTransfers = await TransferService.GetPendingTransfersByLogisticianAsync(currentUserId);
                 pendingTransfers = pendingTransfers
                     .OrderByDescending(t => t.TransferDate)
@@ -375,6 +376,7 @@
             }
             else
             {
+                Console.WriteLine($"[DEBUG] currentUserId is 0, skipping pending transfers load");
                 pendingTransfers = new List<Transfer>();
             }
 
