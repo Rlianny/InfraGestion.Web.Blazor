@@ -73,11 +73,27 @@
 </div>
 
 @code {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private List<DecommissioningReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
 
+    private byte[] bytes;
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
@@ -89,15 +105,19 @@
         {
             isLoading = true;
             errorMessage = null;
-            
-           
-            reportData = await ReportService.GenerateDecommissioningReportAsync();
+
+
+            var report = await ReportService.GenerateDecommissioningReportAsync();
+
+            reportData = report.ReportData;
+
+            bytes = report.PdfBytes;
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"[DecommissioningReport] Error: {ex.Message}");
-           
+
         }
         finally
         {
@@ -105,7 +125,7 @@
         }
     }
 
-  
+
 
     private void GoBack()
     {
@@ -119,7 +139,9 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await ReportService.GetPdfReportAsync("decommissionings");
+
+
+            var pdfBytes = bytes;
             var base64 = Convert.ToBase64String(pdfBytes);
             await JS.InvokeVoidAsync("downloadFile", "reporte-bajas-anuales.pdf", "application/pdf", base64);
         }

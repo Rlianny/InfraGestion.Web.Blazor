@@ -82,11 +82,11 @@
     private SearchItem? selectedItem;
 
     private IEnumerable<SearchItem> FilteredItems => string.IsNullOrWhiteSpace(searchText)
-        ? Items.Take(10)
+        ? Items
         : Items.Where(i => 
             i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
             (i.SubText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false))
-            .Take(10);
+            ;
 
     private void SelectItem(SearchItem item)
     {

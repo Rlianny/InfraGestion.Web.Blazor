@@ -35,22 +35,7 @@
                     </svg>
                 </IconContent>
             </StatCard>
-            <StatCard Label="Bonificaciones" Value="@reportData.Count(r => r.AdjustmentType == "Bonificación").ToString()" Color="green">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-                    </svg>
-                </IconContent>
-            </StatCard>
-            <StatCard Label="Penalizaciones" Value="@reportData.Count(r => r.AdjustmentType == "Penalización").ToString()" Color="red">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-                    </svg>
-                </IconContent>
-            </StatCard>
+           
             <StatCard Label="Promedio Valoración" Value="@(reportData.Any() ? reportData.Average(r => r.AverageRating).ToString("F1") : "0")" Color="yellow">
                 <IconContent>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
@@ -66,32 +51,19 @@
                EmptyText="No se encontraron datos para este reporte">
         <HeaderTemplate>
             <th>Técnico</th>
-            <th>Especialidad</th>
             <th>Intervenciones</th>
-            <th>Valoración Promedio</th>
-            <th>Bonificaciones</th>
-            <th>Penalizaciones</th>
-            <th>Recomendación</th>
-            <th>Ajuste</th>
+            <th>Menor Calificación</th>
+            <th>Calificación Promedio</th>
+            <th>Mayor Calificación</th>
+            <th>Cantidad de Valoraciones</th>
         </HeaderTemplate>
         <RowTemplate Context="item">
             <td class="name-cell">@item.TechnicianName</td>
-            <td>@item.Specialty</td>
             <td class="number-cell">@item.TotalInterventions</td>
-            <td class="number-cell">
-                <div class="rating-display">
-                    <span class="rating-value">@item.AverageRating.ToString("F1")</span>
-                    <span class="rating-max">/5</span>
-                </div>
-            </td>
-            <td class="currency-cell positive">$@item.TotalBonuses.ToString("N2")</td>
-            <td class="currency-cell negative">$@item.TotalPenalties.ToString("N2")</td>
-            <td>@item.Recommendation</td>
-            <td>
-                <span class="adjustment-badge @GetAdjustmentClass(item.AdjustmentType)">
-                    @item.AdjustmentType: $@item.SalaryAdjustmentAmount.ToString("N2")
-                </span>
-            </td>
+            <td class="number-cell">@item.LowestRating</td>
+            <td class="number-cell">@item.AverageRating</td>
+            <td class="number-cell">@item.HighestRating</td>
+            <td class="number-cell">@item.RatingCount</td>
         </RowTemplate>
     </DataTable>
 
@@ -107,11 +79,13 @@
 </div>
 
 @code {
+
     private List<BonusDeterminationReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
 
+    private byte[] bytes;
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
@@ -123,33 +97,23 @@
         {
             isLoading = true;
             errorMessage = null;
-            
+
             var criteria = new BonusReportCriteria();
-            reportData = await ReportService.GenerateBonusDeterminationReportAsync(criteria);
+            var report = await ReportService.GenerateBonusDeterminationReportAsync();
+
+            reportData = report.ReportData;
+
+            bytes = report.PdfBytes;
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"[BonusReport] Error: {ex.Message}");
-            // Use mock data for development
-            LoadMockData();
         }
         finally
         {
             isLoading = false;
         }
-    }
-
-    private void LoadMockData()
-    {
-        reportData = new List<BonusDeterminationReportDto>
-        {
-            new() { TechnicianId = 1, TechnicianName = "Carlos Méndez", Specialty = "Redes", TotalInterventions = 45, AverageRating = 4.5, TotalBonuses = 500, TotalPenalties = 0, Recommendation = "Excelente desempeño", AdjustmentType = "Bonificación", SalaryAdjustmentAmount = 500 },
-            new() { TechnicianId = 2, TechnicianName = "Ana García", Specialty = "Hardware", TotalInterventions = 38, AverageRating = 4.2, TotalBonuses = 350, TotalPenalties = 50, Recommendation = "Buen desempeño", AdjustmentType = "Bonificación", SalaryAdjustmentAmount = 300 },
-            new() { TechnicianId = 3, TechnicianName = "Luis Rodríguez", Specialty = "Software", TotalInterventions = 25, AverageRating = 3.8, TotalBonuses = 200, TotalPenalties = 100, Recommendation = "Desempeño aceptable", AdjustmentType = "Bonificación", SalaryAdjustmentAmount = 100 },
-            new() { TechnicianId = 4, TechnicianName = "María Torres", Specialty = "Telecomunicaciones", TotalInterventions = 15, AverageRating = 2.5, TotalBonuses = 0, TotalPenalties = 200, Recommendation = "Requiere mejora", AdjustmentType = "Penalización", SalaryAdjustmentAmount = 200 }
-        };
-        errorMessage = null;
     }
 
     private void GoBack()
@@ -164,7 +128,7 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await ReportService.GetPdfReportAsync("bonus-determination");
+            var pdfBytes = bytes;
             var base64 = Convert.ToBase64String(pdfBytes);
             await JS.InvokeVoidAsync("downloadFile", "reporte-bonificaciones.pdf", "application/pdf", base64);
         }
@@ -179,13 +143,5 @@
         }
     }
 
-    private string GetAdjustmentClass(string adjustmentType)
-    {
-        return adjustmentType switch
-        {
-            "Bonificación" => "adjustment-bonus",
-            "Penalización" => "adjustment-penalty",
-            _ => ""
-        };
-    }
+   
 }

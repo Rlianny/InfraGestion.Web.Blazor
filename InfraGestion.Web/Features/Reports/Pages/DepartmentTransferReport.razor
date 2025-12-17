@@ -97,10 +97,27 @@
 </div>
 
 @code {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     private List<SectionTransferReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
+
+    private byte[] bytes; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -114,14 +131,18 @@
             isLoading = true;
             errorMessage = null;
             StateHasChanged();
-            
-            reportData = await FrontendReportService.GenerateDepartmentTransferReportAsync();
+
+            var report = await FrontendReportService.GenerateDepartmentTransferReportAsync();
+
+            reportData = report.ReportData;
+
+            bytes = report.PdfBytes;
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"Error loading department transfer report: {ex}");
-            
+
         }
         finally
         {
@@ -130,7 +151,7 @@
         }
     }
 
-   
+
 
     private async Task ExportToPdf()
     {
@@ -139,7 +160,9 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await FrontendReportService.ExportToPdfAsync("transfers");
+
+
+            var pdfBytes = bytes;
             if (pdfBytes != null && pdfBytes.Length > 0)
             {
                 var base64 = Convert.ToBase64String(pdfBytes);

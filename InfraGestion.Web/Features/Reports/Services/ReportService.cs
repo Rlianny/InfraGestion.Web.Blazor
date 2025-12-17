@@ -16,46 +16,35 @@ public class FrontendReport
 		_typesCache = new Dictionary<Type, PropertyInfo[]>();
 	}
 
-	public async Task<List<DeviceReportDto>> GenerateInventoryReportAsync(DeviceReportFilterDto filter)
-	{
-		string endPoint = "reports/inventory";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DeviceReportDto>>>(endPoint + QueryString(filter))
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
-		{
-			return response.Data ?? new List<DeviceReportDto>();
-		}
-		throw new Exception(string.Join("\n", response.Errors));
-	}
-
-	public async Task<List<DecommissioningReportDto>> GenerateDecommissioningReportAsync()
+	
+	public async Task<Report<DecommissioningReportDto>> GenerateDecommissioningReportAsync()
 	{
 		string endPoint = "reports/decommissionings";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DecommissioningReportDto>>>(endPoint);
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<DecommissioningReportDto>>>(endPoint);
 		if (response is not null && response.Success)
 		{
 			return response.Data!;
 		}
-		return new List<DecommissioningReportDto>();
+		return new Report<DecommissioningReportDto>();
     }
 
-	public async Task<List<PersonnelEffectivenessReportDto>> GeneratePersonnelEffectivenessReportAsync(PersonnelReportFilterDto criteria)
+	public async Task<Report<PersonnelEffectivenessReportDto>> GeneratePersonnelEffectivenessReportAsync(PersonnelReportFilterDto criteria)
 	{
 		string endPoint = "reports/personnel-effectiveness";
 		
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<PersonnelEffectivenessReportDto>>>(endPoint + QueryString(criteria))
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<PersonnelEffectivenessReportDto>>>(endPoint + QueryString(criteria))
 			?? throw new Exception($"Error while trying to make a GET {endPoint}");
 		if (response.Success)
 		{
-			return response.Data ?? new List<PersonnelEffectivenessReportDto>();
+			return response.Data ?? new Report<PersonnelEffectivenessReportDto>();
 		}
 		throw new Exception(string.Join("\n", response.Errors));
 	}
 
-	public async Task<List<DeviceReplacementReportDto>> GenerateEquipmentReplacementReportAsync()
+	public async Task<Report<DeviceReplacementReportDto>> GenerateEquipmentReplacementReportAsync()
 	{
 		string endPoint = "reports/equipment-replacement";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DeviceReplacementReportDto>>>(endPoint);
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<DeviceReplacementReportDto>>>(endPoint);
 			
 		if (response is not null &&response.Success)
 		{
@@ -64,16 +53,16 @@ public class FrontendReport
 		return new();
 	}
 
-	public async Task<List<SectionTransferReportDto>> GenerateDepartmentTransferReportAsync()
+	public async Task<Report<SectionTransferReportDto>> GenerateDepartmentTransferReportAsync()
 	{
 		string endPoint = "reports/transfers";
         try
 		{
-			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<SectionTransferReportDto>>>(endPoint);
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<SectionTransferReportDto>>>(endPoint);
 				
             if (response.Success)
             {
-                return response.Data ?? new List<SectionTransferReportDto>();
+                return response.Data ?? new Report<SectionTransferReportDto>();
             }
             throw new Exception(string.Join("\n", response.Errors));
         }
@@ -83,81 +72,58 @@ public class FrontendReport
         }
 	}
 
-	public async Task<List<CorrelationAnalysisReportDto>> GenerateCorrelationAnalysisReportAsync()
+	public async Task<Report<CorrelationAnalysisReportDto>> GenerateCorrelationAnalysisReportAsync()
 	{
 		string endPoint = "reports/correlation-analysis";
-		
-			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<CorrelationAnalysisReportDto>>>(endPoint)
-				?? throw new Exception($"Error while trying to make a GET {endPoint}");
-            if (response.Success)
-            {
-                return response.Data ?? new List<CorrelationAnalysisReportDto>();
-            }
-            throw new Exception(string.Join("\n", response.Errors)); 
-	}
 
-	public async Task<List<BonusDeterminationReportDto>> GenerateBonusDeterminationReportAsync(BonusReportCriteria criteria)
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<CorrelationAnalysisReportDto>>>(endPoint);
+            if (response is not null && response.Success)
+            {
+				return response.Data!;
+            }
+            return new Report<CorrelationAnalysisReportDto>();
+    }
+
+	public async Task<Report<BonusDeterminationReportDto>> GenerateBonusDeterminationReportAsync()
 	{
 		string endPoint = "reports/bonus-determination";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<BonusDeterminationReportDto>>>(endPoint + QueryString(criteria))
-			?? throw new Exception($"Error while trying to make a GET {endPoint}");
-		if (response.Success)
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<BonusDeterminationReportDto>>>(endPoint);
+		if (response is not null &&response.Success)
 		{
-			return response.Data ?? new List<BonusDeterminationReportDto>();
+			return response.Data!;
 		}
-		throw new Exception(string.Join("\n", response.Errors));
+		return new();
 	}
 
-	public async Task<List<DepartmentEquipmentItemDto>> GetDepartmentEquipmentAsync(int departmentId)
+	public async Task<Report<SectionEquipmentDto>> GetDepartmentEquipmentAsync(int sectionId)
 	{
 		try
 		{
-			string endPoint = $"reports/department-equipment?departmentId={departmentId}";
-			var response = await _httpClient.GetFromJsonAsync<ApiResponse<List<DepartmentEquipmentItemDto>>>(endPoint);
-			if (response?.Success == true)
+			string endPoint = $"reports/section-equipment/{sectionId}";
+			var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<SectionEquipmentDto>>>(endPoint);
+			if (response is not null && response.Success)
 			{
-				return response.Data ?? new List<DepartmentEquipmentItemDto>();
+				return response.Data!;
 			}
-			return new List<DepartmentEquipmentItemDto>();
+			return new Report<SectionEquipmentDto>() {};
 		}
 		catch
 		{
-			return new List<DepartmentEquipmentItemDto>();
+			return new Report<SectionEquipmentDto>();
 		}
 	}
 
-	public async Task<List<MaintenanceHistoryItemDto>> GetEquipmentMaintenanceHistoryAsync(int equipmentId)
+	public async Task<Report<DeviceMantainenceReportDto>> GetEquipmentMaintenanceHistoryAsync(int equipmentId)
 	{
-		try
-		{
-			string endPoint = $"reports/equipment-maintenance?equipmentId={equipmentId}";
-			var response = await _httpClient.GetFromJsonAsync<ApiResponse<MaintenanceHistoryReportDto>>(endPoint);
-			if (response?.Success == true)
-			{
-				return response.Data?.Items ?? new List<MaintenanceHistoryItemDto>();
-			}
-			return new List<MaintenanceHistoryItemDto>();
-		}
-		catch
-		{
-			return new List<MaintenanceHistoryItemDto>();
-		}
-	}
-
-	public async Task<byte[]> GetPdfReportAsync(string reportName)
-	{
-		string endPoint = $"reports/export/{reportName}/pdf";
-		var response = await _httpClient.GetFromJsonAsync<ApiResponse<PdfExportDto>>(endPoint);
+		
+		string endPoint = $"reports/equipment-maintenances/{equipmentId}";
+		var response = await _httpClient.GetFromJsonAsync<ApiResponse<Report<DeviceMantainenceReportDto>>>(endPoint);
 		if (response is not null && response.Success)
 		{
-			return response.Data!.PdfContent;
+			return response.Data!;
 		}
-		return Array.Empty<byte>();
-	}
-
-	public async Task<byte[]> ExportToPdfAsync(string reportName)
-	{
-		return await GetPdfReportAsync(reportName);
+		return new();
+			
 	}
 
 	private string QueryString<T>(T obj)

@@ -39,25 +39,7 @@
                     </svg>
                 </IconContent>
             </StatCard>
-            <StatCard Label="Costo Promedio" 
-                      Value="@($"${reportData.Average(r => r.TotalMaintenanceCost):N0}")" 
-                      Color="#F44336">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
-                    </svg>
-                </IconContent>
-            </StatCard>
-            <StatCard Label="Longevidad Promedio" 
-                      Value="@($"{reportData.Average(r => r.AverageEquipmentLongevity):N1} años")" 
-                      Color="#4CAF50">
-                <IconContent>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-                    </svg>
-                </IconContent>
-            </StatCard>
+            
             <StatCard Label="Índice Promedio" 
                       Value="@($"{reportData.Average(r => r.CorrelationIndex):N2}")" 
                       Color="#2196F3">
@@ -73,61 +55,21 @@
     <!-- Data Table -->
     <DataTable TItem="CorrelationAnalysisReportDto" Items="reportData" IsLoading="isLoading" ColumnCount="6" EmptyText="No hay datos de correlación disponibles">
         <HeaderTemplate>
-            <th>Ranking</th>
             <th>Técnico</th>
-            <th>Costo Total Mantenimiento</th>
-            <th>Longevidad Promedio</th>
+            <th>Especialidad</th>
             <th>Índice de Correlación</th>
-            <th>Eficiencia</th>
+            <th>Calificación Promedio</th>
         </HeaderTemplate>
         <RowTemplate Context="item">
-            <td>
-                <span class="rank-badge @GetRankClass(item.Rank)">#@item.Rank</span>
-            </td>
-            <td>
-                <div class="technician-info">
-                    <span class="technician-name">@item.TechnicianName</span>
-                    <span class="technician-id">ID: @item.TechnicianId</span>
-                </div>
-            </td>
-            <td>
-                <span class="cost-value">$@item.TotalMaintenanceCost.ToString("N0")</span>
-            </td>
-            <td>
-                <span class="longevity-value">@item.AverageEquipmentLongevity.ToString("N1") años</span>
-            </td>
-            <td>
-                <div class="correlation-bar">
-                    <div class="bar-fill" style="width: @(Math.Min(item.CorrelationIndex * 100, 100))%; background: @GetCorrelationColor(item.CorrelationIndex)"></div>
-                    <span class="bar-value">@item.CorrelationIndex.ToString("N2")</span>
-                </div>
-            </td>
-            <td>
-                <span class="efficiency-badge @GetEfficiencyClass(item.CorrelationIndex)">
-                    @GetEfficiencyLabel(item.CorrelationIndex)
-                </span>
-            </td>
+            <td>@item.TechnicianName</td>
+            <td>@item.Specialty</td>
+            <td>@item.CorrelationIndex</td>
+            <td>@item.AveragePerformanceRating</td>
         </RowTemplate>
     </DataTable>
 
     <!-- Legend -->
-    <div class="legend-container">
-        <h4>Interpretación del Índice de Correlación</h4>
-        <div class="legend-items">
-            <div class="legend-item">
-                <span class="legend-color high"></span>
-                <span>0.8 - 1.0: Excelente eficiencia</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color medium"></span>
-                <span>0.5 - 0.79: Buena eficiencia</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color low"></span>
-                <span>0.0 - 0.49: Requiere mejora</span>
-            </div>
-        </div>
-    </div>
+    
 </div>
 
 @code {
@@ -135,6 +77,8 @@
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
+
+    private byte[] bytes;
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,13 +93,17 @@
             errorMessage = null;
             StateHasChanged();
 
-            reportData = await ReportService.GenerateCorrelationAnalysisReportAsync();
+            var report = await ReportService.GenerateCorrelationAnalysisReportAsync();
+
+            reportData = report.ReportData;
+
+            bytes = report.PdfBytes;
         }
         catch (Exception ex)
         {
             errorMessage = $"Error al cargar el reporte: {ex.Message}";
             Console.WriteLine($"Error loading correlation analysis report: {ex}");
-            LoadMockData();
+           
         }
         finally
         {
@@ -164,47 +112,9 @@
         }
     }
 
-    private void LoadMockData()
-    {
-        reportData = new List<CorrelationAnalysisReportDto>
-        {
-            new() { Rank = 1, TechnicianId = 1, TechnicianName = "Carlos Rodríguez", Specialty = "Redes", YearsOfExperience = 5, EquipmentType = "Switches", TotalMaintenanceCost = 45000, AverageEquipmentLongevity = 6.5, CorrelationIndex = 0.92 },
-            new() { Rank = 2, TechnicianId = 2, TechnicianName = "María González", Specialty = "Servidores", YearsOfExperience = 8, EquipmentType = "Servidores", TotalMaintenanceCost = 52000, AverageEquipmentLongevity = 5.8, CorrelationIndex = 0.85 },
-            new() { Rank = 3, TechnicianId = 3, TechnicianName = "Pedro Sánchez", Specialty = "Hardware", YearsOfExperience = 6, EquipmentType = "PCs", TotalMaintenanceCost = 38000, AverageEquipmentLongevity = 5.2, CorrelationIndex = 0.78 },
-            new() { Rank = 4, TechnicianId = 4, TechnicianName = "Ana Martínez", Specialty = "Redes", YearsOfExperience = 4, EquipmentType = "Routers", TotalMaintenanceCost = 61000, AverageEquipmentLongevity = 4.9, CorrelationIndex = 0.65 },
-            new() { Rank = 5, TechnicianId = 5, TechnicianName = "Luis García", Specialty = "Hardware", YearsOfExperience = 3, EquipmentType = "Impresoras", TotalMaintenanceCost = 72000, AverageEquipmentLongevity = 4.1, CorrelationIndex = 0.48 }
-        };
-    }
+    
 
-    private string GetRankClass(int rank) => rank switch
-    {
-        1 => "gold",
-        2 => "silver",
-        3 => "bronze",
-        _ => "default"
-    };
-
-    private string GetCorrelationColor(double index) => index switch
-    {
-        >= 0.8 => "#4CAF50",
-        >= 0.5 => "#FF9800",
-        _ => "#F44336"
-    };
-
-    private string GetEfficiencyClass(double index) => index switch
-    {
-        >= 0.8 => "excellent",
-        >= 0.5 => "good",
-        _ => "needs-improvement"
-    };
-
-    private string GetEfficiencyLabel(double index) => index switch
-    {
-        >= 0.8 => "Excelente",
-        >= 0.5 => "Buena",
-        _ => "Mejorar"
-    };
-
+    
     private async Task ExportToPdf()
     {
         try
@@ -212,7 +122,7 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await ReportService.ExportToPdfAsync("correlation-analysis");
+            var pdfBytes = bytes;
             if (pdfBytes != null && pdfBytes.Length > 0)
             {
                 var base64 = Convert.ToBase64String(pdfBytes);

@@ -100,11 +100,19 @@
 </div>
 
 @code {
+
+
+
+
+
+
+
     private List<DeviceReplacementReportDto> reportData = new();
     private bool isLoading = true;
     private bool isExporting = false;
     private string? errorMessage;
 
+    private byte[] bytes;
     protected override async Task OnInitializedAsync()
     {
         await LoadReport();
@@ -118,7 +126,12 @@
             errorMessage = null;
             StateHasChanged();
 
-            reportData = await ReportService.GenerateEquipmentReplacementReportAsync();
+            var report = await ReportService.GenerateEquipmentReplacementReportAsync();
+
+            reportData = report.ReportData;
+
+            bytes = report.PdfBytes;
+
         }
         catch (Exception ex)
         {
@@ -143,10 +156,10 @@
             isExporting = true;
             StateHasChanged();
 
-            var pdfBytes = await ReportService.ExportToPdfAsync("equipment-replacement");
-            if (pdfBytes != null && pdfBytes.Length > 0)
+           
+            if (bytes != null && bytes.Length > 0)
             {
-                var base64 = Convert.ToBase64String(pdfBytes);
+                var base64 = Convert.ToBase64String(bytes);
                 await JS.InvokeVoidAsync("downloadFile", "reporte-equipos-criticos.pdf", "application/pdf", base64);
             }
         }

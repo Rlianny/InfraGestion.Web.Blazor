@@ -86,43 +86,26 @@ public class BonusDeterminationReportItemDto
 /// </summary>
 public class DepartmentEquipmentReportDto
 {
-    public List<DepartmentEquipmentItemDto> Items { get; set; } = new();
+    public List<SectionEquipmentDto> Items { get; set; } = new();
     public int TotalCount { get; set; }
 }
 
 /// <summary>
 /// Item DTO for department equipment
 /// </summary>
-public class DepartmentEquipmentItemDto
+public class SectionEquipmentDto
 {
     public int DeviceId { get; set; }
     public string DeviceName { get; set; } = string.Empty;
-    public string Model { get; set; } = string.Empty;
-    public string Category { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public DateTime AssignmentDate { get; set; }
     public string ResponsiblePerson { get; set; } = string.Empty;
 }
 
 /// <summary>
 /// DTO for maintenance history report
 /// </summary>
-public class MaintenanceHistoryReportDto
-{
-    public List<MaintenanceHistoryItemDto> Items { get; set; } = new();
-    public int TotalCount { get; set; }
-}
+
 
 /// <summary>
 /// Item DTO for maintenance history
 /// </summary>
-public class MaintenanceHistoryItemDto
-{
-    public DateTime MaintenanceDate { get; set; }
-    public string MaintenanceType { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string TechnicianName { get; set; } = string.Empty;
-    public decimal Cost { get; set; }
-    public int DurationHours { get; set; }
-    public string Status { get; set; } = string.Empty;
-}
+
