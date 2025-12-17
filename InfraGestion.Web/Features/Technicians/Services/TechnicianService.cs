@@ -131,10 +131,6 @@ public class TechnicianService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(
-                $"[TechnicianService] Raw API response for technician {technicianId}: {content.Substring(0, Math.Min(500, content.Length))}..."
-            );
-
             var apiResponse = JsonSerializer.Deserialize<ApiResponse<TechnicianDetailDto>>(
                 content,
                 JsonOptions
@@ -142,15 +138,8 @@ public class TechnicianService
 
             if (apiResponse?.Success != true || apiResponse.Data == null)
             {
-                Console.WriteLine(
-                    $"[TechnicianService] API response was not successful or Data is null"
-                );
                 return await BuildBasicTechnicianDetailsAsync(technicianId);
             }
-
-            Console.WriteLine(
-                $"[TechnicianService] Successfully deserialized. MaintenanceRecords count: {apiResponse.Data.MaintenanceRecords.Count}"
-            );
 
             return MapToTechnicianDetails(apiResponse.Data);
         }
@@ -438,16 +427,9 @@ public class TechnicianService
     /// </summary>
     private static TechnicianDetails MapToTechnicianDetails(TechnicianDetailDto dto)
     {
-        Console.WriteLine(
-            $"[TechnicianService] Mapping {dto.MaintenanceRecords.Count} maintenance records for technician {dto.Name}"
-        );
-
         var maintenanceHistory = dto
             .MaintenanceRecords.Select(m =>
             {
-                Console.WriteLine(
-                    $"[TechnicianService] Maintenance record - DeviceId: {m.DeviceId}, DeviceName: '{m.DeviceName}', Date: {m.MaintenanceDate}"
-                );
                 return new MaintenanceRecord
                 {
                     Id = m.MaintenanceRecordId,
@@ -485,7 +467,6 @@ public class TechnicianService
             DecommissionProposals = dto
                 .DecommissioningRequests.Select(d =>
                 {
-                    Console.WriteLine($"[TechnicianService] Decommission request - DeviceId: {d.DeviceId}, DeviceName: '{d.DeviceName}', Receiver: '{d.DeviceReceiverName}', Status: {d.Status}");
                     return new DecommissionProposal
                     {
                         Id = d.DecommissioningRequestId,
@@ -493,7 +474,7 @@ public class TechnicianService
                         DeviceId = d.DeviceId.ToString(),
                         DeviceName = d.DeviceName,
                         Cause = d.GetReasonName(),
-                        Receiver = d.DeviceReceiverName,
+                        Receiver = d.ReceiverUsername ?? string.Empty,
                         Status = d.GetStatusName(),
                     };
                 })

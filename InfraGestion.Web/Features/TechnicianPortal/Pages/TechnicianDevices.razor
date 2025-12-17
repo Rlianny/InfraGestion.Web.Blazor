@@ -173,7 +173,7 @@
 <!-- Modal de Mantenimiento -->
 <Modal IsOpen="@showMaintenanceModal" Title="Registrar Mantenimiento" OnClose="@CloseMaintenanceModal">
     <MaintenanceForm FormModel="@maintenanceRequest" 
-                     Devices="@allDevices" 
+                     AvailableDevices="@allDevices" 
                      OnValidSubmit="@HandleCreateMaintenance" 
                      OnCancel="@CloseMaintenanceModal" />
 </Modal>

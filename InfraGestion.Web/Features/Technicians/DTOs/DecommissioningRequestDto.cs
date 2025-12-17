@@ -33,11 +33,29 @@ public class DecommissioningRequestDto
     [JsonPropertyName("technicianName")]
     public string TechnicianName { get; set; } = string.Empty;
 
-    [JsonPropertyName("deviceReceiverId")]
-    public int DeviceReceiverId { get; set; }
+    [JsonPropertyName("receiverUserId")]
+    public int? ReceiverUserId { get; set; }
 
-    [JsonPropertyName("deviceReceiverName")]
-    public string DeviceReceiverName { get; set; } = string.Empty;
+    [JsonPropertyName("receiverUserName")]
+    public string? ReceiverUsername { get; set; }
+
+    [JsonPropertyName("reviewedDate")]
+    public DateTime? ReviewedDate { get; set; }
+
+    [JsonPropertyName("reviewedByUserId")]
+    public int? ReviewedByUserId { get; set; }
+
+    [JsonPropertyName("reviewedByUserName")]
+    public string? ReviewedByUserName { get; set; }
+
+    [JsonPropertyName("finalDestinationId")]
+    public int? FinalDestinationId { get; set; }
+
+    [JsonPropertyName("finalDestinationName")]
+    public string? FinalDestinationName { get; set; }
+
+    [JsonPropertyName("justification")]
+    public string? Justification { get; set; }
 
     [JsonPropertyName("status")]
     public int Status { get; set; }
@@ -46,9 +64,9 @@ public class DecommissioningRequestDto
     {
         return Status switch
         {
-            0 => "Pendiente",
-            1 => "Aceptado",
-            2 => "Rechazado",
+            2 => "Pendiente",
+            0 => "Aceptado",
+            1 => "Rechazado",
             _ => "Desconocido"
         };
     }
