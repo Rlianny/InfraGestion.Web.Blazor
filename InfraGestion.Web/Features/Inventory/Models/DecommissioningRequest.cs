@@ -20,8 +20,24 @@ public class DecommissioningRequest
     public int? ReviewedByUserId { get; set; }
     public string? ReviewedByUserName { get; set; }
     
-    // Additional properties for display/forms
-    public string ReceiverName { get; set; } = string.Empty;
+    // Receiver information (from backend)
+    public int? ReceiverUserId { get; set; }
+    public string? ReceiverUserName { get; set; }
+    
+    // Final destination (from backend)
+    public int? FinalDestinationId { get; set; }
+    public string? FinalDestinationName { get; set; }
+    
+    // Additional properties for display/forms (backwards compatibility)
+    public string ReceiverName 
+    { 
+        get => ReceiverUserName ?? string.Empty;
+        set => ReceiverUserName = value;
+    }
     public DateTime? DecommissioningDate { get; set; }
-    public string? FinalDestination { get; set; }
+    public string? FinalDestination 
+    { 
+        get => FinalDestinationName;
+        set => FinalDestinationName = value;
+    }
 }

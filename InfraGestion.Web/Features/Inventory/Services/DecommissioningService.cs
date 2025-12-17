@@ -260,20 +260,30 @@ public class DecommissioningService
             await EnsureAuthenticatedAsync();
 
             // Map the model to the API DTO
+            // Backend expects: 0=Accepted, 1=Rejected, 2=Pending
+            var statusValue = request.Status switch
+            {
+                DecommissioningStatus.Accepted => 0,
+                DecommissioningStatus.Rejected => 1,
+                DecommissioningStatus.Pending => 2,
+                _ => 2  // Default to Pending
+            };
+
             var updateDto = new UpdateDecommissioningRequestDto
             {
                 DecommissioningRequestId = request.Id,
                 TechnicianId = request.TechnicianId,
                 DeviceId = request.DeviceId,
                 EmissionDate = request.RequestDate,
-                AnswerDate = request.DecommissioningDate,
-                Status = (int)request.Status,
+                AnswerDate = request.ReviewedDate,
+                Status = statusValue,
                 Reason = (int)request.Reason,
-                DeviceReceiverId = null, // Will be set if we have receiver info
-                IsApproved = request.Status == DecommissioningStatus.Accepted ? true : 
-                             request.Status == DecommissioningStatus.Rejected ? false : null,
-                FinalDestinationDepartmentID = null, // Needs to be set based on FinalDestination lookup
-                LogisticId = null,
+                DeviceReceiverId = request.ReceiverUserId,
+                IsApproved = request.Status == DecommissioningStatus.Accepted ? true :
+                             request.Status == DecommissioningStatus.Rejected ? false :
+                             null, // Pending
+                FinalDestinationDepartmentID = request.FinalDestinationId,
+                LogisticId = request.ReviewedByUserId,
                 Description = request.Justification
             };
 
@@ -296,9 +306,50 @@ public class DecommissioningService
         }
     }
 
-    // Mapper
+    // Mappers
+    private DecommissioningRequestDto MapModelToDto(DecommissioningRequest model)
+    {
+        return new DecommissioningRequestDto
+        {
+            DecommissioningRequestId = model.Id,
+            TechnicianId = model.TechnicianId,
+            TechnicianName = model.TechnicianName,
+            DeviceId = model.DeviceId,
+            DeviceName = model.DeviceName,
+            RequestDate = model.RequestDate,
+            ReviewedDate = model.ReviewedDate,
+            // Backend expects: 0=Accepted, 1=Rejected, 2=Pending
+            Status = model.Status switch
+            {
+                DecommissioningStatus.Accepted => 0,
+                DecommissioningStatus.Rejected => 1,
+                DecommissioningStatus.Pending => 2,
+                _ => 2
+            },
+            Reason = (int)model.Reason,
+            ReasonDescription = model.ReasonDescription,
+            ReceiverUserId = model.ReceiverUserId,
+            ReceiverUserName = model.ReceiverUserName,
+            ReviewedByUserId = model.ReviewedByUserId,
+            ReviewedByUserName = model.ReviewedByUserName,
+            FinalDestinationId = model.FinalDestinationId,
+            FinalDestinationName = model.FinalDestinationName,
+            Justification = model.Justification
+        };
+    }
+
     private DecommissioningRequest MapDtoToModel(DecommissioningRequestDto dto)
     {
+        // Backend status values: 0=Accepted, 1=Rejected, 2=Pending
+        // Enum values match: Accepted=0, Rejected=1, Pending=2
+        var status = dto.Status switch
+        {
+            0 => DecommissioningStatus.Accepted,
+            1 => DecommissioningStatus.Rejected,
+            2 => DecommissioningStatus.Pending,
+            _ => DecommissioningStatus.Pending
+        };
+
         return new DecommissioningRequest
         {
             Id = dto.DecommissioningRequestId,
@@ -307,21 +358,21 @@ public class DecommissioningService
             TechnicianId = dto.TechnicianId,
             TechnicianName = dto.TechnicianName,
             RequestDate = dto.RequestDate,
-            Status = (DecommissioningStatus)dto.Status,
-            Justification = dto.Justification,
+            Status = status,
+            Justification = dto.Justification ?? string.Empty,
             Reason = (DecommissioningReason)dto.Reason,
             ReasonDescription = dto.ReasonDescription,
             ReviewedDate = dto.ReviewedDate,
             ReviewedByUserId = dto.ReviewedByUserId,
             ReviewedByUserName = dto.ReviewedByUserName,
-            ReceiverName = string.IsNullOrEmpty(dto.ReceiverUserName) || dto.ReceiverUserName == "Unrevised" 
-                ? string.Empty 
-                : dto.ReceiverUserName,
-            // DecommissioningDate = ReviewedDate si ReceiverUserId existe, sino null
-            DecommissioningDate = dto.ReceiverUserId.HasValue ? dto.ReviewedDate : null,
-            FinalDestination = string.IsNullOrEmpty(dto.FinalDestinationName) || dto.FinalDestinationName == "Unrevised" 
-                ? string.Empty 
-                : dto.FinalDestinationName
+            // Receiver info from backend
+            ReceiverUserId = dto.ReceiverUserId,
+            ReceiverUserName = dto.ReceiverUserName,
+            // Final destination from backend
+            FinalDestinationId = dto.FinalDestinationId,
+            FinalDestinationName = dto.FinalDestinationName,
+            // Decommissioning date - use reviewed date if status is accepted
+            DecommissioningDate = status == DecommissioningStatus.Accepted ? dto.ReviewedDate : null
         };
     }
 }

@@ -1,6 +1,7 @@
 using InfraGestion.Web.Core.Constants;
 using InfraGestion.Web.Features.Auth.DTOs;
 using InfraGestion.Web.Features.Auth.Services;
+using InfraGestion.Web.Features.Transfers.DTOs;
 using InfraGestion.Web.Features.Transfers.Models;
 using System.Net.Http.Json;
 
@@ -132,6 +133,37 @@ public class TransferService
             return false;
         }
         return true;
+    }
+
+    /// <summary>
+    /// Initiate a new transfer request (for Section Managers)
+    /// POST /transfers
+    /// </summary>
+    public async Task<bool> InitiateTransferAsync(InitiateTransferDto request)
+    {
+        try
+        {
+            string endPoint = "transfers";
+            Console.WriteLine($"[DEBUG] TransferService.InitiateTransferAsync - Calling POST {endPoint}");
+            Console.WriteLine($"[DEBUG] Request: DeviceName={request.DeviceName}, DestinationSection={request.DestinationSectionName}, Receiver={request.DeviceReceiverUsername}, Date={request.TransferDate}");
+            
+            var response = await _httpClient.PostAsJsonAsync(endPoint, request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"[DEBUG] TransferService.InitiateTransferAsync - Transfer initiated successfully");
+                return true;
+            }
+            
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[ERROR] TransferService.InitiateTransferAsync failed: {response.StatusCode} - {errorContent}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] TransferService.InitiateTransferAsync: {ex.Message}");
+            return false;
+        }
     }
 
 }

@@ -5,6 +5,7 @@
 @using InfraGestion.Web.Features.Departments.Services
 @using InfraGestion.Web.Features.Organization.Services
 @using InfraGestion.Web.Features.Auth.Services
+@using InfraGestion.Web.Features.Transfers.Components
 @inject DeviceService DeviceService
 @inject DepartmentService DepartmentService
 @inject OrganizationService OrganizationService
@@ -126,17 +127,31 @@
                 <ActionButtons ShowTransfer="true" ShowView="true"
                     TransferTooltip="Solicitar traslado"
                     ViewTooltip="Ver detalles"
-                    OnTransfer="@(() => RequestTransfer(device.Id))"
+                    OnTransfer="@(() => OpenTransferModal(device))"
                     OnView="@(() => NavigateToDetails(device.Id))" />
             </td>
         </RowTemplate>
     </DataTable>
 </div>
 
+<!-- Transfer Modal -->
+<InitiateTransferModal IsOpen="@showTransferModal"
+                       DeviceId="@selectedDeviceId"
+                       DeviceName="@selectedDeviceName"
+                       OriginSectionName="@currentSectionName"
+                       OnClose="@CloseTransferModal"
+                       OnTransferCompleted="@HandleTransferCompleted" />
+
 @code {
     private List<Device> allDevices = new();
     private List<Device> filteredDevices = new();
     private int currentSectionId = 0;
+    private string currentSectionName = string.Empty;
+    
+    // Transfer modal state
+    private bool showTransferModal = false;
+    private int selectedDeviceId = 0;
+    private string selectedDeviceName = string.Empty;
     private Dictionary<string, int> statistics = new()
     {
         { "Total", 0 },
@@ -197,6 +212,13 @@
             if (currentUser != null)
             {
                 currentSectionId = await OrganizationService.GetSectionIdByDepartmentAsync(currentUser.DepartmentId);
+                
+                // Also get section name for transfer modal
+                if (currentSectionId != 0)
+                {
+                    var section = await OrganizationService.GetSectionByIdAsync(currentSectionId);
+                    currentSectionName = section?.Name ?? "Sección desconocida";
+                }
             }
         }
         catch (Exception ex)
@@ -289,10 +311,30 @@
         filteredDevices = query.ToList();
     }
 
-    private void RequestTransfer(int deviceId)
+    // Transfer modal methods
+    private void OpenTransferModal(Device device)
     {
-        // Navigate to transfer request page or open modal
-        Navigation.NavigateTo($"/manager/transfers?deviceId={deviceId}");
+        selectedDeviceId = device.Id;
+        selectedDeviceName = device.Name;
+        showTransferModal = true;
+    }
+
+    private void CloseTransferModal()
+    {
+        showTransferModal = false;
+        selectedDeviceId = 0;
+        selectedDeviceName = string.Empty;
+    }
+
+    private async Task HandleTransferCompleted(bool success)
+    {
+        if (success)
+        {
+            // Reload devices to reflect the transfer
+            await LoadDevices();
+            CalculateStatistics();
+        }
+        CloseTransferModal();
     }
 
     private void NavigateToDetails(int deviceId)

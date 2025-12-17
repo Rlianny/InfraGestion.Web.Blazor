@@ -1,8 +1,14 @@
 @using InfraGestion.Web.Features.Inventory.Models
 @using InfraGestion.Web.Features.Inventory.Helpers
 @using InfraGestion.Web.Features.Inventory.Services
+@using InfraGestion.Web.Features.Organization.Models
+@using InfraGestion.Web.Features.Organization.Services
+@using InfraGestion.Web.Features.Users.Models
+@using InfraGestion.Web.Features.Users.Services
 @using InfraGestion.Web.Shared.Components
 @inject DecommissioningService DecommissioningService
+@inject OrganizationService OrganizationService
+@inject UserService UserService
 
 <Modal IsOpen="@IsOpen" Title="@ModalTitle" OnClose="@HandleClose">
     <form class="decommissioning-form" @onsubmit="HandleSubmit" @onsubmit:preventDefault="true">
@@ -100,20 +106,26 @@
                     <label class="form-label">
                         Destino Final
                     </label>
-                    <input type="text"
-                           class="form-control"
-                           @bind="EditRequest.FinalDestination"
-                           placeholder="Ej: Reciclaje, Almacén, Donación" />
+                    <select class="form-control" @bind="selectedFinalDestinationId">
+                        <option value="0">Seleccione un departamento</option>
+                        @foreach (var department in departments)
+                        {
+                            <option value="@department.Id">@department.Name (@department.SectionName)</option>
+                        }
+                    </select>
                 </div>
 
                 <div class="form-group full-width">
                     <label class="form-label">
                         Receptor del Equipo
                     </label>
-                    <input type="text"
-                           class="form-control"
-                           @bind="EditRequest.ReceiverName"
-                           placeholder="Nombre de la persona o entidad que recibe el equipo" />
+                    <select class="form-control" @bind="selectedReceiverUserId">
+                        <option value="0">Seleccione un logístico</option>
+                        @foreach (var logistician in logisticians)
+                        {
+                            <option value="@logistician.Id">@logistician.Name</option>
+                        }
+                    </select>
                 </div>
             </div>
 
@@ -148,15 +160,52 @@
     private bool isLoading = false;
     private bool isSubmitting = false;
     private int currentRequestId = 0;
+    
+    // Dropdown data
+    private List<Department> departments = new();
+    private List<User> logisticians = new();
+    
+    // Selected values for dropdowns
+    private int selectedFinalDestinationId = 0;
+    private int selectedReceiverUserId = 0;
 
     private string ModalTitle => $"Editar Baja Técnica #{currentRequestId}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDropdownData();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         if (IsOpen && RequestId != 0 && RequestId != currentRequestId)
         {
             currentRequestId = RequestId;
+            // Load dropdown data when modal opens (if not already loaded)
+            if (departments.Count == 0 || logisticians.Count == 0)
+            {
+                await LoadDropdownData();
+            }
             await LoadRequest();
+        }
+    }
+
+    private async Task LoadDropdownData()
+    {
+        try
+        {
+            // Load departments and logisticians in parallel
+            var departmentsTask = OrganizationService.GetAllDepartmentsAsync();
+            var logisticiansTask = UserService.GetUsersByRoleAsync("Logistician");
+            
+            await Task.WhenAll(departmentsTask, logisticiansTask);
+            
+            departments = await departmentsTask;
+            logisticians = await logisticiansTask;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] LoadDropdownData: {ex.Message}");
         }
     }
 
@@ -182,11 +231,23 @@
                     RequestDate = request.RequestDate,
                     Status = request.Status,
                     Reason = request.Reason,
+                    ReasonDescription = request.ReasonDescription,
                     Justification = request.Justification,
-                    DecommissioningDate = request.DecommissioningDate,
-                    FinalDestination = request.FinalDestination,
-                    ReceiverName = request.ReceiverName
+                    ReviewedDate = request.ReviewedDate,
+                    ReviewedByUserId = request.ReviewedByUserId,
+                    ReviewedByUserName = request.ReviewedByUserName,
+                    // Receiver info
+                    ReceiverUserId = request.ReceiverUserId,
+                    ReceiverUserName = request.ReceiverUserName,
+                    // Final destination
+                    FinalDestinationId = request.FinalDestinationId,
+                    FinalDestinationName = request.FinalDestinationName,
+                    DecommissioningDate = request.DecommissioningDate
                 };
+                
+                // Initialize dropdown selections from loaded data
+                selectedFinalDestinationId = request.FinalDestinationId ?? 0;
+                selectedReceiverUserId = request.ReceiverUserId ?? 0;
             }
         }
         catch (Exception ex)
@@ -212,11 +273,24 @@
             RequestDate = request.RequestDate,
             Status = request.Status,
             Reason = request.Reason,
+            ReasonDescription = request.ReasonDescription,
             Justification = request.Justification,
-            DecommissioningDate = request.DecommissioningDate,
-            FinalDestination = request.FinalDestination,
-            ReceiverName = request.ReceiverName
+            ReviewedDate = request.ReviewedDate,
+            ReviewedByUserId = request.ReviewedByUserId,
+            ReviewedByUserName = request.ReviewedByUserName,
+            // Receiver info
+            ReceiverUserId = request.ReceiverUserId,
+            ReceiverUserName = request.ReceiverUserName,
+            // Final destination
+            FinalDestinationId = request.FinalDestinationId,
+            FinalDestinationName = request.FinalDestinationName,
+            DecommissioningDate = request.DecommissioningDate
         };
+        
+        // Initialize dropdown selections
+        selectedFinalDestinationId = request.FinalDestinationId ?? 0;
+        selectedReceiverUserId = request.ReceiverUserId ?? 0;
+        
         StateHasChanged();
     }
 
@@ -225,6 +299,35 @@
         if (isSubmitting || EditRequest == null) return;
 
         isSubmitting = true;
+        
+        // Update EditRequest with selected dropdown values before submit
+        // Note: IDs can be negative in the database, so we check != 0 instead of > 0
+        Console.WriteLine($"[DEBUG] Submitting DecommissioningFormEdit - selectedFinalDestinationId={selectedFinalDestinationId}, selectedReceiverUserId={selectedReceiverUserId}");
+        if (selectedFinalDestinationId != 0)
+        {
+            EditRequest.FinalDestinationId = selectedFinalDestinationId;
+            var selectedDepartment = departments.FirstOrDefault(d => d.Id == selectedFinalDestinationId);
+            EditRequest.FinalDestinationName = selectedDepartment?.Name;
+        }
+        else
+        {
+            EditRequest.FinalDestinationId = null;
+            EditRequest.FinalDestinationName = null;
+        }
+        
+        if (selectedReceiverUserId != 0)
+        {
+            EditRequest.ReceiverUserId = selectedReceiverUserId;
+            var selectedLogistician = logisticians.FirstOrDefault(l => l.Id == selectedReceiverUserId);
+            EditRequest.ReceiverUserName = selectedLogistician?.Name;
+        }
+        else
+        {
+            EditRequest.ReceiverUserId = null;
+            EditRequest.ReceiverUserName = null;
+        }
+        
+        Console.WriteLine($"[DEBUG] EditRequest to submit: Id={EditRequest.Id}, DeviceId={EditRequest.DeviceId}, FinalDestinationId={EditRequest.FinalDestinationId}, ReceiverUserId={EditRequest.ReceiverUserId}, FinalDestinationName={EditRequest.FinalDestinationName}, ReceiverUserName={EditRequest.ReceiverUserName}");
         await OnSubmit.InvokeAsync(EditRequest);
         isSubmitting = false;
     }
@@ -235,6 +338,8 @@
         {
             EditRequest = null;
             currentRequestId = 0;
+            selectedFinalDestinationId = 0;
+            selectedReceiverUserId = 0;
             await OnClose.InvokeAsync();
         }
     }
